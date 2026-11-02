@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PropCart</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Intentionally dark-only: black and purple was the brief. */
+:root{--bg:#08050d;--panel:#120c1e;--card:#171027;--line:#2d2147;--ink:#f4efff;--mu:#a094c0;--pur:#9d6bff;--pur2:#c9adff;--ok:#5ee6a8;--bad:#ff8fa3;--bar:#3b2a63;
+--disp:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;--body:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 110px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:20}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:19;background:var(--bg);border-bottom:1px solid var(--line)}
+.in{max-width:720px;margin:0 auto;padding:0 16px}
+.brand{display:flex;align-items:center;gap:10px;padding:12px 0 6px;font:800 24px var(--disp);letter-spacing:-.03em}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--pur);display:grid;place-items:center;color:#08050d;font-size:16px}
+.brand small{font:400 13px var(--body);letter-spacing:0;color:var(--mu);margin-left:2px}
+#tabs{display:flex;gap:4px}
+#tabs button{flex:1;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 4px;background:none;color:var(--mu);font:600 13px var(--body)}
+#tabs button.on{color:var(--ink);border-color:var(--pur)}
+#cc{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:99px;background:var(--pur);color:#08050d;font-size:12px;line-height:20px}
+main{max-width:720px;margin:0 auto;padding:18px 16px 60px}
+h2{font:800 28px/1.05 var(--disp);letter-spacing:-.02em;margin:0 0 6px}
+h3{font:800 17px var(--disp);margin:22px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+h3 em{font:400 13px var(--body);color:var(--mu);font-style:normal}
+.sub{color:var(--mu);margin:0 0 14px;max-width:50ch}
+button{font:600 15px var(--body);padding:10px 16px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;transition:transform .08s}
+button:active{transform:scale(.97)}
+button.p{background:var(--pur);border-color:var(--pur);color:#08050d}
+:focus-visible{outline:3px solid var(--pur2);outline-offset:2px}
+input,select{font:inherit;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:100%;min-width:0}
+input[type=range]{accent-color:var(--pur);padding:0;margin-top:6px}
+.bt{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.bt.end{align-items:flex-end;margin:0}
+.gm{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;margin:6px 0;padding:14px}
+.gm.on{border-color:var(--pur);background:#221540;box-shadow:inset 3px 0 0 var(--pur)}
+.gm b{display:block}.gm em{font-style:normal;color:var(--mu);font-size:13px}
+.dt i{font:600 11px var(--body);font-style:normal;background:#2a1a4d;color:var(--pur2);border-radius:6px;padding:2px 7px;margin-left:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chips button{padding:7px 14px;border-radius:99px}.chips button.on{background:var(--pur);border-color:var(--pur);color:#08050d}
+.set{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--panel);border-radius:14px;padding:14px;margin-bottom:6px}
+.set label,.add label,.ft label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu);font-weight:600}
+.wide{grid-column:1/-1}.set b{color:var(--ink)}
+.pc,.leg{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px;margin:8px 0}
+.thr{font:800 36px/1 var(--disp);letter-spacing:-.04em;min-width:58px;color:var(--pur2)}
+.thr small{display:block;font:600 12px var(--body);letter-spacing:0;color:var(--mu);margin-top:3px}
+.nm{font-weight:600;line-height:1.2}
+.tm{font:600 11px var(--body);background:#2a1a4d;color:var(--pur2);border-radius:6px;padding:1px 6px;margin-left:6px}
+.mx{font-size:12px;color:var(--mu);margin-top:2px}.mx.good{color:var(--ok)}.mx.bad{color:var(--bad)}
+.bars{position:relative;display:flex;align-items:flex-end;gap:4px;height:44px;margin-top:8px}
+.bars span{width:22px;min-height:17px;background:var(--bar);border-radius:5px 5px 2px 2px;display:flex;justify-content:center;font:600 11px/17px var(--body)}
+.bars .tl{position:absolute;left:-2px;right:-2px;border-top:2px dashed var(--pur2);pointer-events:none}
+.add.on{background:#221540;border-color:var(--pur);color:var(--pur2)}
+.side{display:flex;flex-direction:column;gap:6px;align-items:stretch;width:92px}
+.st{display:flex;flex-direction:column;gap:6px}.st button{width:100%;padding:10px 0;font-size:16px;line-height:1}
+.od{text-align:center;font-weight:600;padding:8px}
+.rm{background:none;border:0;color:var(--mu);font-size:13px;padding:2px;text-decoration:underline}
+.slip{border:2px solid var(--pur);border-radius:18px;padding:16px;margin-top:18px;background:var(--panel);box-shadow:0 0 28px rgba(157,107,255,.22)}
+.ft{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}.ft label{width:112px}
+#sum{margin-top:14px}#sum .n{font:800 36px/1 var(--disp);letter-spacing:-.03em;color:var(--ok)}#sum .l{font-size:13px;color:var(--mu);margin-top:4px}
+.note{font-size:13px;color:var(--mu);margin-top:12px;max-width:60ch}
+.empty{padding:18px;border:2px dashed var(--line);border-radius:12px;color:var(--mu);margin:10px 0}
+details{margin-top:26px;background:var(--panel);border-radius:14px;padding:4px 14px}
+summary{font:800 17px var(--disp);padding:12px 0;cursor:pointer}
+.add{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0 14px}.add .bt{grid-column:1/-1;margin:0}
+#chat{display:flex;flex-direction:column;gap:10px;margin:12px 0;min-height:80px}
+.msg{max-width:88%;padding:10px 14px;border-radius:16px;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:var(--pur);color:#08050d;border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--card);border:1.5px solid var(--line);border-bottom-left-radius:4px}
+.msg small{display:block;color:var(--ok);margin-top:6px}
+.send{display:flex;gap:8px;position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);background:var(--bg);padding:8px 0}
+.av{width:40px;height:40px;border-radius:50%;background:#2a1a4d;border:1.5px solid var(--pur);display:inline-grid;place-items:center;font:800 14px var(--disp);color:var(--pur2);flex:none;vertical-align:middle}
+.av.sm{width:26px;height:26px;font-size:11px;margin-right:7px}
+button.pn{background:none;border:0;padding:0;font:600 16px var(--body);color:var(--ink);text-decoration:underline dotted var(--pur);text-underline-offset:4px}
+.mdl{position:fixed;inset:0;z-index:30;background:rgba(4,2,8,.82);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);border:1.5px solid var(--pur);border-radius:20px 20px 0 0;width:100%;max-width:720px;max-height:88vh;overflow-y:auto;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px)}
+.sh{display:flex;gap:12px;align-items:center;margin-bottom:8px}.sh .av{width:56px;height:56px;font-size:20px}
+.ladder{width:100%;border-collapse:collapse;font-size:14px}.ladder td{padding:8px 4px;border-top:1px solid var(--line)}.ladder input{width:76px;padding:7px;text-align:center}.ladder button{padding:6px 12px}
+.warn{background:#2a1230;border:1px solid #5a2a66;color:#ffc2d1;border-radius:10px;padding:8px 10px;font-size:13px;margin-top:6px}
+.sp{width:70px;padding:6px;text-align:center;display:inline-block}
+details.va{margin-top:2px;background:none;padding:0}details.va summary{font:600 12px var(--body);color:var(--pur2);padding:3px 0}
+.up{display:inline-block;padding:8px 14px;border:1.5px solid var(--line);border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;background:var(--card);color:var(--ink)}
+@media (max-width:420px){.thr{font-size:30px;min-width:48px}.side{width:84px}}
+@media (prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+<div class="brand"><span class="logo">P</span>PropCart<small>build parlays from steady props</small></div>
+<nav id="tabs"><button data-t="games">Games</button><button data-t="props">Props</button><button data-t="safe">Safe</button><button data-t="cart">Parlay<span id="cc">0</span></button><button data-t="ai">Infinity</button></nav>
+</div></header><div id="dp" style="max-width:720px;margin:8px auto 0;padding:0 16px;display:flex;gap:8px;align-items:center"><button type="button" onclick="dpStep(-1)" aria-label="Previous game day" style="padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer">◀</button><input type="date" id="dpi" onchange="dpSet(this.value)" aria-label="Pick a date" style="flex:1;width:auto;min-width:0;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer;color-scheme:dark"><button type="button" onclick="dpStep(1)" aria-label="Next game day" style="padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer">▶</button><button type="button" onclick="loadLive('')" style="padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer">Today</button></div><div id="lv" class="mx" style="max-width:720px;margin:8px auto 0;padding:0 16px"></div>
+<main id="v"></main><div id="md"></div>
+<script>
+var K='propcart:v3',ST={pts:'points',reb:'rebounds',ast:'assists',tpm:'threes'},PRI={reb:0,tpm:1,ast:2,pts:3};
+var SEED=[
+{n:'Victor Wembanyama',t:'SAS',pts:[25,23],reb:[13,7],ast:[2,2],tpm:[2,2]},
+{n:'Dylan Harper',t:'SAS',pts:[20,22],reb:[3,5],ast:[2,2],tpm:[1,3]},
+{n:'De’Aaron Fox',t:'SAS',pts:[19,19],reb:[4,3],ast:[9,9],tpm:[2,2]},
+{n:'Stephon Castle',t:'SAS',pts:[15,19],reb:[7,4],ast:[5,8],tpm:[3,3]},
+{n:'Julian Champagnie',t:'SAS',pts:[6,12],reb:[0,5],ast:[0,3],tpm:[2,3]},
+{n:'Keldon Johnson',t:'SAS',pts:[8,7],reb:[6,6],ast:[1,3],tpm:[0,0]},
+{n:'Austin Reaves',t:'LAL',pts:[28,29],reb:[2,1],ast:[9,4],tpm:[3,4]},
+{n:'Walker Kessler',t:'LAL',pts:[22,2],reb:[8,7],ast:[3,0],tpm:[0,0]},
+{n:'Matisse Thybulle',t:'LAL',pts:[13,11],reb:[1,1],ast:[2,1],tpm:[3,3]},
+{n:'Ziaire Williams',t:'LAL',pts:[14,11],reb:[5,2],ast:[0,1],tpm:[1,3]},
+{n:'Collin Sexton',t:'LAL',pts:[5,13],reb:[1,2],ast:[2,1],tpm:[1,1]},
+{n:'Sandro Mamukelashvili',t:'LAL',pts:[7,9],reb:[5,3],ast:[2,0],tpm:[1,1]},
+{n:'Luka Doncic',t:'LAL',pts:[52],reb:[8],ast:[10],tpm:[8]},
+{n:'Anthony Edwards',t:'MIN',pts:[26,15,45],reb:[1,4],ast:[3,4],tpm:[2,2,9]},
+P('Jaden McDaniels','MIN',14,6,3,1),P('Rudy Gobert','MIN',8,13,0,0),P('Jonathan Kuminga','MIN',13,4,1,3),P('LaMelo Ball','MIN',15,1,8,4),P('Terrence Shannon Jr','MIN',15,4,3,3),P('Trey Lyles','MIN',3,6,2,1),
+P('Donovan Mitchell','CLE',22,5,4,2),P('Jarrett Allen','CLE',21,8,0,1),P('Evan Mobley','CLE',20,10,4,2),P('Jaylon Tyson','CLE',15,1,4,3),P('James Harden','CLE',12,8,7,1),P('Peyton Watson','CLE',11,3,4,2),P('Mario Hezonja','CLE',9,5,1,2),P('Sam Merrill','CLE',7,2,3,1),
+P('Shai Gilgeous-Alexander','OKC',34,6,5,1),P('Ajay Mitchell','OKC',18,6,4,1),P('Isaiah Hartenstein','OKC',12,12,1,0),P('Alex Caruso','OKC',12,7,6,2),P('Jalen Williams','OKC',8,2,5,0),P('Cason Wallace','OKC',4,3,1,0),P('Jared McCain','OKC',3,1,0,1),P('Aday Mara','OKC',2,3,1,0),
+P('Devin Booker','PHX',43,7,7,2),P('Miles Bridges','PHX',16,7,3,2),P('Dillon Brooks','PHX',15,2,5,1),P('Jalen Green','PHX',12,2,1,1),P('Collin Gillespie','PHX',11,4,9,2),P('Luke Kennard','PHX',11,4,1,3),P('Jordan Goodwin','PHX',9,2,4,1),P('Ryan Dunn','PHX',5,5,0,1),
+P('Jalen Johnson','ATL',26,9,16,2),P('Dyson Daniels','ATL',18,8,3,1),P('CJ McCollum','ATL',17,2,1,1),P('Onyeka Okongwu','ATL',8,6,2,0),P('Luguentz Dort','ATL',7,2,3,1),
+P('Kevin Durant','HOU',22,4,2,3),P('Reed Sheppard','HOU',19,6,7,5),P('Alperen Sengun','HOU',17,10,7,1),P('Jabari Smith Jr.','HOU',14,5,3,2),P('Bogdan Bogdanovic','HOU',11,1,1,3),
+P('Jamal Murray','DEN',42,3,6,8),P('Trevon Brazile','DEN',17,9,0,3),P('Christian Braun','DEN',15,8,2,0),P('DeMar DeRozan','DEN',12,3,3,0),P('Aaron Gordon','DEN',7,5,4,1),
+P('Yaxel Lendeborg','GSW',26,9,5,6),P('De\'Anthony Melton','GSW',25,5,5,4),P('Brandon Williams','GSW',20,3,5,2),P('Graham Ike','GSW',12,10,2,0),P('Will Richard','GSW',11,0,1,3),
+P('Brandon Miller','CHA',34,8,4,3),P('Dennis Schroder','CHA',25,6,4,3),P('Naz Reid','CHA',23,9,0,5),P('Ryan Kalkbrenner','CHA',6,5,2,0),P('Moussa Diabate','CHA',4,5,2,0),
+P('Davion Mitchell','MIA',22,1,10,3),P('Bam Adebayo','MIA',20,8,4,2),P('Pelle Larsson','MIA',15,7,4,1),P('Klay Thompson','MIA',14,3,0,4),P('Giannis Antetokounmpo','MIA',14,6,3,0),P('Bobby Portis Jr.','MIA',13,8,0,2)];
+var OPP={SAC:{reb:1.16,tpm:1.33,pts:1.09,ast:1.11},POR:{reb:1.0,tpm:0.86,pts:1.03,ast:0.78}};
+var WHY={SAC:{reb:'Sacramento gave up 59 rebounds in their opener, well above the typical 51.',tpm:'Sacramento let Portland shoot 48 threes, about a third more than usual, though only 29% went in.',pts:'Sacramento allowed 128 points in their opener.',ast:'Portland racked up 30 assists on Sacramento.'},POR:{reb:'Portland allowed an average 51 rebounds in their opener, so no edge either way.',tpm:'Portland held Sacramento to 31 three-point attempts, about 14% fewer than usual, and just 25.8% shooting. Fewer looks, and fewer go in.',pts:'Portland allowed 120 points in their opener, about average.',ast:'Portland held Sacramento to 21 assists, about 22% under normal, so passing lanes were tight.'}};
+var G=[{i:1,d:'Sun Oct 25',t:'9:00 PM',a:'MEM',h:'SAC'},{i:2,d:'Mon Oct 26',t:'7:00 PM',a:'MIN',h:'CLE'},{i:3,d:'Mon Oct 26',t:'7:00 PM',a:'WAS',h:'CHA'},{i:4,d:'Mon Oct 26',t:'7:30 PM',a:'CHI',h:'BOS'},{i:5,d:'Mon Oct 26',t:'7:30 PM',a:'DAL',h:'MIA'},{i:6,d:'Mon Oct 26',t:'8:00 PM',a:'PHX',h:'OKC'},{i:7,d:'Mon Oct 26',t:'8:00 PM',a:'IND',h:'MIL'},{i:8,d:'Mon Oct 26',t:'8:30 PM',a:'ATL',h:'HOU'},{i:9,d:'Mon Oct 26',t:'9:00 PM',a:'MEM',h:'UTA'},{i:10,d:'Mon Oct 26',t:'10:00 PM',a:'GSW',h:'DEN'},{i:11,d:'Tue Oct 27',t:'7:30 PM',a:'BKN',h:'BOS'},{i:12,d:'Tue Oct 27',t:'8:00 PM',a:'SAC',h:'SAS'},{i:13,d:'Tue Oct 27',t:'8:00 PM',a:'DET',h:'NYK'},{i:14,d:'Tue Oct 27',t:'11:00 PM',a:'POR',h:'LAL'},{i:15,d:'Wed Oct 28',t:'7:00 PM',a:'WAS',h:'CLE'}];
+function P(n,t,a,b,c,d){return{n:n,t:t,pts:[a],reb:[b],ast:[c],tpm:[d]}}
+var FACT={CLE:['Cleveland',58,49,40.8,23,121,'Brooklyn'],MIN:['Minnesota',43,38,26.3,20,94,'Toronto'],OKC:['Oklahoma City',50,38,39.5,30,101,'the Clippers'],PHX:['Phoenix',54,39,43.6,24,122,'Golden State'],HOU:['Houston',54,49,26.5,35,114,'Atlanta'],ATL:['Atlanta',55,35,40,27,121,'Houston'],DEN:['Denver',56,38,28.9,33,135,'New Orleans, in overtime'],GSW:['Golden State',46,37,37.8,33,131,'Phoenix'],CHA:['Charlotte',47,35,37.1,22,110,'Miami'],MIA:['Miami',58,43,37.2,22,115,'Charlotte']};
+Object.keys(FACT).forEach(function(t){var f=FACT[t],n=f[0],o=f[6];
+OPP[t]={reb:+(f[1]/51).toFixed(2),tpm:+(f[2]/36).toFixed(2),ast:+(f[4]/27).toFixed(2),pts:+(f[5]/117).toFixed(2)};
+WHY[t]={reb:n+' allowed '+f[1]+' rebounds to '+o+' (typical is about 51).',tpm:n+' allowed '+f[2]+' three-point attempts at '+f[3]+'% to '+o+' (typical is about 36 attempts).',ast:n+' allowed '+f[4]+' assists to '+o+' (typical is about 27).',pts:n+' allowed '+f[5]+' points to '+o+' (typical is about 117).'}});
+var WP={2:[40.5,59.5],3:[46.1,53.9],4:[13.9,86.1],5:[25,75],6:[21.9,78.1],7:[62.1,37.9],8:[35.6,64.4],9:[49,51],10:[26.7,73.3]};
+function wp(g){var w=WP[g.i];if(!w)return '';return ' · '+g.a+' '+Math.round(w[0])+'%, '+g.h+' '+Math.round(w[1])+'%'+(Math.max(w[0],w[1])>=75?' · lopsided, blowout risk':'')}
+var D=SEED.slice(),M={},AI=null,S={tab:'games',sel:{2:1,3:1,5:1,6:1,8:1,10:1},f:'all',m:50,g:1,cart:[],pt:'k',stake:5,combo:'',chat:[],busy:0,sp:{},pm:null,pr:{},sl:5,sc:{reb:1,tpm:1,ast:1,pts:1},ss:'c',mp:70,q:'',pl:'Kalshi',mult:''};
+try{var r=JSON.parse(localStorage.getItem(K)||'null');if(r){if(r.D&&r.D.length)D=r.D;if(r.cart)S.cart=r.cart}}catch(e){}
+function save(){try{localStorage.setItem(K,JSON.stringify({D:D,cart:S.cart}))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function norm(s){return String(s).toLowerCase().replace(/[’']/g,'')}
+function hasData(t){return D.some(function(p){return p.t===t})}
+function dec(a){a=parseFloat(a);if(!a)return 0;if(S.pt==='k')return a>0&&a<100?100/a:0;return a>0?1+a/100:1+100/Math.abs(a)}
+function stats(p,s,opp,hv,gi){
+var v=(p[s]||[]).slice(0,10),g=v.length;if(!g||g<S.g)return null;
+var mn=Math.min.apply(null,v),avg=v.reduce(function(a,b){return a+b},0)/g,thr=Math.max(1,Math.floor(mn*S.m/100));
+if(mn<=0||mn<thr||(s!=='tpm'&&thr<3))return null;
+var f=opp&&OPP[opp]?OPP[opp][s]:1;
+var w=WP[gi],mxp=w?Math.max(w[0],w[1]):0,bl=mxp>=85?3:mxp>=75?2:0,pen=bl===3?0.1:bl===2?0.05:0;
+return{key:p.n+'|'+s,n:p.n,t:p.t,s:s,v:v,g:g,mn:mn,thr:thr,opp:opp||'',hv:hv||'',f:f,gi:gi,bl:bl,wpx:Math.round(mxp),sc:Math.round((mn/avg+0.1*(g-1)+0.4*(f-1)-pen)*1000)/1000}}
+function cands(){
+var out=[];M={};
+if(!Object.keys(S.sel).length){D.forEach(function(p){Object.keys(ST).forEach(function(s){var x=stats(p,s,'','');if(x)out.push(x)})})}
+else G.forEach(function(g){if(!S.sel[g.i])return;[[g.a,g.h,'at'],[g.h,g.a,'vs']].forEach(function(q){D.forEach(function(p){if(p.t!==q[0])return;Object.keys(ST).forEach(function(s){var x=stats(p,s,q[1],q[2],g.i);if(x)out.push(x)})})})});
+out.sort(function(a,b){return b.sc-a.sc||PRI[a.s]-PRI[b.s]||b.mn-a.mn});
+out.forEach(function(x){M[x.key]=x});return out}
+function auto(c,n){
+var used={},cnt={},tc={},o=[];
+c.forEach(function(x){if(o.length>=n||used[x.n]||(cnt[x.s]||0)>=2||(tc[x.t]||0)>=3)return;used[x.n]=1;tc[x.t]=(tc[x.t]||0)+1;cnt[x.s]=(cnt[x.s]||0)+1;o.push(x)});return o}
+function inCart(k){return S.cart.some(function(c){return c.k===k})}
+function addCart(x){if(!inCart(x.key))S.cart.push({k:x.key,n:x.n,t:x.t,s:x.s,v:x.v,bar:x.thr,opp:x.opp,hv:x.hv,f:x.f,bl:x.bl||0,wpx:x.wpx,odds:''})}
+function bars(v,b){v=v.slice(0,12);var mx=Math.max.apply(null,v.concat([b]))*1.12;
+return '<div class="bars" aria-label="Last games: '+v.join(', ')+'"><div class="tl" style="bottom:'+(b/mx*100).toFixed(1)+'%"></div>'+v.map(function(n){return '<span style="height:'+(n/mx*100).toFixed(1)+'%">'+n+'</span>'}).join('')+'</div>'}
+function tag(x){if(!x.opp)return '';var f=x.f,k=f>=1.08?'good':f<=0.92?'bad':'',w=f>=1.08?'Soft':f<=0.92?'Tough':'Even';
+return '<div class="mx '+k+'">'+x.hv+' '+x.opp+': '+w+' matchup for '+ST[x.s]+(OPP[x.opp]?'':' (no data yet)')+'</div>'+(k&&WHY[x.opp]?'<div class="mx">Why: '+WHY[x.opp][x.s]+'</div>':'')+(x.bl>=2?'<div class="warn">Blowout risk: this game looks lopsided'+(x.wpx?' (favorite about '+x.wpx+'% to win)':'')+', so starters may sit in the fourth quarter and wreck their stats.</div>':'')}
+function card(x){var on=inCart(x.key);
+return '<div class="pc"><div class="thr">'+x.thr+'+<small>'+ST[x.s]+'</small></div><div><div class="nm">'+av(x.n,'sm')+'<button class="pn" data-p="'+esc(x.n)+'">'+esc(x.n)+'</button><span class="tm">'+esc(x.t)+'</span></div>'+tag(x)+bars(x.v,x.thr)+riskTag(x)+'<details class="va"><summary>View analysis</summary><div class="mx">Games logged: '+x.g+'. Lowest game: '+x.mn+'. Bar: '+x.thr+', set at '+Math.round(S.m)+'% of the lowest game. The estimate is (games cleared + 1) ÷ (games + 2), minus small cuts for blowout risk and tough matchups. It is not a market price.</div></details></div><button class="add'+(on?' on':'')+'" data-k="'+esc(x.key)+'">'+(on?'In cart':'Add')+'</button></div>'}
+function av(n,c){var w=n.replace(/[’']/g,'').split(' ').filter(Boolean);var im=PH[n];var ini=esc((((w[0]||'')[0]||'')+(w.length>1?w[w.length-1][0]:'')).toUpperCase());if(im)return '<span class="av '+(c||'')+'" style="background:url('+im+') center/cover"></span>';return '<span class="av '+(c||'')+'" style="position:relative;overflow:hidden">'+ini+(PID[n]?'<img alt="" loading="lazy" src="https://cdn.nba.com/headshots/nba/latest/260x190/'+PID[n]+'.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 15%" onerror="this.remove()">':'')+'</span>'}
+var PH={};try{PH=JSON.parse(localStorage.getItem('propcart:photos')||'{}')||{}}catch(e){}
+function onPhoto(f){if(!f||!S.pm)return;var n=S.pm.n,r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas'),z=Math.min(im.width,im.height);c.width=c.height=120;c.getContext('2d').drawImage(im,(im.width-z)/2,(im.height-z)/2,z,z,0,0,120,120);PH[n]=c.toDataURL('image/jpeg',0.8);try{localStorage.setItem('propcart:photos',JSON.stringify(PH))}catch(e){}view();vP()};im.src=r.result};r.readAsDataURL(f)}
+function riskTag(x){var q=(x.g<2?3:x.g<3?1:0)+(x.bl>=3?3:x.bl>=2?2:0)+(x.f<=0.92?1:0),l=q>=4?'Extreme':q>=3?'High':q>=1?'Moderate':'Low';return '<div class="mx '+(q>=3?'bad':q>=1?'':'good')+'">Risk: '+l+', est. '+Math.round(est(x)*100)+'% hit chance'+(x.g<2?', only 1 game logged':x.g<3?', small sample':'')+'</div>'}
+function verdict(h,n,pr){pr=parseFloat(pr);if(!(pr>0&&pr<100))return '';return (h<n?'Missed in '+(n-h)+' of '+n+' games. ':'Cleared all '+n+'. ')+'Kalshi implies '+pr+'%.'+(h===n&&pr>=85?' That’s a short price for the risk.':'')}
+function addLeg(p,s,bar){var k=p.n+'|'+s,ex=S.cart.filter(function(c){return c.k===k})[0];if(ex){ex.bar=bar;save();return}var o=nextOpp(p.t);S.cart.push({k:k,n:p.n,t:p.t,s:s,v:p[s],bar:bar,opp:o.opp,hv:o.hv,bl:o.bl||0,wpx:o.wpx,f:o.opp&&OPP[o.opp]?OPP[o.opp][s]:1,odds:''});save()}
+function vP(){
+var md=$('md'),pm=S.pm,p=pm&&findP(pm.n);if(!p){md.innerHTML='';return}
+var s=pm.s,v=p[s]||[],n=v.length,mn=n?Math.min.apply(null,v):0,mx=n?Math.max.apply(null,v):0,st=Math.max(1,Math.ceil(mx/12)),o=nextOpp(p.t),def=Math.max(1,Math.floor(mn*S.m/100)),rows='';
+for(var b=1;b<=mx;b+=st){var h=v.filter(function(x){return x>=b}).length,pk=p.n+'|'+s,pr=S.pr[pk+'|'+b]||'';
+rows+='<tr><td><b>'+b+'+</b>'+(b===def?' <span class="tm">app pick</span>':'')+'</td><td>'+h+' of '+n+'</td><td><input class="pi" data-pk="'+esc(pk)+'" data-pb="'+b+'" inputmode="numeric" placeholder="¢" value="'+esc(pr)+'" aria-label="Kalshi price for '+b+' plus"></td><td><button data-pa="'+b+'">Add</button></td></tr><tr><td colspan="4" class="mx" id="vd'+b+'" style="border:0;padding:0 4px 6px">'+verdict(h,n,pr)+'</td></tr>'}
+md.innerHTML='<div class="mdl" id="mdl"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+esc(p.n)+'"><div class="sh">'+av(p.n)+'<div style="flex:1"><h2 style="font-size:24px;margin:0">'+esc(p.n)+'</h2><div class="mx">'+esc(p.t)+', '+n+' recent '+(n===1?'game':'games')+' logged</div></div><button id="pmx">Close</button></div><div class="mx"><label class="up">Add photo<input type="file" accept="image/*" id="ph" hidden></label></div><div class="chips" style="margin-top:12px">'+Object.keys(ST).map(function(k){return '<button data-ps="'+k+'"'+(s===k?' class="on"':'')+'>'+ST[k].charAt(0).toUpperCase()+ST[k].slice(1)+'</button>'}).join('')+'</div>'+(n?bars(v,def)+tag({opp:o.opp,hv:o.hv,f:o.opp&&OPP[o.opp]?OPP[o.opp][s]:1,s:s,bl:o.bl||0})+'<h3>Pick your line</h3><p class="sub" style="margin-bottom:6px">He cleared up to '+mn+'+ in every game. Higher bars pay more, but he has missed them. Type the Kalshi price to compare.</p><table class="ladder"><tbody>'+rows+'</tbody></table><p class="note">With only '+n+' '+(n===1?'game':'games')+' logged, treat this as a rough guide.</p>':'<div class="empty">No games logged for this stat.</div>')+'</div></div>'}
+var PL=[['Kalshi','k','https://kalshi.com'],['Hard Rock','a','https://hardrock.bet'],['DraftKings','a','https://sportsbook.draftkings.com'],['FanDuel','a','https://sportsbook.fanduel.com'],['PrizePicks','m','https://prizepicks.com'],['Sleeper','m','https://sleeper.com']],SM={c:0.5,b:0.6,a:0.75};
+function est(x){var b=x.thr!==undefined?x.thr:x.bar,n=x.v.length,h=x.v.filter(function(y){return y>=b}).length,p=(h+1)/(n+2);p-=x.bl>=3?0.08:x.bl>=2?0.04:0;if(x.f<=0.92)p-=0.03;return Math.max(0,p)}
+function safeList(){var m=S.m,g=S.g;S.m=SM[S.ss]*100;S.g=1;var c=cands();S.m=m;S.g=g;
+c=c.filter(function(x){return S.sc[x.s]&&est(x)>=S.mp/100});c.sort(function(a,b){return est(b)-est(a)||b.sc-a.sc});
+var used={},tc={},o=[],cap=Math.max(3,Math.ceil(S.sl/4));
+c.forEach(function(x){if(o.length>=S.sl||used[x.n]||(tc[x.t]||0)>=cap)return;used[x.n]=1;tc[x.t]=(tc[x.t]||0)+1;o.push(x)});return o}
+function chips(k,opts,cur){return '<div class="chips">'+opts.map(function(o){return '<button data-sf="'+k+'" data-v="'+o[0]+'"'+(String(cur)===String(o[0])?' class="on"':'')+'>'+o[1]+'</button>'}).join('')+'</div>'}
+function vSafe(v){var o=safeList();S.sres=o;
+v.innerHTML='<h2>Safe Prop Finder</h2><p class="sub">Keeps props where the bar is a fraction of the player’s worst game (Conservative 50%, Balanced 60%, Aggressive 75%) and the estimated hit chance clears your filter. Small samples score low on purpose, so expect few or no results until more games are logged.</p><h3>Legs wanted</h3>'+chips('l',[[3,'3'],[5,'5'],[7,'7'],[10,'10'],[15,'15'],[20,'20']],S.sl)+'<h3>Strategy</h3>'+chips('s',[['c','Conservative'],['b','Balanced'],['a','Aggressive']],S.ss)+'<h3>Minimum hit chance</h3>'+chips('p',[[70,'70%'],[80,'80%'],[85,'85%'],[90,'90%'],[95,'95%']],S.mp)+'<h3>Categories</h3><div class="chips">'+[['pts','Points'],['reb','Rebounds'],['ast','Assists'],['tpm','Threes']].map(function(c){return '<button data-sc="'+c[0]+'"'+(S.sc[c[0]]?' class="on"':'')+'>'+c[1]+'</button>'}).join('')+'</div>'+(o.length?'<h3>'+o.length+' of '+S.sl+' legs found<em><button class="p" id="sa">Add all to cart</button></em></h3>'+o.map(card).join('')+(o.length<S.sl?'<p class="note">Only '+o.length+' qualified, so that’s all you get. It won’t pad the list.</p>':''):'<div class="empty">NO QUALIFYING PROPS FOUND. Nothing clears '+S.mp+'% with the games logged for your selected games. A player with one logged game tops out near 67%.</div>')}
+function foot(){var L=S.cart,w=null,wp=2,gm={};L.forEach(function(c){var p=est(c);if(p<wp){wp=p;w=c}gm[c.t]=(gm[c.t]||0)+1});var mx=Math.max.apply(null,Object.keys(gm).map(function(k){return gm[k]}).concat([0])),pl=PL.filter(function(p){return p[0]===S.pl})[0];
+return '<div class="mx" style="margin-top:10px">Combined probability unavailable: legs from the same team move together, and only a few games are logged per player. '+(w?'Weakest leg: '+esc(w.n)+' '+w.bar+'+ '+ST[w.s]+' (estimate '+Math.round(wp*100)+'%). ':'')+(mx>=3?mx+' legs ride on one team’s game. ':'')+'</div><a class="up" style="margin-top:10px;text-decoration:none" target="_blank" rel="noopener" href="'+pl[2]+'">Open '+pl[0]+'</a><div class="mx">Manual selection required: add each pick on the platform yourself and confirm the line there.</div>'}
+function view(){
+document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===S.tab)});
+$('cc').textContent=S.cart.length;var v=$('v');
+if(S.tab==='games')vGames(v);else if(S.tab==='props')vProps(v);else if(S.tab==='safe')vSafe(v);else if(S.tab==='cart')vCart(v);else vAI(v)}
+function vGames(v){
+var day='',h='<h2>Who’s playing</h2><p class="sub">Tap the games you want props for. Times are Eastern. Tags show which teams have player stats in the app so far. Win chances show for each game, and lopsided games get a blowout warning because starters sit when it gets out of hand.</p><div class="bt"><button id="sg">Select all</button><button id="cg">Clear</button></div>';
+G.forEach(function(g){if(g.d!==day){day=g.d;h+='<h3>'+day+'</h3>'}
+h+='<button class="gm'+(S.sel[g.i]?' on':'')+'" data-g="'+g.i+'"><span><b>'+g.a+' at '+g.h+'</b><em>'+g.t+wp(g)+'</em></span><span class="dt">'+[g.a,g.h].filter(hasData).map(function(t){return '<i>'+t+' stats</i>'}).join('')+'</span></button>'});
+h+='<div class="bt"><button class="p" id="sp">See props for '+Object.keys(S.sel).length+' games</button></div>';v.innerHTML=h}
+function vProps(v){
+var ch=[['all','All'],['reb','Rebounds'],['tpm','Threes'],['ast','Assists'],['pts','Points']];
+v.innerHTML='<h2>Best props</h2><p class="sub">Steady players first, nudged by how the next opponent defends. The dashed line is the bar to bet.</p><input id="qs" placeholder="Search players" value="'+esc(S.q)+'" aria-label="Search players" style="margin-bottom:10px"><div class="chips">'+ch.map(function(c){return '<button data-f="'+c[0]+'"'+(S.f===c[0]?' class="on"':'')+'>'+c[1]+'</button>'}).join('')+'</div>'+
+'<div class="set"><label class="wide">Bar height: <b id="mv">'+S.m+'</b>% of their worst game<input id="ms" type="range" min="30" max="90" value="'+S.m+'"></label><label>Games needed<select id="gn">'+[1,2,3].map(function(n){return '<option'+(S.g===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></label><div class="bt end"><button id="ab5">Add best 5</button></div></div><div id="pl"></div>'+
+'<details><summary>Add or update a player</summary><div class="add"><label>Name<input id="an"></label><label>Team<input id="at" placeholder="SAS"></label><label>Points per game<input id="ap" placeholder="25, 23"></label><label>Rebounds per game<input id="ar" placeholder="13, 7"></label><label>Assists per game<input id="aa" placeholder="2, 2"></label><label>Threes per game<input id="a3" placeholder="2, 2"></label><div class="bt"><button class="p" id="ad">Save player</button><button id="rd">Reset starting data</button></div></div></details>';
+plist()}
+function plist(){
+var c=cands().filter(function(x){return (S.f==='all'||x.s===S.f)&&(!S.q||norm(x.n).indexOf(norm(S.q))>-1)}),h='';
+if(!c.length){$('pl').innerHTML='<div class="empty">No props qualify. Pick more games, lower the bar height, or lower games needed. Only teams tagged with stats have players here.</div>';return}
+if(!Object.keys(S.sel).length)h='<div class="mx" style="margin:6px 0">No games picked, so this shows every player with stats.</div>'+c.map(card).join('');
+else G.forEach(function(g){if(!S.sel[g.i])return;var l=c.filter(function(x){return x.gi===g.i});if(l.length)h+='<h3>'+g.a+' at '+g.h+'<em>'+g.d+', '+g.t+'</em></h3>'+l.map(card).join('')});
+$('pl').innerHTML=h}
+function vCart(v){
+if(!S.cart.length){v.innerHTML='<h2>Your cart is empty</h2><p class="sub">Add props from the Props tab, ask the AI to fill it, or let the app pick for you.</p><div class="bt"><button class="p" id="ab">Auto-build best 5</button><button id="sp">Browse props</button></div>';return}
+var h='<h2>Parlay cart</h2><p class="sub">Use ▲ and ▼ to raise or lower each line. Pick your platform and stake below.</p>';
+S.cart.forEach(function(c,i){var ok=c.v.filter(function(n){return n>=c.bar}).length;
+h+='<div class="leg"><div class="thr">'+c.bar+'+<small>'+ST[c.s]+'</small></div><div><div class="nm">'+av(c.n,'sm')+'<button class="pn" data-p="'+esc(c.n)+'">'+esc(c.n)+'</button><span class="tm">'+esc(c.t)+'</span></div>'+tag(c)+bars(c.v,c.bar)+'<div class="mx '+(ok===c.v.length?'good':'bad')+'">Cleared in '+ok+' of '+c.v.length+' games</div></div><div class="side"><div class="st"><button data-c="'+i+'" data-d="1" aria-label="Raise line">▲</button><button data-c="'+i+'" data-d="-1" aria-label="Lower line">▼</button></div><button class="rm" data-rm="'+i+'">Remove</button></div></div>'});
+h+='<div class="slip"><div class="ft"><label>Stake ($)<input id="sk" type="number" min="0" value="'+esc(S.stake)+'"></label><label>Platform<select id="pt">'+PL.map(function(p){return '<option'+(S.pl===p[0]?' selected':'')+'>'+p[0]+'</option>'}).join('')+'</select></label>'+(S.pt==='m'?'<label>Payout multiplier shown<input id="mu" inputmode="decimal" placeholder="e.g. 20" value="'+esc(S.mult)+'"></label>':S.pt==='k'?'<label>Combo price ¢ (optional)<input id="cb" inputmode="numeric" value="'+esc(S.combo)+'"></label>':'')+'</div><div id="sum">'+payout()+'</div>'+foot()+
+'<p class="note">On Kalshi each contract pays $1 if the leg hits, so a 70¢ price means a 70% implied chance. Legs multiply; if Kalshi shows one price for the whole combo, use the combo box. Fees are estimated at about 7% × price × (1 − price) per contract, so check Kalshi’s fee schedule. I can’t see live prices, so the real payout is shown on the platform. Check that you’re eligible to trade where you live.</p></div><div class="bt"><button id="ab">Auto-build best 5</button><button id="clr">Clear cart</button></div>';
+v.innerHTML=h}
+function payout(){
+var L=S.cart,cb=parseFloat(S.combo),k=S.pt==='k',d=1,miss=0,st=+S.stake||0;
+if(L.length<2)return '<div class="l">Add at least 2 legs to see a parlay payout.</div>';
+if(S.pt==='m'){var mu=parseFloat(S.mult);if(!(mu>0))return '<div class="l">Type the payout multiplier '+S.pl+' shows for '+L.length+' picks.</div>';return '<div class="n">$'+(st*mu).toFixed(2)+'</div><div class="l">'+S.pl+' pays '+mu+'× your entry if every pick hits. Profit $'+(st*mu-st).toFixed(2)+'. Check '+S.pl+' for its exact pick-count rules and whether these players and lines are offered.</div>'}
+L.forEach(function(c){var q=dec(c.odds);if(!q)miss++;else d*=q});
+var uc=k&&cb>0&&cb<100;if(uc)d=100/cb;
+if(miss&&!uc)return '<div class="l">'+L.length+' legs ready. I can’t see live odds, so open '+S.pl+', add these legs, and enter your stake there to see the real payout. Nothing here is guaranteed.</div>';
+if(k){var p=1/d,n=Math.floor(st/p);if(n<1)return '<div class="l">That stake is too small to buy one contract at this price.</div>';
+var fee=Math.ceil(0.07*n*p*(1-p)*100)/100,paid=n*p+fee;
+return '<div class="n">$'+n.toFixed(2)+'</div><div class="l">'+n+' contracts at '+(p*100).toFixed(1)+'¢ cost about $'+paid.toFixed(2)+' with ~$'+fee.toFixed(2)+' in fees. If all '+L.length+' hit you profit $'+(n-paid).toFixed(2)+'. They need to hit '+(paid/n*100).toFixed(1)+'% of the time to break even.</div>'}
+return '<div class="n">$'+(d*st).toFixed(2)+'</div><div class="l">Payout on $'+st.toFixed(2)+'. The book gives all '+L.length+' hitting a '+(100/d).toFixed(1)+'% chance.</div>'}
+var CH=['Build the safest 5-leg parlay for my games','4 legs, only threes and rebounds','Remove all the points props','Make it riskier with higher bars'];
+function vAI(v){
+v.innerHTML='<h2>Infinity</h2><p class="sub">Tell it how you want your parlay. It can add, remove and change legs in your cart.</p>'+(true?'<div class="chips">'+CH.map(function(q){return '<button data-q="'+esc(q)+'">'+esc(q)+'</button>'}).join('')+'</div><div id="chat"></div><div class="send"><input id="qi" placeholder="e.g. 3 legs from the Spurs game, no points" aria-label="Message"><button class="p" id="snd">Send</button></div>':'<div class="empty">The AI isn’t available in this view. Open the page while signed in to claude.ai and allow it when asked.</div>');
+msgs()}
+function msgs(){var c=$('chat');if(!c)return;
+c.innerHTML=S.chat.map(function(m){return '<div class="msg '+m.r+'">'+esc(m.t)+(m.a?'<small>'+esc(m.a)+'</small>':'')+'</div>'}).join('')+(S.busy?'<div class="msg a">Thinking…</div>':'');
+window.scrollTo(0,document.body.scrollHeight)}
+function findP(name){var n=norm(name);return D.filter(function(p){return norm(p.n)===n})[0]||D.filter(function(p){var q=norm(p.n);return n&&(q.indexOf(n)>-1||n.indexOf(q)>-1)})[0]}
+function nextOpp(t){for(var i=0;i<G.length;i++){var g=G[i];if(S.sel[g.i]&&(g.a===t||g.h===t))return{opp:g.a===t?g.h:g.a,hv:g.h===t?'vs':'at',bl:WP[g.i]&&Math.max(WP[g.i][0],WP[g.i][1])>=75?2:0,wpx:WP[g.i]?Math.round(Math.max(WP[g.i][0],WP[g.i][1])):0}}return{opp:'',hv:''}}
+function apply(acts){var out=[];(acts||[]).forEach(function(x){if(!x)return;
+if(x.op==='clear'){S.cart=[];out.push('Cleared the cart')}
+else if(x.op==='stake'&&+x.amount>0){S.stake=+x.amount;out.push('Stake set to $'+(+x.amount))}
+else if(x.op==='platform'){var pq=PL.filter(function(p){return norm(p[0])===norm(x.name||'')})[0];if(pq){S.pl=pq[0];S.pt=pq[1];out.push('Platform set to '+pq[0])}}
+else if(x.op==='remove'){var p=findP(x.player||'');if(!p)return;var b=S.cart.length;S.cart=S.cart.filter(function(c){return !(c.n===p.n&&(!x.stat||c.s===x.stat))});if(S.cart.length<b)out.push('Removed '+p.n)}
+else if(x.op==='add'){var q=findP(x.player||''),s=x.stat;if(!q||!ST[s]||!(q[s]||[]).length)return;
+var def=Math.max(1,Math.floor(Math.min.apply(null,q[s])*S.m/100)),bar=+x.bar>0?Math.round(+x.bar):def,k=q.n+'|'+s,ex=S.cart.filter(function(c){return c.k===k})[0];
+if(ex)ex.bar=bar;else{var o=nextOpp(q.t);S.cart.push({k:k,n:q.n,t:q.t,s:s,v:q[s],bar:bar,opp:o.opp,hv:o.hv,f:o.opp&&OPP[o.opp]?OPP[o.opp][s]:1,odds:''})}
+out.push('Added '+q.n+' '+bar+'+ '+ST[s])}});
+save();return out}
+function parse(t){var a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<a)return{reply:t,actions:[]};try{return JSON.parse(t.slice(a,b+1))}catch(e){return{reply:t,actions:[]}}}
+async function ask(text){
+text=(text||'').trim();if(!text||S.busy)return;if(!AI){S.chat.push({r:'u',t:text});var lo=localAsk(text);S.chat.push({r:'a',t:lo.reply,a:lo.a});$('cc').textContent=S.cart.length;msgs();return}
+S.chat.push({r:'u',t:text});S.busy=1;msgs();
+var data=cands().slice(0,70).map(function(x){return x.n+' | '+x.t+' | '+x.s+' | suggested bar '+x.thr+' | last games '+x.v.join(',')+(x.opp?' | '+x.hv+' '+x.opp+' '+(x.f>=1.08?'soft':x.f<=0.92?'tough':'even')+' matchup':'')+(x.bl>=2?' | BLOWOUT RISK (favorite about '+x.wpx+'% to win)':'')}).join('\n');
+var cart=S.cart.map(function(c){return c.n+' '+c.bar+'+ '+ST[c.s]}).join('; ')||'empty';
+var hist=S.chat.slice(-7,-1).map(function(m){return (m.r==='u'?'User: ':'Assistant: ')+m.t}).join('\n');
+var prompt='You are the assistant inside PropCart, an app that builds NBA player-prop parlays from steady stats. Reply with ONLY a JSON object: {"reply":"short friendly text","actions":[...]}. Allowed actions: {"op":"add","player":"exact name","stat":"pts|reb|ast|tpm","bar":number}, {"op":"remove","player":"exact name","stat":"optional"}, {"op":"clear"}, {"op":"stake","amount":number}, {"op":"platform","name":"Kalshi|Hard Rock|DraftKings|FanDuel|PrizePicks|Sleeper"}. Rules: only use players and stats listed in DATA. Use the suggested bar unless the user asks for safer or riskier (a bar is "over this many"; keep it at or below the player\'s lowest recent game; a riskier bar can go up to their average). Use one leg per player and at most 3 legs per team unless the user insists. To change a parlay, remove or add legs. Avoid legs flagged BLOWOUT RISK unless the user insists, since starters sit in blowouts. Never promise a win; samples are only 1-3 games, so say so briefly when it matters. Keep the reply under 70 words.\nDATA (best first):\n'+data+'\nCURRENT CART: '+cart+'\nRECENT CHAT:\n'+hist+'\nUSER REQUEST: '+text;
+var reply,sum='';
+try{var res=await AI(prompt,{cache:false}),o=parse(res.text||'');reply=o.reply||'Done.';var a=apply(o.actions);sum=a.join('. ')}
+catch(e){reply=e&&e.code==='not_granted'?'I need permission to run. Reload the page and choose Allow when it asks.':e&&e.code==='rate_limited'?'Too many requests at once. Wait a minute and try again.':'Something went wrong. Try asking again.'}
+S.busy=0;S.chat.push({r:'a',t:reply,a:sum});$('cc').textContent=S.cart.length;msgs()}
+document.addEventListener('click',function(e){
+if(e.target.id==='mdl'){S.pm=null;vP();return}var b=e.target.closest('button');if(!b)return;var d=b.dataset,id=b.id;
+if(d.sf){if(d.sf==='l')S.sl=+d.v;else if(d.sf==='s')S.ss=d.v;else S.mp=+d.v;view();return}
+if(d.sc){S.sc[d.sc]=S.sc[d.sc]?0:1;view();return}
+if(id==='sa'){(S.sres||[]).forEach(addCart);save();S.tab='cart';view();window.scrollTo(0,0);return}
+if(d.p){S.pm={n:d.p,s:'reb'};vP();return}
+if(d.ps){S.pm.s=d.ps;vP();return}
+if(id==='pmx'){S.pm=null;vP();return}
+if(d.pa){addLeg(findP(S.pm.n),S.pm.s,+d.pa);$('cc').textContent=S.cart.length;if(S.tab==='props')plist();b.textContent='Added';return}
+if(d.t){S.tab=d.t;view();window.scrollTo(0,0);return}
+if(d.g){if(S.sel[d.g])delete S.sel[d.g];else S.sel[d.g]=1;view();return}
+if(id==='sg'&&b.textContent==='Select all'){G.forEach(function(g){S.sel[g.i]=1});view();return}
+if(id==='cg'){S.sel={};view();return}
+if(id==='sp'){S.tab='props';view();window.scrollTo(0,0);return}
+if(d.f){S.f=d.f;view();return}
+if(d.k){if(inCart(d.k))S.cart=S.cart.filter(function(c){return c.k!==d.k});else if(M[d.k])addCart(M[d.k]);save();$('cc').textContent=S.cart.length;if(S.tab==='safe')view();else plist();return}
+if(id==='ab5'){var c5=cands().filter(function(x){return S.f==='all'||x.s===S.f});auto(c5,5).forEach(addCart);save();$('cc').textContent=S.cart.length;plist();return}
+if(id==='ab'){S.cart=[];auto(cands(),5).forEach(addCart);save();view();return}
+if(d.c!==undefined){var it=S.cart[+d.c],stp=it.s==='pts'?5:1,dr=+d.d,nb=dr>0?(Math.floor(it.bar/stp)+1)*stp:(Math.ceil(it.bar/stp)-1)*stp;it.bar=Math.max(1,nb);save();view();return}
+if(d.rm!==undefined){S.cart.splice(+d.rm,1);save();view();return}
+if(id==='clr'){S.cart=[];save();view();return}
+if(d.q){ask(d.q);return}
+if(id==='snd'){var qi=$('qi'),t=qi.value;qi.value='';ask(t);return}
+if(id==='ad'){var n=$('an').value.trim();if(!n){alert('Enter a player name.');return}
+var nums=function(i){return $(i).value.split(/[,\s]+/).map(parseFloat).filter(function(x){return !isNaN(x)})},f={pts:nums('ap'),reb:nums('ar'),ast:nums('aa'),tpm:nums('a3')};
+if(!f.pts.length&&!f.reb.length&&!f.ast.length&&!f.tpm.length){alert('Enter at least one stat.');return}
+var p=D.filter(function(x){return norm(x.n)===norm(n)})[0];if(!p){p={n:n,t:'',pts:[],reb:[],ast:[],tpm:[]};D.push(p)}
+var tm=$('at').value.trim();if(tm)p.t=tm.toUpperCase();Object.keys(f).forEach(function(s){if(f[s].length)p[s]=f[s]});
+['an','at','ap','ar','aa','a3'].forEach(function(i){$(i).value=''});save();plist();return}
+if(id==='rd'){if(confirm('Replace your players with the starting data?')){D=SEED.slice();save();plist()}}
+});
+document.addEventListener('input',function(e){var t=e.target;
+if(t.id==='ms'){S.m=+t.value;$('mv').textContent=t.value;plist()}
+else if(t.classList.contains('od')){S.cart[+t.dataset.i].odds=t.value;save();$('sum').innerHTML=payout()}
+else if(t.id==='sk'){S.stake=t.value;$('sum').innerHTML=payout()}
+else if(t.id==='cb'){S.combo=t.value;$('sum').innerHTML=payout()}
+else if(t.id==='mu'){S.mult=t.value;$('sum').innerHTML=payout()}
+else if(t.id==='qs'){S.q=t.value;plist()}
+else if(t.dataset.sp){S.sp[t.dataset.sp]=Math.abs(parseFloat(t.value))||0}
+else if(t.dataset.pb){S.pr[t.dataset.pk+'|'+t.dataset.pb]=t.value;var pp=findP(S.pm.n),vv=pp[S.pm.s]||[];$('vd'+t.dataset.pb).textContent=verdict(vv.filter(function(n){return n>=+t.dataset.pb}).length,vv.length,t.value)}});
+document.addEventListener('change',function(e){var t=e.target;
+if(t.id==='gn'){S.g=+t.value;plist()}
+else if(t.id==='pt'){var pp=PL.filter(function(p){return p[0]===t.value})[0],ot=S.pt;S.pl=pp[0];S.pt=pp[1];if(ot!==S.pt)S.cart.forEach(function(c){c.odds=''});view()}
+else if(t.id==='ph'){onPhoto(t.files&&t.files[0])}});
+document.addEventListener('keydown',function(e){if(e.target.id==='qi'&&e.key==='Enter'){e.preventDefault();var t=e.target.value;e.target.value='';ask(t)}});
+
+var LIVE=null,PID={},LDATE='',DATES=[];
+function banner(){var e=$('lv');if(!e)return;if(!LIVE){e.style.color='var(--mu)';e.textContent='Loading live NBA data...';return}
+if(LIVE.err){e.style.color='var(--bad)';e.textContent='Live NBA data unavailable ('+LIVE.err+'). If the black window is closed, start it again with: python server.py';return}
+if(LIVE.note){e.style.color='var(--pur2)';e.textContent=LIVE.note;return}
+e.style.color='var(--ok)';e.textContent='Live NBA data for '+LIVE.date+': '+LIVE.games+' games, '+LIVE.teams+' teams, '+LIVE.players+' players, '+(LIVE.logs_current_season+LIVE.logs_previous_season)+' game logs ('+LIVE.logs_current_season+' this season, '+LIVE.logs_previous_season+' previous). Updated '+String(LIVE.updated).slice(0,16).replace('T',' ')+'.'}
+function dpSet(v){if(v)loadLive(v)}
+function dpStep(dir){var cur=LDATE,t=null,i;if(!cur)return;
+if(DATES.length){if(dir>0){for(i=0;i<DATES.length;i++)if(DATES[i]>cur){t=DATES[i];break}}else{for(i=DATES.length-1;i>=0;i--)if(DATES[i]<cur){t=DATES[i];break}}}
+else{var d=new Date(cur+'T12:00:00');d.setDate(d.getDate()+dir);t=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+if(t)loadLive(t)}
+function loadLive(date){LIVE=null;banner();fetch('/api/data'+(date?'?date='+encodeURIComponent(date):'')).then(function(r){return r.json()}).then(function(j){
+if(j.error)throw new Error(j.error);
+DATES=j.dates||[];LDATE=j.stats.date;var di=$('dpi');if(di)di.value=LDATE;
+if(!j.games.length){G=[];D=[];WP={};S.sel={};LIVE={note:'No NBA games on '+LDATE+'. Use the arrows to jump to a day with games.'};banner();view();return}
+if(!j.players||!j.players.length)throw new Error('games found but no players returned');
+j.players.forEach(function(p){PID[p.n]=p.id});D=j.players.map(function(p){return{n:p.n,t:p.t,pts:p.pts,reb:p.reb,ast:p.ast,tpm:p.tpm}});
+G=j.games;OPP=j.opp||{};WHY=j.why||{};WP={};S.sel={};G.forEach(function(g){S.sel[g.i]=1});LIVE=j.stats;banner();view()
+}).catch(function(e){LIVE={err:String(e&&e.message||e)};banner()})}
+function localAsk(t){
+var s=norm(t),acts=[],n=5,m=s.match(/(\d+)\s*-?\s*(leg|pick|prop)/)||s.match(/\b(\d{1,2})\b/);if(m&&+m[1]>0&&+m[1]<=20)n=+m[1];
+var cats=[];if(/three|3pt|\b3s\b/.test(s))cats.push('tpm');if(/rebound|board/.test(s))cats.push('reb');if(/assist/.test(s))cats.push('ast');if(/point|pts|scor/.test(s))cats.push('pts');
+var nm=D.filter(function(p){var q=norm(p.n);return s.indexOf(q)>-1||q.split(' ').some(function(w){return w.length>4&&(' '+s+' ').indexOf(' '+w+' ')>-1})}).map(function(p){return p.n});
+var pq=PL.filter(function(p){return s.indexOf(norm(p[0]))>-1})[0];if(pq){S.pl=pq[0];S.pt=pq[1];acts.push('Platform: '+pq[0])}
+var sk=s.match(/(?:stake|bet|wager)\D{0,6}(\d+(?:\.\d+)?)/);if(sk){S.stake=+sk[1];acts.push('Stake: $'+S.stake)}
+var reply='';
+if(/(clear|empty|reset)/.test(s)&&/(cart|parlay)/.test(s)){S.cart=[];reply='Cart cleared.'}
+else if(/(remove|drop|delete|take out)/.test(s)){var b=S.cart.length;
+if(/(riskiest|weakest|worst|least safe)/.test(s)&&b){var w=S.cart.reduce(function(a,x){return est(x)<est(a)?x:a});S.cart=S.cart.filter(function(x){return x!==w});acts.push('Removed '+w.n+' '+w.bar+'+ '+ST[w.s])}
+else if(nm.length)S.cart=S.cart.filter(function(x){return nm.indexOf(x.n)<0});
+else if(cats.length)S.cart=S.cart.filter(function(x){return cats.indexOf(x.s)<0});
+reply=S.cart.length<b?'Done.':'I couldn’t tell which leg to remove. Name a player or a category.'}
+else if(/\b(parlay|build|make|find|give|add|safe|conservative|consistent|legs?|picks?)\b/.test(s)){
+var c=cands().filter(function(x){return (!cats.length||cats.indexOf(x.s)>-1)&&(!nm.length||nm.indexOf(x.n)>-1)&&est(x)>=0.7});
+c.sort(function(a,b){return est(b)-est(a)||b.sc-a.sc});
+var used={},tc={},cap=Math.max(3,Math.ceil(n/4)),k=0;S.cart.forEach(function(x){used[x.n]=1});
+c.forEach(function(x){if(k>=n||used[x.n]||(tc[x.t]||0)>=cap)return;used[x.n]=1;tc[x.t]=(tc[x.t]||0)+1;if(!inCart(x.key)){addCart(x);k++;acts.push('Added '+x.n+' '+x.thr+'+ '+ST[x.s]+' (est. '+Math.round(est(x)*100)+'%)')}});
+reply=k?'Added '+k+' leg'+(k>1?'s':'')+(k<n?'. Only '+k+' qualified at 70%+, so that’s all I added':'')+'. Estimates come from each player’s logged games, not market prices, and none are guaranteed.':'Nothing qualifies at 70%+ for that request with the games logged. I won’t pad the cart.'}
+else reply=acts.length?'Done.':'Try: “5-leg parlay with rebounds and threes”, “remove the riskiest leg”, “stake 10 on Kalshi”.';
+save();return{reply:reply,a:acts.join('. ')}}
+
+view();loadLive();
+(async function(){try{if(window.claude&&claude.use)AI=await claude.use('sample')}catch(e){AI=null}if(S.tab==='ai')view()})();
+</script>
+</body>
+</html>

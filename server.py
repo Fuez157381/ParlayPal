@@ -21,7 +21,9 @@ from zoneinfo import ZoneInfo
 from flask import Flask, jsonify, request, send_file
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DB = os.path.join(HERE, "cache.sqlite")
+HOSTED = bool(os.environ.get("PORT") or os.environ.get("VERCEL"))
+# Vercel's disk is read-only except /tmp
+DB = "/tmp/cache.sqlite" if os.environ.get("VERCEL") else os.path.join(HERE, "cache.sqlite")
 OLD_PAGE = os.path.join(HERE, "propcart_live.html")
 PAGE = os.path.join(HERE, "parlaypal.html")
 TTL_SCOREBOARD = 10 * 60        # seconds
@@ -349,7 +351,7 @@ def api_data():
     date = request.args.get("date", "").strip()
     if date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
         return cors(jsonify({"error": "date must look like 2026-11-02"})), 400
-    if os.environ.get("PORT"):  # hosted: use today's saved copy right away instead of waiting on a blocked NBA
+    if HOSTED:  # hosted: use today's saved copy right away instead of waiting on a blocked NBA
         snap = load_snapshot(date)
         today = dt.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
         if snap and snap.get("stats", {}).get("today") == today:

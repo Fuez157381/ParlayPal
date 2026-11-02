@@ -1,0 +1,13 @@
+odds_key.txt
+anthropic_key.txt
+anthropic_model.txt
+*.db
+*.sqlite
+feedback.jsonl
+lines_cache.json
+__pycache__/
+BACKUP*/
+*.bak
+PARLAY-PAL-HANDOFF.md
+PHONE-LINK.bat
+*-SETUP.txt
