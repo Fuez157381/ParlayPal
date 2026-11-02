@@ -224,6 +224,7 @@ def parse_logs(raw):
             "gid": r[h["GAME_ID"]], "date": r[h["GAME_DATE"]], "min": mins,
             "pts": r[h["PTS"]], "reb": r[h["REB"]], "ast": r[h["AST"]],
             "tpm": r[h["FG3M"]], "tpa": r[h["FG3A"]],
+            "mu": r[h["MATCHUP"]] if "MATCHUP" in h else "",
         })
     return out
 
@@ -300,7 +301,8 @@ def build(date_str=None):
         players.append({"id": pid, "n": rows[0]["name"], "t": team, "ncur": len(series),
                         "pts": [r["pts"] for r in allg], "reb": [r["reb"] for r in allg],
                         "ast": [r["ast"] for r in allg], "tpm": [r["tpm"] for r in allg],
-                        "min": [r["min"] for r in allg], "dates": [r["date"] for r in allg]})
+                        "min": [r["min"] for r in allg], "dates": [r["date"] for r in allg],
+                        "mu": [r.get("mu", "") for r in allg]})
     try:
         inj_map, inj_src = cached("injuries", TTL_INJ, fetch_injuries)
     except Exception as e:
@@ -347,6 +349,11 @@ def api_data():
     date = request.args.get("date", "").strip()
     if date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
         return cors(jsonify({"error": "date must look like 2026-11-02"})), 400
+    if os.environ.get("PORT"):  # hosted: use today's saved copy right away instead of waiting on a blocked NBA
+        snap = load_snapshot(date)
+        today = dt.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+        if snap and snap.get("stats", {}).get("today") == today:
+            return cors(jsonify(snap))
     try:
         return cors(jsonify(build(date or None)))
     except Exception as e:
@@ -359,7 +366,7 @@ def api_data():
 
 def load_snapshot(date):
     d = os.path.join(HERE, "snapshots")
-    for name in ([f"{date}.json"] if date else []) + ["latest.json"]:
+    for name in ([f"{date}.json"] if date else ["latest.json"]):
         p = os.path.join(d, name)
         if os.path.exists(p):
             try:
@@ -418,6 +425,25 @@ def api_ask():
         return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), body.get("context") or {})))
     except Exception as e:
         return cors(jsonify({"configured": bool(ask.api_key()), "error": f"{type(e).__name__}: {e}"})), 502
+
+
+@app.route("/api/polymarket/probe")
+def api_polymarket_probe():
+    import polymarket
+    try:
+        return cors(jsonify(polymarket.probe()))
+    except Exception as e:
+        return cors(jsonify({"error": f"{type(e).__name__}: {e}"})), 502
+
+
+@app.route("/api/live", methods=["POST"])
+def api_live():
+    import live
+    body = request.get_json(silent=True) or {}
+    try:
+        return cors(jsonify({"games": live.many([str(g) for g in (body.get("gids") or [])])}))
+    except Exception as e:
+        return cors(jsonify({"error": f"{type(e).__name__}: {e}"})), 502
 
 
 @app.route("/api/odds/status")
