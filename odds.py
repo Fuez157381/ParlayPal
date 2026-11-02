@@ -12,8 +12,8 @@ import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE = os.environ.get("ODDS_BASE", "https://api.the-odds-api.com")
-REGIONS = "us,us2,us_ex,us_dfs"          # sportsbooks, more sportsbooks, exchanges, pick'em apps
-TTL = 5 * 60                               # seconds an event's odds are reused (saves your free credits)
+REGIONS = "us,us_dfs"                     # sportsbooks + pick'em apps (each region multiplies the credit cost)
+TTL = 2 * 3600                             # seconds an event's odds are reused (makes the free 500 credits last)
 
 NAMES = {
     "ATL": "Atlanta Hawks", "BOS": "Boston Celtics", "BKN": "Brooklyn Nets", "CHA": "Charlotte Hornets",
@@ -117,12 +117,49 @@ def leg_price(event_json, leg):
 
 
 def compare(legs):
-    key = api_key()
-    if not key:
-        return {"configured": False}
+    """Prices from every free source we have, merged per book: SportsGameOdds (free plan, 9 sportsbooks),
+    The Odds API (only while its credits last), and Kalshi (always free). A book's price for a leg comes
+    from the first source that has it."""
     legs = [l for l in legs if l.get("s") in MARKET and l.get("bar") and l.get("n") and l.get("t") and l.get("opp")][:20]
     if not legs:
         return {"configured": True, "books": [], "notes": ["Add legs to see prices."]}
+    import kalshi
+    import sgo
+    per_leg = [{} for _ in legs]
+    notes, used, remaining = [], [], None
+
+    def merge(rows, name):
+        if any(rows):
+            used.append(name)
+        for d, r in zip(per_leg, rows):
+            for k, v in r.items():
+                d.setdefault(k, v)
+
+    if sgo.api_key():
+        try:
+            merge(sgo.leg_prices(legs), "SportsGameOdds")
+        except Exception as e:
+            notes.append(f"SportsGameOdds didn't answer ({type(e).__name__}).")
+    if api_key():
+        try:
+            rows, _, remaining = _oddsapi_prices(api_key(), legs)
+            merge(rows, "The Odds API")
+        except Exception:
+            pass   # usually out of credits: the other sources still work
+    try:
+        rows = [{"kalshi": ("Kalshi", r["american"])} if r.get("found") and r.get("american") is not None else {}
+                for r in kalshi.match(legs)]
+        merge(rows, "Kalshi")
+    except Exception as e:
+        notes.append(f"Kalshi didn't answer ({type(e).__name__}).")
+    books = _books(legs, per_leg)
+    if used:
+        notes.append("Prices from " + ", ".join(used) + "." + (" Sportsbook prices can be a few minutes old, so check the app before you bet." if "SportsGameOdds" in used else ""))
+    notes.append("Parlay price is each leg's listed price multiplied together. A book's own slip can price a parlay differently, and some books limit same-game parlays.")
+    return {"configured": True, "updated": time.strftime("%H:%M"), "books": books, "notes": notes, "creditsLeft": remaining}
+
+
+def _oddsapi_prices(key, legs):
     events = _events_list(key)
     by_teams = {frozenset((e["home_team"], e["away_team"])): e for e in events}
     notes, remaining = [], None
@@ -144,6 +181,10 @@ def compare(legs):
             ev_cache[ev["id"]] = data
             remaining = rem or remaining
         per_leg.append(leg_price(ev_cache[ev["id"]], l))
+    return per_leg, notes, remaining
+
+
+def _books(legs, per_leg):
     titles = {}
     for d in per_leg:
         for k, (t, _) in d.items():
@@ -162,8 +203,7 @@ def compare(legs):
             row["american"] = to_american(dec)
         books.append(row)
     books.sort(key=lambda b: (b["american"] is None, -(b.get("decimal") or 0), -b["legsOffered"], b["title"]))
-    notes.append("Parlay price is each leg's listed price multiplied together. A book's own slip can price a parlay differently, and some books limit same-game parlays.")
-    return {"configured": True, "updated": time.strftime("%H:%M:%S"), "books": books, "notes": notes, "creditsLeft": remaining}
+    return books
 
 
 # ---------------------------------------------------------------------------------------------

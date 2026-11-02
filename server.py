@@ -412,11 +412,29 @@ def api_kalshi():
 @app.route("/api/lines", methods=["POST"])
 def api_lines():
     import kalshi   # free: Kalshi market data needs no key and uses no Odds API credits
+    import sgo      # free plan: reuses the saved SportsGameOdds data, costs nothing extra
     body = request.get_json(silent=True) or {}
+    games = body.get("games") or []
+    out, errs = None, []
     try:
-        return cors(jsonify(kalshi.lines(body.get("games") or [])))
+        out = kalshi.lines(games)
     except Exception as e:
-        return cors(jsonify({"configured": True, "error": f"{type(e).__name__}: {e}"})), 502
+        errs.append(f"Kalshi: {type(e).__name__}: {e}")
+    if sgo.api_key():
+        try:
+            more = sgo.lines(games)
+            if out is None:
+                out = {"configured": True, "updated": time.strftime("%H:%M"), "players": {}, "posted": {}, "creditsLeft": None}
+            for k, bars in more["players"].items():
+                out["players"][k] = sorted(set(out["players"].get(k, [])) | bars)
+            for t, ok in more["posted"].items():
+                out["posted"][t] = bool(out["posted"].get(t)) or ok
+            out["source"] = "Kalshi + sportsbooks" if not errs else "sportsbooks"
+        except Exception as e:
+            errs.append(f"SportsGameOdds: {type(e).__name__}: {e}")
+    if out is None:
+        return cors(jsonify({"configured": True, "error": "; ".join(errs)})), 502
+    return cors(jsonify(out))
 
 
 @app.route("/api/ask", methods=["POST"])
@@ -451,7 +469,8 @@ def api_live():
 @app.route("/api/odds/status")
 def api_odds_status():
     import odds
-    return cors(jsonify(odds.status()))
+    import sgo
+    return cors(jsonify(dict(odds.status(), sportsgameodds=sgo.status())))
 
 
 @app.route("/api/odds", methods=["POST"])
