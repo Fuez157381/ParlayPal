@@ -1206,8 +1206,8 @@ html[data-clash] .btn:not(.ghost):not(.wht),html[data-clash] .add.on,html[data-c
 .lkwheel{position:relative;width:min(320px,78vw);aspect-ratio:1;margin:8px auto 12px}
 .lkwheel svg{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 30px rgba(0,0,0,.5))}
 .lkptr{position:absolute;left:50%;top:-8px;z-index:2;transform:translateX(-50%);width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:24px solid var(--ink);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-.lkhub{position:absolute;left:50%;top:50%;z-index:2;transform:translate(-50%,-50%);width:78px;height:78px;padding:0;border-radius:50%;border:4px solid var(--card);background:var(--ink);color:var(--blk);font-weight:800;font-size:15px;letter-spacing:.06em;box-shadow:0 6px 18px rgba(0,0,0,.45);transition:transform .15s}
-.lkhub:not(:disabled):hover{transform:translate(-50%,-50%) scale(1.06)}.lkhub:disabled{opacity:.55;cursor:default}
+.lkhub{position:absolute;left:calc(50% - 39px);top:calc(50% - 39px);z-index:2;width:78px;height:78px;padding:0;border-radius:50%;border:4px solid var(--card);background:var(--ink);color:var(--blk);font-weight:800;font-size:15px;letter-spacing:.06em;box-shadow:0 6px 18px rgba(0,0,0,.45);transition:transform .15s}
+.lkhub:not(:disabled):hover{transform:scale(1.06)}.lkhub:disabled{opacity:.55;cursor:default}
 .lksp{text-align:center;color:var(--mu);font-size:13.5px;margin:0 0 10px}.lksp .lnk{font-size:13.5px}
 .lkodds{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.lkodds span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--card2);border:1px solid var(--line)}.lkodds i{width:8px;height:8px;border-radius:50%;background:var(--rc)}
 .lkfine{margin:12px 0 0;text-align:center;font-size:12px;color:var(--mu2,var(--mu))}
@@ -1366,8 +1366,11 @@ function dayList(){var base=TODAY||DAY;if(!base)return[];var ds=DATES.filter(fun
 function fmtDate(d){var p=String(d).split('-');return p.length===3?(+p[1])+'/'+(+p[2]):String(d)}
 
 /* ---------- data ---------- */
-var DAYWANT=null,DAYC={},DAYTOK=0,DAYT=0,DAYLATE=0;
-function dayApply(j){ERR=null;EX={st:0,list:[]};DATES=j.dates||[];STATS=j.stats;DAY=STATS.date;TODAY=STATS.today||TODAY||DAY;
+var DAYWANT=null,DAYC={},DAYTOK=0,DAYT=0,DAYLATE=0,AUTODAY=0;
+function dayApply(j){
+  /* first load on a day with no games (an off night): jump straight to the next day that has games, so the board is never empty */
+  if(!AUTODAY){AUTODAY=1;var st=j.stats||{},nx=(j.dates||[]).filter(function(d){return d>(st.date||'')})[0];if(!(j.games||[]).length&&st.date===st.today&&nx){TODAY=st.today;loadDay(nx);return}}
+ERR=null;EX={st:0,list:[]};DATES=j.dates||[];STATS=j.stats;DAY=STATS.date;TODAY=STATS.today||TODAY||DAY;
   D=j.players||[];G=j.games||[];OPP=j.opp||{};WHY=j.why||{};NET=j.net||{};F.game=0;F.lim=24;F.pg=0;LOADING=false;DAYWANT=null;
   if(V==='picks'){renderDays();renderData();renderGames();renderCats();renderProps();rowArrows();clearTimeout(DAYLATE);DAYLATE=setTimeout(function(){renderHome();renderShow();renderPhone();renderChat();renderSlip();renderAcct()},60)}
   else renderAll();linesLoad()}
@@ -2148,7 +2151,7 @@ function streakHtml(){var pr=streakPairs();SKP=pr;if(!pr.length)return'<div clas
       '<div class="skb"><button class="skadd" data-act="addall" data-keys="'+esc(a.key)+','+esc(b.key)+'">+ Add to parlay</button><span class="skpb" data-i="'+qi+'">'+v.btn+'</span></div></div>'}).join('');
   return'<div class="hsec" id="sec-streak"><h2>Streaking parlays</h2><p class="sub">Two players who keep clearing realistic lines. Hit counts come from their last 10 games. Prices come from live odds and are shown only when an app really lists both legs.</p><div class="hrow">'+cards+'</div></div>'}
 function gameStrip(){if(!G.length)return'';var dl=dayLabel(DAY);
-  return'<div class="gstrip" aria-label="Games"><div class="sech">'+sico('pts',22)+'<h2>'+(dl==='Today'?'Today\'s':esc(dl))+' Matchups</h2><span>'+G.length+' game'+(G.length===1?'':'s')+'</span></div><div class="mgrid">'+G.slice().sort(function(x,y){var f=S.acct&&S.acct.team;return f?((y.a===f||y.h===f)?1:0)-((x.a===f||x.h===f)?1:0):0}).map(function(g){var A=NET[g.a],B=NET[g.h],m=(A&&B&&A.g>=3&&B.g>=3)?'<span class="mgn">Avg margin '+esc(g.a)+' '+fmtM(A.m)+' · '+esc(g.h)+' '+fmtM(B.m)+'</span>':'';
+  return'<div class="gstrip" aria-label="Games"><div class="sech">'+sico('pts',22)+'<h2>'+(dl==='Today'||dl==='Tomorrow'?dl+'\'s':esc(dl))+' Matchups</h2><span>'+G.length+' game'+(G.length===1?'':'s')+'</span></div><div class="mgrid">'+G.slice().sort(function(x,y){var f=S.acct&&S.acct.team;return f?((y.a===f||y.h===f)?1:0)-((x.a===f||x.h===f)?1:0):0}).map(function(g){var A=NET[g.a],B=NET[g.h],m=(A&&B&&A.g>=3&&B.g>=3)?'<span class="mgn">Avg margin '+esc(g.a)+' '+fmtM(A.m)+' · '+esc(g.h)+' '+fmtM(B.m)+'</span>':'';
     return'<button class="mcard" data-act="gogame" data-i="'+g.i+'" aria-label="'+esc(tname(g.a))+' at '+esc(tname(g.h))+', '+esc(g.t)+'" style="--ca:'+(TCOL[g.a]||'#555')+';--ch:'+(TCOL[g.h]||'#555')+'"><span class="mblur" aria-hidden="true"><i></i><i></i></span>'+
       '<span class="mtm">'+tlogo(g.a,'xl')+'<b>'+esc(g.a)+'</b></span><span class="mtime"><small>'+esc(dl)+'</small><small>'+esc(g.t)+'</small></span><span class="mtm">'+tlogo(g.h,'xl')+'<b>'+esc(g.h)+'</b></span>'+m+'</button>'}).join('')+'</div></div>'}
 function injHtml(){var tm={};G.forEach(function(g){tm[g.a]=1;tm[g.h]=1});
