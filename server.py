@@ -358,6 +358,10 @@ def api_data():
         today = dt.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
         if snap and snap.get("stats", {}).get("today") == today:
             return cors(jsonify(snap))
+        if os.environ.get("VERCEL"):  # the NBA blocks Vercel, so a live call only hangs until the 60 s limit
+            if snap:
+                return cors(jsonify(snap))  # an older saved copy beats endless loading
+            return cors(jsonify({"error": "This day's data hasn't been saved yet. It refreshes overnight, so check back soon."})), 503
     try:
         return cors(jsonify(build(date or None)))
     except Exception as e:
