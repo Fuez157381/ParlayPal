@@ -1434,7 +1434,7 @@ function weakWhy(ws){var a=ws.a,t='Estimated '+Math.round(a.p*100)+'% to hit. Cl
 
 /* ---------- rendering pieces ---------- */
 function av(name,id,cls){var w=String(name).split(' ').filter(Boolean),ini=((w[0]||'')[0]||'')+(w.length>1?w[w.length-1][0]:'');
-  return'<span class="av '+(cls||'')+'">'+esc(ini.toUpperCase())+(id?'<img alt="" loading="lazy" src="https://cdn.nba.com/headshots/nba/latest/260x190/'+id+'.png" onerror="this.remove()">':'')+'</span>'}
+  return'<span class="av '+(cls||'')+'">'+esc(ini.toUpperCase())+(id?'<img alt="" loading="lazy" src="https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/'+id+'.png&amp;w=260&amp;h=190" onerror="this.remove()">':'')+'</span>'}
 function bars(vals,dates,ncur,line){
   var n=vals.length,vs=vals.slice().reverse(),ds=(dates||[]).slice().reverse(),prev=n-ncur;
   var mx=Math.max.apply(null,vs.concat([line||0,1]))*1.12;

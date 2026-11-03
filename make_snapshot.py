@@ -1,6 +1,6 @@
 """Saves a copy of the NBA data so the online site still works if the host cannot reach the NBA.
 Run on your PC:  python make_snapshot.py   then upload the snapshots folder to GitHub.
-(refresh-data.ps1 does both, and Windows runs it every night.)"""
+(GitHub runs this every day: .github/workflows/refresh-data.yml.)"""
 import json, os
 import server
 

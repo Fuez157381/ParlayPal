@@ -1,4 +1,4 @@
-"""Live and final box scores for tracked parlays (NBA's own live data, free)."""
+"""Live and final box scores for tracked parlays, from ESPN (free, and it works from cloud servers)."""
 import time
 
 _cache = {}
@@ -9,15 +9,8 @@ def box(gid):
     c = _cache.get(gid)
     if c and now - c[0] < (300 if c[1].get("status") == 3 else 20):
         return c[1]
-    from nba_api.live.nba.endpoints import boxscore
-    g = boxscore.BoxScore(game_id=gid, timeout=20).get_dict()["game"]
-    out = {"status": g.get("gameStatus"), "text": str(g.get("gameStatusText", "")).strip(), "players": {}}
-    for side in ("homeTeam", "awayTeam"):
-        for p in g.get(side, {}).get("players", []):
-            s = p.get("statistics", {}) or {}
-            out["players"][str(p.get("personId"))] = {
-                "pts": s.get("points", 0), "reb": s.get("reboundsTotal", 0), "ast": s.get("assists", 0),
-                "tpm": s.get("threePointersMade", 0), "min": s.get("minutes", ""), "played": str(p.get("played", "")) == "1"}
+    import espn
+    out = espn.box(gid)
     _cache[gid] = (now, out)
     return out
 

@@ -4,9 +4,9 @@ Setup:   pip install -r requirements.txt
 Check:   python server.py --check     (prints games / teams / players / game logs loaded)
 Run:     python server.py             (then open http://localhost:8000)
 
-Data comes only from the free nba_api library (NBA's own endpoints). Nothing is made up:
-if the NBA endpoints can't be reached you get an error, never sample numbers.
-Responses are cached in cache.sqlite so repeat loads don't hit the NBA servers.
+Data comes from ESPN's free public NBA API (espn.py): schedule, game logs, injuries and live box scores.
+The NBA's own sites block cloud servers, ESPN doesn't. Nothing is made up: if ESPN can't be reached
+you get an error, never sample numbers. Responses are cached in cache.sqlite so repeat loads are quick.
 """
 import json
 import os
@@ -29,7 +29,6 @@ PAGE = os.path.join(HERE, "parlaypal.html")
 TTL_SCOREBOARD = 10 * 60        # seconds
 TTL_LOGS = 6 * 60 * 60
 TTL_SCHEDULE = 3 * 60 * 60
-SCHEDULE_URL = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"
 ESPN_INJ = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
 TTL_INJ = 20 * 60               # injury report refreshed every 20 minutes
 MAX_GAMES = 20                  # per player, newest first (previous season fills gaps)
@@ -42,7 +41,7 @@ app.register_blueprint(auth.bp, url_prefix="/api/auth")
 # ---------- cache ----------
 def cached(key, ttl, fn):
     """Return (data, source) where source is 'cache', 'live' or 'stale-cache'."""
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect(DB, timeout=60)  # several downloads can save at once; wait instead of failing
     con.execute("create table if not exists cache(k text primary key, ts real, body text)")
     row = con.execute("select ts, body from cache where k=?", (key,)).fetchone()
     if row and time.time() - row[0] < ttl:
@@ -61,44 +60,11 @@ def cached(key, ttl, fn):
     return data, "live"
 
 
-# ---------- nba_api fetchers ----------
-def fetch_scoreboard():
-    from nba_api.live.nba.endpoints import scoreboard
-    return scoreboard.ScoreBoard(timeout=30).get_dict()["scoreboard"]
-
-
-def fetch_logs(season):
-    from nba_api.stats.endpoints import leaguegamelog
-    rs = leaguegamelog.LeagueGameLog(
-        season=season, player_or_team_abbreviation="P",
-        season_type_all_star="Regular Season", timeout=90,
-    ).get_dict()["resultSets"][0]
-    return {"headers": rs["headers"], "rows": rs["rowSet"]}
-
-
 BROWSER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Accept": "application/json, text/plain, */*", "Accept-Language": "en-US,en;q=0.9",
     "Origin": "https://www.nba.com", "Referer": "https://www.nba.com/", "Connection": "keep-alive",
 }
-
-
-def parse_schedule(js):
-    """Reduce the NBA schedule JSON to {YYYY-MM-DD: [games]}."""
-    out = {}
-    for d in js["leagueSchedule"]["gameDates"]:
-        m, dd, y = d["gameDate"].split(" ")[0].split("/")
-        rows = []
-        for g in d["games"]:
-            a, h = g["awayTeam"].get("teamTricode"), g["homeTeam"].get("teamTricode")
-            if a and h:
-                rows.append({"id": g["gameId"], "a": a, "h": h, "utc": g.get("gameDateTimeUTC") or "",
-                             "status": g.get("gameStatusText") or ""})
-        if rows:
-            out[f"{y}-{m}-{dd}"] = rows
-    if not out:
-        raise ValueError("schedule came back empty")
-    return out
 
 
 def norm_name(s):
@@ -137,61 +103,17 @@ def fetch_injuries():
     return out
 
 
-def fetch_schedule():
-    """The NBA's full season schedule. Tries the NBA's schedule file, then nba_api's own schedule endpoint."""
-    errs = []
-    try:
-        import requests
-        r = requests.get(SCHEDULE_URL, timeout=30, headers=BROWSER_HEADERS)
-        r.raise_for_status()
-        return parse_schedule(r.json())
-    except Exception as e:
-        errs.append(f"schedule file: {type(e).__name__}: {e}")
-    try:
-        from nba_api.stats.endpoints import scheduleleaguev2
-        return parse_schedule(scheduleleaguev2.ScheduleLeagueV2(season=season_str(0), timeout=60).get_dict())
-    except Exception as e:
-        errs.append(f"nba_api schedule: {type(e).__name__}: {e}")
-    raise RuntimeError(" | ".join(errs))
-
-
-def fetch_day(date_str):
-    """Last resort: the NBA's scoreboard for one specific date."""
-    from nba_api.stats.endpoints import scoreboardv2
-    y, m, d = date_str.split("-")
-    sets = {r["name"]: r for r in scoreboardv2.ScoreboardV2(game_date=f"{m}/{d}/{y}", timeout=30).get_dict()["resultSets"]}
-    gh, ls = sets["GameHeader"], sets["LineScore"]
-    gi = {n: i for i, n in enumerate(gh["headers"])}
-    li = {n: i for i, n in enumerate(ls["headers"])}
-    abbr = {r[li["TEAM_ID"]]: r[li["TEAM_ABBREVIATION"]] for r in ls["rowSet"]}
-    out = []
-    for r in gh["rowSet"]:
-        h, a = abbr.get(r[gi["HOME_TEAM_ID"]]), abbr.get(r[gi["VISITOR_TEAM_ID"]])
-        if h and a:
-            out.append({"id": r[gi["GAME_ID"]], "a": a, "h": h, "utc": "", "status": r[gi["GAME_STATUS_TEXT"]] or ""})
-    return out
-
-
 def games_for(date_str):
     """Games on one date (YYYY-MM-DD, Eastern). No date = today. Returns (games, dates_with_games, date_str, source)."""
     et = ZoneInfo("America/New_York")
     today = dt.datetime.now(et).strftime("%Y-%m-%d")
     date_str = date_str or today
-    rows, dates, src = None, [], None
-    try:
-        sched, src = cached("schedule", TTL_SCHEDULE, fetch_schedule)
-        rows, dates = sched.get(date_str, []), sorted(sched)
-    except Exception as e1:
-        try:
-            rows, src = cached(f"day:{date_str}", TTL_SCOREBOARD if date_str == today else TTL_SCHEDULE,
-                               lambda: fetch_day(date_str))
-        except Exception as e2:
-            if date_str != today:
-                raise RuntimeError(f"{e1} | day lookup: {type(e2).__name__}: {e2}")
-    if rows is None:  # schedule unreachable: fall back to the live scoreboard (today only)
-        sb, src = cached("scoreboard", TTL_SCOREBOARD, fetch_scoreboard)
-        rows = [{"id": g["gameId"], "a": g["awayTeam"]["teamTricode"], "h": g["homeTeam"]["teamTricode"],
-                 "utc": g["gameTimeUTC"], "status": ""} for g in sb["games"]]
+    import espn
+    start = int(season_str(0)[:4])
+    # today's games change status during the night, so today's schedule is refreshed more often
+    sched, src = cached(f"espn:schedule:{start}", TTL_SCOREBOARD if date_str == today else TTL_SCHEDULE,
+                        lambda: espn.fetch_schedule(start))
+    rows, dates = sched.get(date_str, []), sorted(sched)
     games = []
     for i, g in enumerate(rows, 1):
         try:
@@ -216,23 +138,6 @@ def season_str(offset=0):
 
 
 # ---------- transform ----------
-def parse_logs(raw):
-    h = {name: i for i, name in enumerate(raw["headers"])}
-    out = []
-    for r in raw["rows"]:
-        mins = r[h["MIN"]]
-        if not mins:           # did not play: never treated as a zero-stat game
-            continue
-        out.append({
-            "pid": r[h["PLAYER_ID"]], "name": r[h["PLAYER_NAME"]], "team": r[h["TEAM_ABBREVIATION"]],
-            "gid": r[h["GAME_ID"]], "date": r[h["GAME_DATE"]], "min": mins,
-            "pts": r[h["PTS"]], "reb": r[h["REB"]], "ast": r[h["AST"]],
-            "tpm": r[h["FG3M"]], "tpa": r[h["FG3A"]],
-            "mu": r[h["MATCHUP"]] if "MATCHUP" in h else "",
-        })
-    return out
-
-
 def opponent_factors(cur):
     """How much each team allows vs the league average, from real game totals this season."""
     tot = {}
@@ -275,13 +180,14 @@ def build(date_str=None):
     games, dates, date_str, sb_src = games_for(date_str)
     teams = {t for g in games for t in (g["a"], g["h"])}
 
-    cur_raw, cur_src = cached("logs:" + season_str(0), TTL_LOGS, lambda: fetch_logs(season_str(0)))
-    try:
-        prev_raw, prev_src = cached("logs:" + season_str(1), 24 * TTL_LOGS, lambda: fetch_logs(season_str(1)))
-    except Exception:
-        prev_raw, prev_src = None, "unavailable"
-    cur = parse_logs(cur_raw)
-    prev = parse_logs(prev_raw) if prev_raw else []
+    import espn
+    year = int(season_str(0)[:4]) + 1          # ESPN names a season by the year it ends: 2026-27 is 2027
+    roster, _ = cached("espn:rosters", TTL_LOGS, espn.fetch_rosters)
+    cur = espn.all_logs(roster, year, cached, TTL_LOGS)
+    prev = espn.all_logs(roster, year - 1, cached, 30 * 24 * 3600)   # last season never changes
+    cur_src = prev_src = "espn"
+    if not cur:
+        raise RuntimeError("ESPN returned no game logs for this season")
 
     def by_player(rows):
         d = {}
@@ -294,7 +200,7 @@ def build(date_str=None):
     cp, pp = by_player(cur), by_player(prev)
     players, cur_logs, prev_logs = [], 0, 0
     for pid, rows in cp.items():
-        team = rows[0]["team"]                      # most recent team this season
+        team = (roster.get(str(pid)) or {}).get("t") or rows[0]["team"]   # current roster team (handles trades)
         if team not in teams:
             continue
         series = rows[:MAX_GAMES]

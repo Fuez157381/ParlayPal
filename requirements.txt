@@ -1,4 +1,3 @@
-nba_api
 flask
 requests
 gunicorn
