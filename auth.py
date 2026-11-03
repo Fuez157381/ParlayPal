@@ -45,7 +45,14 @@ class StorageOff(Exception):
 
 def pg_url():
     """A Postgres database (Neon, added in Vercel's Storage tab) keeps accounts on hosts that wipe their disks."""
-    return (os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or "").strip()
+    for k in ("DATABASE_URL", "POSTGRES_URL"):
+        if os.environ.get(k):
+            return os.environ[k].strip()
+    # Vercel can add a name in front, like STORAGE_DATABASE_URL
+    for k, v in sorted(os.environ.items()):
+        if v and (k.endswith("_DATABASE_URL") or k.endswith("_POSTGRES_URL")) and "UNPOOLED" not in k:
+            return v.strip()
+    return ""
 
 
 class _Rows:
