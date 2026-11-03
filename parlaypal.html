@@ -1189,6 +1189,15 @@ html[data-clash] .btn:not(.ghost):not(.wht),html[data-clash] .add.on,html[data-c
 .amenu .ntm{flex:1;min-width:0;padding:9px 4px 9px 20px;background:none;border-radius:7px}.amenu .ntm:hover{background:none}
 .nta{display:flex;flex:none;gap:1px;padding:6px 5px 0 0;opacity:0;transition:opacity .12s ease}.nti:hover .nta,.nti:focus-within .nta{opacity:1}@media (hover:none){.nta{opacity:1}}
 .amenu .nta button{display:grid;place-items:center;width:26px;height:26px;padding:0;border-radius:6px;color:var(--mu)}.amenu .nta button:hover{background:var(--line2);color:var(--ink)}
+/* v27 motion: bars grow from the floor, the line sweeps from the left, a soft light follows the mouse on cards */
+.chart .b{transform-origin:50% 100%}.chart .tl{transform-origin:0 50%}
+.hcard{position:relative}
+@media (hover:hover) and (pointer:fine){
+  .mcard::after,.hcard::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .25s ease;background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--pal) 16%,transparent),transparent 70%)}
+  .mcard:hover::after,.hcard:hover::after{opacity:1}
+  .mblur i{transition:opacity .3s ease}.mcard:hover .mblur i{opacity:.3}
+}
+html.calm .mcard::after,html.calm .hcard::after{display:none}
 html.calm *,html.calm *::before,html.calm *::after{animation:none!important;transition:none!important}
 </style>
 </head>
@@ -1281,7 +1290,7 @@ do{i=Math.floor(Math.random()*H.length)}while(i===last);try{sessionStorage.setIt
 <div class="popov" id="pop" hidden role="dialog" aria-modal="true"><div class="popbox" id="popbox"></div></div>
 
 <script>
-try{if(localStorage.getItem('pp_calm')==='1')document.documentElement.classList.add('calm')}catch(e){}
+try{var pc=localStorage.getItem('pp_calm');if(pc==='1'||(pc===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('calm')}catch(e){} /* the phone's "reduce motion" setting turns animations off until the visitor chooses */
 (function(){
 'use strict';
 var $=function(id){return document.getElementById(id)};
@@ -2024,6 +2033,7 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   el.innerHTML=h;if(WS===1)renderPhone()}
 function blocked(add){
   if(S.acct){if(trialLeft()<=0&&BILLING_LIVE){openWel(4);return true}return false}
+  if(ACCT_OFF)return false;
   if(S.gUsed&&(!add||S.cart.length===0)){openWel(3,true);return true}return false}
 
 
@@ -2228,7 +2238,7 @@ setInterval(palIdle,26000);
   function wig(c){var b=document.getElementById('pal');if(!b||!PP.hidden)return;b.classList.add(c);setTimeout(function(){b.classList.remove(c)},c==='hi'?2600:850)}
   setInterval(function(){wig(Math.random()<.5?'hi':'wig')},14000);
   var last=0;setInterval(function(){var n=(S.cart||[]).length;if(n!==last){last=n;document.querySelectorAll('.cart-n,#cartN,.fcart b,.fcart .n,.cnt').forEach(function(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')})}},250);
-  function grow(){document.querySelectorAll('[class*="bar"] > i,[class*="bar"] > span').forEach(function(e){if(e.dataset.g)return;e.dataset.g=1;e.style.transformOrigin='left';e.style.animation='pmline .9s cubic-bezier(.2,.8,.2,1) both'})}
+  function grow(){if(mvOff())return;document.querySelectorAll('#trk .xtbar > i').forEach(function(e){if(e.dataset.g)return;e.dataset.g=1;e.style.transformOrigin='left';e.style.animation='pmline .9s cubic-bezier(.2,.8,.2,1) both'})}
   new MutationObserver(grow).observe(document.body,{childList:true,subtree:true});
 })();
 
@@ -2286,7 +2296,7 @@ function trkCard(t){var i=TRK.indexOf(t),badge=t.res==='hit'?'<span class="xtb h
       '<div class="xtf"><small>'+hits+' of '+t.legs.length+' legs hit so far</small>'+(t.sample?'':'<button class="lnk" data-act="trkrm" data-i="'+i+'">Remove</button>')+'</div></div>'}
 function trackInner(){if(TSAMPLE)return trkCard(TSAMPLE);var act=TRK.filter(function(t){return!t.done}),done=TRK.filter(function(t){return t.done});act.sort(function(a,b){return(b.live?1:0)-(a.live?1:0)});
   return(act.length?act.map(trkCard).join('')+'<button class="lnk trkr" data-act="trkref">Refresh now</button>':'<div class="trke"><b>No active parlays</b><span>Submit a parlay and it\'ll show up here with live stats.</span></div>')+(done.length?'<h3>Finished</h3>'+done.slice(0,8).map(trkCard).join(''):'')}
-function confetti(){var c=document.createElement('div');c.className='confetti';var cols=['var(--pal)','var(--sky)','#FFD34E','#34D399','#F472B6'];
+function confetti(){if(mvOff())return;var c=document.createElement('div');c.className='confetti';var cols=['var(--pal)','var(--sky)','#FFD34E','#34D399','#F472B6'];
   for(var i=0;i<46;i++){var p=document.createElement('i');p.style.left=Math.random()*100+'%';p.style.background=cols[i%5];p.style.animationDelay=(Math.random()*.6)+'s';p.style.animationDuration=(1.8+Math.random()*1.4)+'s';c.appendChild(p)}
   document.body.appendChild(c);setTimeout(function(){c.remove()},4200)}
 function palCelebrate(t){confetti();PAL.classList.remove('inside');palStand(true);PAL.classList.add('wave','pop');setTimeout(function(){PAL.classList.remove('pop')},800);
@@ -2525,7 +2535,41 @@ function cuScan(){if(mvOff())return;msCart();
       var w={e:e,node:node,pre:m[1],post:m[3],to:+m[2],key:cuKey(e,id)},st=CU[w.key];
       if(st&&st.to===w.to){if(performance.now()-st.t0<CUDUR&&st.from!==st.to)cuPlay(w,st);return}
       if(cuOnScreen(e)||!cuIO)cuStart(w);else{cuWait.push(w);cuIO.observe(e)}})});
-  ballScan();mvSeen();mvScale()}
+  ballScan();mvSeen();mvScale();bvScan();bkScan();tkScan()}
+/* Hit-rate bars on Picks and in the slip grow up when they first scroll into view, and the line sweeps across.
+   Uses Web Animations (not classes or styles) because mvSet strips extra attributes on every re-render.
+   BV remembers what already played, so re-renders and coming back to a page don't replay it. */
+var BV={},bvIO=window.IntersectionObserver?new IntersectionObserver(function(es){es.forEach(function(x){if(!x.isIntersecting)return;bvIO.unobserve(x.target);var an=x.target._bv;x.target._bv=null;if(an)an.forEach(function(a){a.play()})})},{rootMargin:'0px 0px -6% 0px'}):null;
+function bvKey(c){var card=c.closest('.prop,.leg'),nm=card&&card.querySelector('.nm'),tl=c.querySelector('.tl');return(nm?nm.textContent:'')+'|'+(c.getAttribute('aria-label')||'')+'|'+(tl?tl.style.bottom:'')}
+function bvScan(){if(!bvIO||!BV)return;['props','slip'].forEach(function(id){var root=$(id);if(!root)return;
+  Array.prototype.forEach.call(root.querySelectorAll('.chart'),function(c){if(c._bvd||!c.getClientRects().length)return;c._bvd=1;var k=id+'|'+bvKey(c);if(BV[k])return;BV[k]=1;var an=[];
+    Array.prototype.forEach.call(c.querySelectorAll('.b'),function(b,i){var d=Math.min(i,14)*32;
+      an.push(b.animate([{transform:'scaleY(0)'},{transform:'none'}],{duration:560,delay:d,easing:MVEASE,fill:'backwards'}));
+      var em=b.querySelector('em');if(em)an.push(em.animate([{opacity:0},{opacity:1}],{duration:260,delay:d+320,fill:'backwards'}))});
+    var tl=c.querySelector('.tl');if(tl)an.push(tl.animate([{transform:'scaleX(0)'},{transform:'none'}],{duration:640,delay:140,easing:MVEASE,fill:'backwards'}));
+    if(cuOnScreen(c))return;   /* already on screen: play now */
+    an.forEach(function(a){a.pause();a.currentTime=0});c._bv=an;bvIO.observe(c)})})}
+/* Compare books: rows slide in when prices arrive, Best pops, the best price glows green once. Once per set of legs. */
+var bkSig='';
+function bkScan(){var b=document.querySelector('#slip .books:not(.dim)');if(!b||OD.st!=='ok'||OD.sig===bkSig||!b.getClientRects().length)return;bkSig=OD.sig;
+  var rows=b.querySelectorAll('.bk'),best=b.querySelector('.best'),am=rows[0]&&rows[0].querySelector('em.am');
+  Array.prototype.forEach.call(rows,function(r,i){r.animate([{opacity:0,transform:'translateX(-12px)'},{opacity:1,transform:'none'}],{duration:380,delay:Math.min(i,8)*45,easing:MVEASE,fill:'backwards'})});
+  if(best)best.animate([{opacity:0,transform:'scale(.5)'},{opacity:1,transform:'scale(1.18)',offset:.6},{opacity:1,transform:'none'}],{duration:500,delay:280,easing:'ease-out',fill:'backwards'});
+  if(best&&am)am.animate([{},{color:'#22C55E',offset:.3},{}],{duration:1400,delay:450,easing:'ease-out'})}
+/* Tracker: a leg that just hit flashes green and its name pops; a leg that just missed gives a small shake; a parlay that just hit gets a stamp. */
+var TKS={};
+function tkScan(){var root=$('trk');if(!root||!TKS)return;
+  Array.prototype.forEach.call(root.querySelectorAll('.xtk'),function(card){var hd=card.querySelector('.xth'),ck=hd?hd.textContent.replace(/HIT|MISSED|LIVE|WAITING/g,''):'';
+    var badge=card.querySelector('.xtb'),bs=badge?badge.textContent:'',bk='card|'+ck+'|'+Array.prototype.map.call(card.querySelectorAll('.xtt span'),function(s){return s.textContent.replace(/^\W+/,'')}).join(',');
+    var ob=TKS[bk];TKS[bk]=bs;if(ob&&ob!==bs&&bs==='HIT'&&badge&&card.getClientRects().length)badge.animate([{transform:'scale(1.8) rotate(-8deg)',opacity:0},{transform:'scale(.92)',opacity:1,offset:.6},{transform:'none',opacity:1}],{duration:520,easing:'cubic-bezier(.22,1,.36,1)'});
+    Array.prototype.forEach.call(card.querySelectorAll('.xtl'),function(l){var sp=l.querySelector('.xtt span'),k=bk+'|'+(sp?sp.textContent.replace(/^\W+/,''):''),st=l.classList.contains('hit')?'hit':l.classList.contains('miss')?'miss':'wait',old=TKS[k];TKS[k]=st;
+      if(!old||old===st||!l.getClientRects().length)return;
+      if(st==='hit'){l.animate([{backgroundColor:'rgba(34,197,94,.24)'},{backgroundColor:'rgba(34,197,94,0)'}],{duration:1500,easing:'ease-out'});if(sp)sp.animate([{transform:'none'},{transform:'scale(1.07)',offset:.3},{transform:'none'}],{duration:520,easing:'ease-out'})}
+      else if(st==='miss')l.animate([{transform:'none'},{transform:'translateX(-5px)',offset:.2},{transform:'translateX(5px)',offset:.45},{transform:'translateX(-3px)',offset:.7},{transform:'none'}],{duration:420,easing:'ease-out'})})})}
+/* A soft light follows the mouse on matchup and parlay cards (mouse only; phones skip it). */
+var spE=null,spX=0,spY=0,spR=0;
+document.addEventListener('pointermove',function(e){if(e.pointerType!=='mouse'||mvOff()||!e.target.closest)return;var c=e.target.closest('.mcard,.hcard');if(!c)return;spE=c;spX=e.clientX;spY=e.clientY;
+  if(!spR)spR=requestAnimationFrame(function(){spR=0;if(!spE)return;var r=spE.getBoundingClientRect();spE.style.setProperty('--mx',(spX-r.left).toFixed(0)+'px');spE.style.setProperty('--my',(spY-r.top).toFixed(0)+'px')})},{passive:true});
 var mvScaleSeen=false,mvScaleIO=window.IntersectionObserver?new IntersectionObserver(function(es){es.forEach(function(x){if(!x.isIntersecting)return;mvScaleIO.unobserve(x.target);mvScaleSeen=true;x.target.classList.add('in')})},{threshold:.25}):null;
 function mvScale(){var e=document.querySelector('#homeBody .scale');if(!e||e.dataset.mv||LOADING)return;e.dataset.mv=1;if(mvScaleSeen||!mvScaleIO)e.classList.add('in');else mvScaleIO.observe(e)}
 /* The cards' entrance only plays once, not on every re-render or return to Home. */
@@ -2601,7 +2645,8 @@ function acMailScreen(){var m=ACMAIL,a=S.acct,sent=m.emailSent,to=m.to||(a&&a.em
 function acBar(){var b=$('vbar');if(!b)return;var a=S.acct;b.hidden=!(a&&!a.verified);if(!b.hidden)b.innerHTML='<span>Please verify your email, <b>'+esc(a.email)+'</b>.</span><button type="button" data-act="acresend">Resend email</button>'}
 function acResend(){acPost('resend').then(function(j){if(j.alreadyVerified){if(S.acct)S.acct.verified=true;acRefresh();return}ACMAIL={kind:'verify',to:S.acct&&S.acct.email,emailSent:j.emailSent,mailProblem:j.mailProblem,devLink:j.devLink};if(j.emailSent)toast('Verification email sent.');if(j.emailSent&&!j.devLink&&$('wel').hidden)return;openWel(7,false)}).catch(function(e){toast(e.message)})}
 function acSignOut(){acMenuClose();acPost('logout').catch(function(){}).then(function(){if(!$('apanel').hidden)acClose();S.guest=true;S.gUsed=true;S.acct=null;acRefresh();toast('Signed out. Your parlays stay on this device.')})}
-function acLoad(){fetch('/api/auth/me',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(!j||(!j.user&&!S.acct))return;if(j.user&&S.acct&&JSON.stringify(j.user)===JSON.stringify({id:S.acct.id,name:S.acct.name,email:S.acct.email,verified:S.acct.verified,start:S.acct.start,team:S.acct.team,color:S.acct.color,photo:S.acct.photo||'',mascot:S.acct.mascot||''}))return;acSet(j.user)}).catch(function(){});
+var ACCT_OFF=false;   /* the server says accounts aren't set up (no lasting storage yet), so guests are never sent to sign-up */
+function acLoad(){fetch('/api/auth/me',{credentials:'same-origin'}).then(function(r){if(r.status===503)ACCT_OFF=true;return r.ok?r.json():null}).then(function(j){if(!j||(!j.user&&!S.acct))return;if(j.user&&S.acct&&JSON.stringify(j.user)===JSON.stringify({id:S.acct.id,name:S.acct.name,email:S.acct.email,verified:S.acct.verified,start:S.acct.start,team:S.acct.team,color:S.acct.color,photo:S.acct.photo||'',mascot:S.acct.mascot||''}))return;acSet(j.user)}).catch(function(){});
   var q=new URLSearchParams(location.search),v=q.get('verified'),rs=q.get('reset');
   if(v!==null||rs){try{history.replaceState(null,'',location.pathname+location.hash)}catch(x){}}
   if(v==='1')setTimeout(function(){if(S.acct)S.acct.verified=true;acRefresh();toast('Your email is verified.')},350);else if(v==='0')setTimeout(function(){toast('That link has expired. Use Resend to get a new one.')},350);
