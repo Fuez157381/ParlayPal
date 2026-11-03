@@ -10,7 +10,7 @@ jobs:
     steps:
       - run: |
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-          t() { r=$(curl -s -o /tmp/o -w "%{http_code} %{time_total}s %{size_download}b" --max-time 25 -A "$UA" -H "Referer: https://www.nba.com/" -H "Origin: https://www.nba.com" "$2" || echo "TIMEOUT"); echo "PROBE $1 => $r"; }
+          t() { r=$(curl -s -o /tmp/o -w "%{http_code} %{time_total}s %{size_download}b" --max-time 25 -A "$UA" -H "Referer: https://www.nba.com/" -H "Origin: https://www.nba.com" "$2" || echo "TIMEOUT"); echo "::notice title=$1::$r"; }
           t stats_gamelog "https://stats.nba.com/stats/leaguegamelog?Counter=0&Direction=DESC&LeagueID=00&PlayerOrTeam=P&Season=2026-27&SeasonType=Regular+Season&Sorter=DATE"
           t cdn_schedule "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"
           t cdn_box_recent "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_0022600172.json"
