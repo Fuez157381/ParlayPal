@@ -13,3 +13,5 @@ PHONE-LINK.bat
 *-SETUP.txt
 sgo_key.txt
 sgo_cache.json
+smtp_settings.json
+auth_dev_mode.txt

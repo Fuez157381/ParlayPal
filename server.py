@@ -35,6 +35,8 @@ TTL_INJ = 20 * 60               # injury report refreshed every 20 minutes
 MAX_GAMES = 20                  # per player, newest first (previous season fills gaps)
 
 app = Flask(__name__)
+import auth  # noqa: E402
+app.register_blueprint(auth.bp, url_prefix="/api/auth")
 
 
 # ---------- cache ----------
@@ -437,12 +439,28 @@ def api_lines():
     return cors(jsonify(out))
 
 
+def day_data(date):
+    """The same day's data the page shows, for Pal to look players up in."""
+    date = str(date or "")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+        date = ""
+    if HOSTED:
+        snap = load_snapshot(date)
+        if snap:
+            return snap
+    try:
+        return build(date or None)
+    except Exception:
+        return load_snapshot(date) or {}
+
+
 @app.route("/api/ask", methods=["POST"])
 def api_ask():
     import ask
     body = request.get_json(silent=True) or {}
+    context = body.get("context") or {}
     try:
-        return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), body.get("context") or {})))
+        return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), context, lambda: day_data(context.get("date")))))
     except Exception as e:
         return cors(jsonify({"configured": bool(ask.api_key()), "error": f"{type(e).__name__}: {e}"})), 502
 
