@@ -43,6 +43,74 @@ class StorageOff(Exception):
     pass
 
 
+def pg_url():
+    """A Postgres database (Neon, added in Vercel's Storage tab) keeps accounts on hosts that wipe their disks."""
+    return (os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or "").strip()
+
+
+class _Rows:
+    """Makes Postgres results look like sqlite3.Row results, so the routes below work unchanged."""
+    def __init__(self, cur):
+        self.cur = cur
+        self.cols = [d[0] for d in cur.description] if cur.description else []
+
+    def fetchone(self):
+        r = self.cur.fetchone()
+        return dict(zip(self.cols, r)) if r is not None else None
+
+    def fetchall(self):
+        return [dict(zip(self.cols, r)) for r in self.cur.fetchall()]
+
+    def __iter__(self):
+        return iter(self.fetchall())
+
+
+class _Pg:
+    """The small part of sqlite3's connection that this file uses, on top of Postgres."""
+    ready = False
+
+    def __init__(self, url):
+        import ssl
+        from urllib.parse import unquote, urlparse
+        import pg8000.dbapi
+        u = urlparse(url)
+        self.con = pg8000.dbapi.connect(user=unquote(u.username or ""), password=unquote(u.password or ""),
+                                        host=u.hostname, port=u.port or 5432, database=(u.path or "/").lstrip("/") or "postgres",
+                                        ssl_context=None if os.environ.get("PG_NO_SSL") else ssl.create_default_context(), timeout=15)  # PG_NO_SSL: test database only
+        if not _Pg.ready:
+            for sql in (
+                "CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, pw TEXT NOT NULL,"
+                " verified INTEGER NOT NULL DEFAULT 0, start BIGINT NOT NULL, team TEXT NOT NULL DEFAULT '', color TEXT NOT NULL DEFAULT '',"
+                " photo TEXT NOT NULL DEFAULT '', mascot TEXT NOT NULL DEFAULT '', locker TEXT NOT NULL DEFAULT '')",
+                "CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, expires BIGINT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS tokens(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, kind TEXT NOT NULL, expires BIGINT NOT NULL)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS locker TEXT NOT NULL DEFAULT ''",
+            ):
+                self.con.cursor().execute(sql)
+            self.con.commit()
+            _Pg.ready = True
+
+    def execute(self, sql, params=()):
+        cur = self.con.cursor()
+        cur.execute(sql.replace("?", "%s"), tuple(params))
+        return _Rows(cur)
+
+    def commit(self):
+        self.con.commit()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, kind, *_):
+        try:
+            if kind is None:
+                self.con.commit()
+            else:
+                self.con.rollback()
+        finally:
+            self.con.close()
+
+
 def db_path():
     p = os.environ.get("AUTH_DB", "").strip()
     if p:
@@ -53,6 +121,8 @@ def db_path():
 
 
 def db():
+    if pg_url():
+        return _Pg(pg_url())
     con = sqlite3.connect(db_path(), timeout=10)
     con.row_factory = sqlite3.Row
     con.executescript("""
@@ -63,7 +133,7 @@ def db():
         CREATE TABLE IF NOT EXISTS tokens(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, kind TEXT NOT NULL, expires INTEGER NOT NULL);
     """)
     have = {r["name"] for r in con.execute("PRAGMA table_info(users)")}
-    for col in ("photo", "mascot"):
+    for col in ("photo", "mascot", "locker"):
         if col not in have:
             con.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
     return con
@@ -138,8 +208,40 @@ def _mail_link(con, user, kind):
         return {"emailSent": False, "mailProblem": "send_failed"}
 
 
+# ---------- locker room: every Pal you can roll, and how often ----------
+# chance is out of 100. The basketball is everyone's starter, so it isn't on the wheel.
+MASCOTS = {
+    "ball": 0, "baseball": 30, "chip": 30, "dice": 20, "eight": 11.5, "goat": 6, "coin": 2, "dad": 0.5,
+}
+START_SPINS = 3          # a new account starts with these
+DAILY_SPINS = 1          # plus one free spin every day
+
+
+def _today():
+    import datetime as dt
+    from zoneinfo import ZoneInfo
+    return dt.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+
+
+def _locker(u):
+    """{"owned": {key: count}, "spins": unused spins, "day": last day the daily spin was given}"""
+    try:
+        lk = json.loads(u["locker"] or "{}")
+    except (TypeError, ValueError):
+        lk = {}
+    if not isinstance(lk, dict) or "owned" not in lk:
+        lk = {"owned": {"ball": 1}, "spins": START_SPINS, "day": _today()}
+        if u["mascot"] and u["mascot"] in MASCOTS:
+            lk["owned"][u["mascot"]] = 1
+    if lk.get("day") != _today():          # a new day: top up the free spin
+        lk["spins"] = max(int(lk.get("spins", 0)), DAILY_SPINS)
+        lk["day"] = _today()
+    lk["owned"] = {k: int(v) for k, v in (lk.get("owned") or {}).items() if k in MASCOTS and int(v) > 0} or {"ball": 1}
+    return lk
+
+
 def _public(u):
-    return {"id": u["id"], "name": u["name"], "email": u["email"], "verified": bool(u["verified"]), "start": u["start"], "team": u["team"], "color": u["color"], "photo": u["photo"], "mascot": u["mascot"]}
+    return {"id": u["id"], "name": u["name"], "email": u["email"], "verified": bool(u["verified"]), "start": u["start"], "team": u["team"], "color": u["color"], "photo": u["photo"], "mascot": u["mascot"], "locker": _locker(u)}
 
 
 def _start_session(resp, con, uid):
@@ -219,8 +321,8 @@ def signup():
     with db() as con:
         if con.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
             return _err("There's already an account with this email. Try signing in.", 409)
-        cur = con.execute("INSERT INTO users(name,email,pw,start) VALUES(?,?,?,?)", (name, email, generate_password_hash(pw), int(time.time() * 1000)))
-        u = con.execute("SELECT * FROM users WHERE id=?", (cur.lastrowid,)).fetchone()
+        con.execute("INSERT INTO users(name,email,pw,start) VALUES(?,?,?,?)", (name, email, generate_password_hash(pw), int(time.time() * 1000)))
+        u = con.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()   # works the same on sqlite and Postgres
         mail = _mail_link(con, u, "verify")
         resp = make_response(jsonify({"user": _public(u), **mail}))
         _start_session(resp, con, u["id"])
@@ -370,15 +472,45 @@ def photo():
         return jsonify({"user": _public(con.execute("SELECT * FROM users WHERE id=?", (u["id"],)).fetchone())})
 
 
+@bp.route("/spin", methods=["POST"])
+def spin():
+    """Roll the wheel on the server, so a rare Pal can't be faked from the page."""
+    with db() as con:
+        u = _current(con)
+        if not u:
+            return _err("Please sign in first.", 401)
+        if _limited("spin", u["id"], 30, 60):
+            return _err("Slow down a little and try again.", 429)
+        lk = _locker(u)
+        if lk["spins"] <= 0:
+            return _err("No spins left today. You get a free spin every day.", 409)
+        pool = [(k, w) for k, w in MASCOTS.items() if w > 0]
+        roll, got = secrets.randbelow(10 ** 6) / 10 ** 6 * sum(w for _, w in pool), pool[-1][0]
+        for k, w in pool:
+            if roll < w:
+                got = k
+                break
+            roll -= w
+        new = got not in lk["owned"]
+        lk["owned"][got] = lk["owned"].get(got, 0) + 1
+        lk["spins"] -= 1
+        con.execute("UPDATE users SET locker=? WHERE id=?", (json.dumps(lk), u["id"]))
+        con.commit()
+        u = con.execute("SELECT * FROM users WHERE id=?", (u["id"],)).fetchone()
+        return jsonify({"got": got, "new": new, "user": _public(u)})
+
+
 @bp.route("/mascot", methods=["POST"])
 def mascot():
     kind = str(_body().get("mascot", ""))
-    if kind not in ("ball", "goat"):
+    if kind not in MASCOTS:
         return _err("Please pick one of the mascots.")
     with db() as con:
         u = _current(con)
         if not u:
             return _err("Please sign in first.", 401)
+        if kind not in _locker(u)["owned"]:
+            return _err("Roll the wheel to unlock that Pal first.", 403)
         con.execute("UPDATE users SET mascot=? WHERE id=?", (kind, u["id"]))
         con.commit()
         return jsonify({"user": _public(con.execute("SELECT * FROM users WHERE id=?", (u["id"],)).fetchone())})
