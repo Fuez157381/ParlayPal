@@ -1,0 +1,22 @@
+# One-time check of which data sources GitHub's servers can reach. Safe to delete.
+name: Probe data sources
+on:
+  push:
+    paths: [".github/workflows/probe.yml"]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+          t() { r=$(curl -s -o /tmp/o -w "%{http_code} %{time_total}s %{size_download}b" --max-time 25 -A "$UA" -H "Referer: https://www.nba.com/" -H "Origin: https://www.nba.com" "$2" || echo "TIMEOUT"); echo "PROBE $1 => $r"; }
+          t stats_gamelog "https://stats.nba.com/stats/leaguegamelog?Counter=0&Direction=DESC&LeagueID=00&PlayerOrTeam=P&Season=2026-27&SeasonType=Regular+Season&Sorter=DATE"
+          t cdn_schedule "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"
+          t cdn_box_recent "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_0022600172.json"
+          t cdn_box_lastseason "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_0022401000.json"
+          t cdn_scoreboard "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json"
+          t espn_scoreboard "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=20261102"
+          t espn_gamelog "https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/1966/gamelog"
+          t espn_summary "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=401810000"
+          t espn_injuries "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
