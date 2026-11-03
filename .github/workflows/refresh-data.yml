@@ -1,0 +1,41 @@
+# Saves fresh NBA data every day on GitHub's free servers and commits it, so Vercel redeploys the live site.
+# Times are UTC: 05:15 is 12:15 AM Eastern, 16:00 is 11 AM Eastern (one hour later in summer).
+name: Daily data refresh
+on:
+  schedule:
+    - cron: "15 5 * * *"
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/refresh-data.yml"]
+permissions:
+  contents: write
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Save NBA data
+        run: |
+          for i in 1 2 3; do
+            timeout 600 python make_snapshot.py | tee out.txt && grep -q saved out.txt && exit 0
+            echo "try $i failed"; sleep 60
+          done
+          exit 1
+      - name: Upload if changed
+        run: |
+          git config user.name "parlay-pal-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A snapshots
+          git diff --cached --quiet && { echo "no changes"; exit 0; }
+          git commit -m "Daily data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase origin main
+          git push origin main
