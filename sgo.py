@@ -19,9 +19,11 @@ BASE = "https://api.sportsgameodds.com/v2"
 TTL = int(os.environ.get("SGO_TTL", 4 * 3600))      # 4 hours keeps a normal month under the free 2,500 games
 STAT = {"pts": "points", "reb": "rebounds", "ast": "assists", "tpm": "threePointersMade"}
 # SportsGameOdds bookmaker ids -> the keys the site already knows (so the right logo and link show)
-BOOK_KEY = {"caesars": "williamhill_us", "williamhill": "williamhill_us"}
+BOOK_KEY = {"caesars": "williamhill_us", "williamhill": "williamhill_us", "hardrock": "hardrockbet"}
 BOOK_TITLE = {"draftkings": "DraftKings", "fanduel": "FanDuel", "betmgm": "BetMGM", "williamhill_us": "Caesars",
-              "espnbet": "ESPN BET", "bovada": "Bovada", "unibet": "Unibet", "pointsbet": "PointsBet"}
+              "espnbet": "ESPN BET", "bovada": "Bovada", "unibet": "Unibet", "pointsbet": "PointsBet",
+              "hardrockbet": "Hard Rock", "fanatics": "Fanatics", "betrivers": "BetRivers", "bet365": "bet365",
+              "underdog": "Underdog", "prizepicks": "PrizePicks", "sleeper": "Sleeper", "fliff": "Fliff", "ballybet": "Bally Bet"}
 CACHE_FILE = "/tmp/sgo_cache.json" if os.environ.get("VERCEL") else os.path.join(HERE, "sgo_cache.json")
 _mem = {"t": 0, "v": None}
 

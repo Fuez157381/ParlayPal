@@ -367,10 +367,11 @@ def day_data(date):
 @app.route("/api/ask", methods=["POST"])
 def api_ask():
     import ask
+    import odds
     body = request.get_json(silent=True) or {}
     context = body.get("context") or {}
     try:
-        return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), context, lambda: day_data(context.get("date")))))
+        return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), context, lambda: day_data(context.get("date")), odds.compare)))
     except Exception as e:
         return cors(jsonify({"configured": bool(ask.api_key()), "error": f"{type(e).__name__}: {e}"})), 502
 

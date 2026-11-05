@@ -12,7 +12,7 @@ import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE = os.environ.get("ODDS_BASE", "https://api.the-odds-api.com")
-REGIONS = "us,us_dfs"                     # sportsbooks + pick'em apps (each region multiplies the credit cost)
+REGIONS = "us,us2,us_dfs"                 # sportsbooks, more books (Hard Rock, ESPN BET, Fanatics, Fliff), pick'em apps (Underdog, PrizePicks, Sleeper, Pick6, Betr); each region multiplies the credit cost
 TTL = 2 * 3600                             # seconds an event's odds are reused (makes the free 500 credits last)
 
 NAMES = {

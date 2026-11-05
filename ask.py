@@ -9,7 +9,7 @@ import anthropic
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_DEFAULT = "claude-opus-5-5"
-MAX_LOOKUPS = 6
+MAX_LOOKUPS = 10
 
 SYSTEM = """You are Pal, the mascot inside Parlay Pal, a free NBA player-prop research site. You help people understand players, matchups and parlays, and you change their parlay when they ask.
 
@@ -29,11 +29,13 @@ Changing the parlay
 - Change it only when the user asks. Check each request against the data first. If it can't be done, say why and offer the closest real alternative.
 - Refer to picks by their "ref" from the context. For a player who isn't in the pool, use player, stat and bar.
 - Describe in your reply what you changed and why.
+- When the user names an app ("only Kalshi", "on Underdog", "legs Hard Rock has"), call check_apps on your best candidates (20 at a time, more rounds if needed) and add only legs that app lists. Also set the platform. If the app doesn't list enough strong legs, say how many it has instead of padding with weak ones or legs from other apps.
 
 Voice
 - Friendly and relaxed, like a friend who really knows the numbers. Light humor is fine, one joke at most, and never at the user's expense.
 - Keep simple answers to 2 to 5 sentences. Go deeper when someone asks for a breakdown. Plain text with "- " lists, no markdown. Write "3-Pointers" for threes.
-- When a user's message refers to something earlier, use the conversation to work out what they mean.
+- When a user's message refers to something earlier, use the conversation to work out what they mean. "This guy", "him" or "he" means the player you were just talking about (lastPlayerDiscussed), or the player whose page is open (playerPageOpen). Only ask who they mean if neither exists.
+- People talk casually, by voice, with typos and slang ("is bro cooking", "gimme a 10 leg", "fade him"). Work out what they want and do it. Do exactly what was asked: the number of legs, the app, the stat and the team they named.
 
 Your final answer is the JSON object the response format asks for. Use an empty actions list when nothing should change. Action fields you don't need are null. Actions: "add" (ref, or player + stat + bar), "remove" (ref or player), "clear", "stake" (value), "platform" (value). Stat codes: pts, reb, ast, tpm."""
 
@@ -56,6 +58,33 @@ TOOLS = [
             "type": "object",
             "properties": {"team": {"type": "string", "description": "Three-letter team code, like BOS or LAL"}},
             "required": ["team"],
+            "additionalProperties": False,
+        },
+        "strict": True,
+    },
+    {
+        "name": "check_apps",
+        "description": "Check which betting apps list each leg right now, with each app's American odds for the over. Use it whenever the user asks for legs on a specific app, wants only legs that are really offered, or asks for odds. Up to 20 legs per call. Copy team and vs from the pool or slip.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "legs": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "player": {"type": "string"},
+                            "team": {"type": "string", "description": "Three-letter code"},
+                            "vs": {"type": "string", "description": "Opponent three-letter code"},
+                            "stat": {"type": "string", "enum": ["pts", "reb", "ast", "tpm"]},
+                            "bar": {"type": "number", "description": "The bar, e.g. 20 for 20+"},
+                        },
+                        "required": ["player", "team", "vs", "stat", "bar"],
+                        "additionalProperties": False,
+                    },
+                }
+            },
+            "required": ["legs"],
             "additionalProperties": False,
         },
         "strict": True,
@@ -163,8 +192,23 @@ def get_team(data, team):
     }
 
 
-def _run_tool(name, args, load_day):
+def check_apps(legs, compare):
+    legs = [{"n": l.get("player"), "t": l.get("team"), "opp": l.get("vs"), "s": l.get("stat"), "bar": l.get("bar")} for l in (legs or [])[:20]]
+    res = compare(legs)
+    books = res.get("books") or []
+    rows = []
+    for i, l in enumerate(legs):
+        apps = {b.get("title") or b.get("key"): b["legs"][i] for b in books if b.get("legs") and i < len(b["legs"]) and b["legs"][i] is not None}
+        rows.append({"player": l["n"], "stat": l["s"], "bar": l["bar"], "apps": apps})
+    return {"legs": rows, "note": "An app missing from a leg does not list that line right now. Prices are American odds for the over."}
+
+
+def _run_tool(name, args, load_day, compare=None):
     try:
+        if name == "check_apps":
+            if not compare:
+                return {"error": "App checking isn't available here."}
+            return check_apps(args.get("legs"), compare)
         data = load_day()
         if name == "get_player":
             return get_player(data, args.get("name", ""))
@@ -172,7 +216,7 @@ def _run_tool(name, args, load_day):
             return get_team(data, args.get("team", ""))
         return {"error": f"unknown tool {name}"}
     except Exception as e:  # the model can still answer from the context
-        return {"error": f"Could not load the day's data: {type(e).__name__}"}
+        return {"error": f"Lookup failed: {type(e).__name__}"}
 
 
 def _history(history):
@@ -192,7 +236,7 @@ def _history(history):
     return msgs
 
 
-def ask(message, history, context, load_day=None):
+def ask(message, history, context, load_day=None, compare=None):
     key = api_key()
     if not key:
         return {"configured": False}
@@ -238,7 +282,7 @@ def ask(message, history, context, load_day=None):
             if lookups > MAX_LOOKUPS:
                 out = {"error": "Lookup limit reached. Answer now with what you have, and say what you couldn't check."}
             else:
-                out = _run_tool(c.name, c.input, load_day)
+                out = _run_tool(c.name, c.input, load_day, compare)
             results.append({"type": "tool_result", "tool_use_id": c.id, "content": json.dumps(out, separators=(",", ":"))})
         msgs.append({"role": "user", "content": results})
 

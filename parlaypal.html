@@ -1332,7 +1332,7 @@ function pmatch(p,q){var qn=norm(q).trim();if(!qn)return true;var nm=' '+norm(p.
 var ST={pts:'points',reb:'rebounds',ast:'assists',tpm:'3-Pointers'};
 var CATS=['pts','reb','ast','tpm'];
 var STEP={pts:5,reb:1,ast:1,tpm:1};
-var PLAT=[['Kalshi','https://kalshi.com','Exchange'],['Polymarket','https://polymarket.com','Exchange'],['DraftKings','https://sportsbook.draftkings.com','Sportsbook'],['FanDuel','https://sportsbook.fanduel.com','Sportsbook'],['Hard Rock','https://hardrock.bet','Sportsbook'],['Caesars','https://www.caesars.com/sportsbook-and-casino','Sportsbook'],['BetMGM','https://sports.betmgm.com','Sportsbook'],['PrizePicks','https://prizepicks.com',"Pick'em"],['Underdog','https://underdogfantasy.com',"Pick'em"],['Sleeper','https://sleeper.com',"Pick'em"]];
+var PLAT=[['Kalshi','https://kalshi.com','Exchange'],['Polymarket','https://polymarket.com','Exchange'],['DraftKings','https://sportsbook.draftkings.com','Sportsbook'],['FanDuel','https://sportsbook.fanduel.com','Sportsbook'],['Hard Rock','https://hardrock.bet','Sportsbook'],['Caesars','https://www.caesars.com/sportsbook-and-casino','Sportsbook'],['BetMGM','https://sports.betmgm.com','Sportsbook'],['PrizePicks','https://prizepicks.com',"Pick'em"],['Underdog','https://underdogfantasy.com',"Pick'em"],['Sleeper','https://sleeper.com',"Pick'em"],['Fanatics','https://sportsbook.fanatics.com','Sportsbook'],['ESPN BET','https://espnbet.com','Sportsbook'],['BetRivers','https://www.betrivers.com','Sportsbook'],['bet365','https://www.bet365.com','Sportsbook'],['Bovada','https://www.bovada.lv','Sportsbook'],['Fliff','https://www.getfliff.com','Sportsbook'],['DK Pick6','https://pick6.draftkings.com',"Pick'em"],['Betr','https://www.betr.app',"Pick'em"],['Novig','https://novig.us','Exchange']];
 var TEAMS={ATL:['hawks'],BOS:['celtics'],BKN:['nets'],CHA:['hornets'],CHI:['bulls'],CLE:['cavaliers','cavs'],DAL:['mavericks','mavs'],DEN:['nuggets'],DET:['pistons'],GSW:['warriors','dubs'],HOU:['rockets'],IND:['pacers'],LAC:['clippers'],LAL:['lakers'],MEM:['grizzlies'],MIA:['heat'],MIL:['bucks'],MIN:['timberwolves','wolves'],NOP:['pelicans','pels'],NYK:['knicks'],OKC:['thunder'],ORL:['magic'],PHI:['76ers','sixers'],PHX:['suns'],POR:['trail blazers','blazers'],SAC:['kings'],SAS:['spurs'],TOR:['raptors'],UTA:['jazz'],WAS:['wizards']};
 function tname(t){var n=TEAMS[t];return n?n[0].replace(/\b[a-z]/g,function(c){return c.toUpperCase()}):t}
 var TID={ATL:1610612737,BOS:1610612738,CLE:1610612739,NOP:1610612740,CHI:1610612741,DAL:1610612742,DEN:1610612743,GSW:1610612744,HOU:1610612745,LAC:1610612746,LAL:1610612747,MIA:1610612748,MIL:1610612749,MIN:1610612750,BKN:1610612751,NYK:1610612752,ORL:1610612753,IND:1610612754,PHI:1610612755,PHX:1610612756,POR:1610612757,SAC:1610612758,SAS:1610612759,OKC:1610612760,TOR:1610612761,UTA:1610612762,MEM:1610612763,WAS:1610612764,DET:1610612765,CHA:1610612766};
@@ -1549,11 +1549,11 @@ function legHtml(c,i){var a=analyze(c),L=ladOf(c);
 function ringSvg(score,tone,size){size=size||104;var r=44,C=2*Math.PI*r,col=tone==='ok'?'var(--pal)':tone==='warn'?'#F5A524':'#EF5B45';
   return'<svg width="'+size+'" height="'+size+'" viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="'+r+'" fill="none" stroke="rgba(170,160,150,.28)" stroke-width="10"/><circle cx="52" cy="52" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+(C*score/100).toFixed(1)+' '+C.toFixed(1)+'"/></svg>'}
 var OD={st:'idle',data:null,sig:'',err:''};
-var BKLINK={draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',williamhill_us:'Caesars',hardrockbet:'Hard Rock',kalshi:'Kalshi',polymarket:'Polymarket',prizepicks:'PrizePicks',underdog:'Underdog',sleeper:'Sleeper'};
+var BKLINK={draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',williamhill_us:'Caesars',hardrockbet:'Hard Rock',kalshi:'Kalshi',polymarket:'Polymarket',prizepicks:'PrizePicks',underdog:'Underdog',sleeper:'Sleeper',fanatics:'Fanatics',espnbet:'ESPN BET',betrivers:'BetRivers',bet365:'bet365',bovada:'Bovada',fliff:'Fliff',pick6:'DK Pick6',betr_us_dfs:'Betr',novig:'Novig'};
 var BKURL={fanatics:'https://sportsbook.fanatics.com',betrivers:'https://www.betrivers.com',ballybet:'https://ballybet.com',espnbet:'https://espnbet.com',thescore:'https://thescore.bet',novig:'https://novig.us'};
 function fmtAm(a){return a==null?'':(a>0?'+':'-')+Math.abs(a)}
 function winOn(a,k){k=parseFloat(k)||0;if(a==null||!k)return'';var w=a>0?k*a/100:k*100/-a;return'$'+k.toFixed(k%1?2:0)+' pays $'+(k+w).toFixed(2)+' · profit $'+w.toFixed(2)}
-var BKDOM={draftkings:'sportsbook.draftkings.com',fanduel:'sportsbook.fanduel.com',betmgm:'betmgm.com',williamhill_us:'caesars.com',hardrockbet:'hardrock.bet',kalshi:'kalshi.com',polymarket:'polymarket.com',prizepicks:'prizepicks.com',underdog:'underdogfantasy.com',sleeper:'sleeper.com',fanatics:'fanatics.com',betrivers:'betrivers.com',ballybet:'ballybet.com',espnbet:'espnbet.com',thescore:'thescore.bet',novig:'novig.us'};
+var BKDOM={draftkings:'sportsbook.draftkings.com',fanduel:'sportsbook.fanduel.com',betmgm:'betmgm.com',williamhill_us:'caesars.com',hardrockbet:'hardrock.bet',kalshi:'kalshi.com',polymarket:'polymarket.com',prizepicks:'prizepicks.com',underdog:'underdogfantasy.com',sleeper:'sleeper.com',fanatics:'fanatics.com',betrivers:'betrivers.com',ballybet:'ballybet.com',espnbet:'espnbet.com',thescore:'thescore.bet',novig:'novig.us',bet365:'bet365.com',bovada:'bovada.lv',fliff:'getfliff.com',pick6:'pick6.draftkings.com',betr_us_dfs:'betr.app'};
 function keyFor(nm){for(var k in BKLINK)if(BKLINK[k]===nm)return k;return String(nm||'').toLowerCase().replace(/[^a-z]/g,'')}
 function bkIcon(key,nm){var d=BKDOM[key],w=String(nm||'?').split(/\s+/),ini=(w[0][0]||'')+(w[1]?w[1][0]:'');
   return'<span class="bki" aria-hidden="true">'+esc(ini.toUpperCase())+(d?'<img alt="" loading="lazy" src="https://www.google.com/s2/favicons?domain='+d+'&sz=64" onerror="this.remove()">':'')+'</span>'}
@@ -1683,8 +1683,8 @@ function parseAsk(raw){
   var s=' '+raw.toLowerCase().replace(/[’']/g,'')+' ',o={cats:[],ex:[],n:null,teams:[],stake:null,pl:null,perTeam:false,minP:null},m;
   m=s.match(/(?:stake|wager)\D{0,14}?(\d+(?:\.\d+)?)/)||s.match(/\$\s*(\d+(?:\.\d+)?)/)||s.match(/(\d+(?:\.\d+)?)\s*(?:dollars|bucks)/);
   if(m){o.stake=parseFloat(m[1]);s=s.replace(m[0],' ')}
-  var pls={'hard rock':'Hard Rock','hardrock':'Hard Rock','draftkings':'DraftKings','draft kings':'DraftKings','fanduel':'FanDuel','fan duel':'FanDuel','kalshi':'Kalshi','prizepicks':'PrizePicks','prize picks':'PrizePicks','sleeper':'Sleeper'};
-  Object.keys(pls).forEach(function(k){if(s.indexOf(k)>-1){o.pl=pls[k];s=s.replace(k,' ')}});
+  var pls={'hard rock bet':'Hard Rock','hard rock':'Hard Rock','hardrock':'Hard Rock','dk pick6':'DK Pick6','pick6':'DK Pick6','pick 6':'DK Pick6','draftkings':'DraftKings','draft kings':'DraftKings','fanduel':'FanDuel','fan duel':'FanDuel','kalshi':'Kalshi','polymarket':'Polymarket','prizepicks':'PrizePicks','prize picks':'PrizePicks','underdog fantasy':'Underdog','underdog':'Underdog','sleeper':'Sleeper','caesars':'Caesars','betmgm':'BetMGM','mgm':'BetMGM','fanatics':'Fanatics','espn bet':'ESPN BET','espnbet':'ESPN BET','betrivers':'BetRivers','bet rivers':'BetRivers','bet365':'bet365','bovada':'Bovada','fliff':'Fliff','betr':'Betr','novig':'Novig'};
+  Object.keys(pls).forEach(function(k){var re=new RegExp('\\b'+k+'\\b');if(re.test(s)){o.pl=o.pl||pls[k];s=s.replace(re,' ')}});
   // three-point phrases become one token first, so "three pointers" is never read as 3 legs
   s=s.replace(/\b(?:three|3)[\s-]*(?:pointers?|ptrs?|point(?!s)\b|pt\b)/g,' @tpm ').replace(/\b(?:threes|3s|3pm|3ptm|triples)\b/g,' @tpm ');
   CATS.forEach(function(c){var re=new RegExp('\\b'+PRE+(c==='tpm'?'@tpm':SR[c]+'\\b'),'g');if(re.test(s)){o.ex.push(c);s=s.replace(re,' ')}});
@@ -1737,36 +1737,40 @@ function playerLine(p){var parts=CATS.map(function(c){var v=(p[c]||[]).slice(0,1
 
 /* Pal: only legs that real apps offer */
 function offeredIntent(s){return /\b(offered|offer|offers|listed|bettable|real lines?|on any apps?|on the apps?|by apps?|by the apps?|apps? (?:offer|list|have)|isnt offered|arent offered|not offered|cant bet|cannot bet|available (?:on|at|in) )/.test(s)||(/\bavailable\b/.test(s)&&/\b(app|apps|book|books|sportsbook|leg|legs|line|lines|pick|picks|bet|bets)\b/.test(s))}
-function aiOffered(o,raw,addMode){
+function aiOffered(o,raw,addMode,fresh){
   var teams=o.teams.filter(function(t){return G.some(function(g){return g.a===t||g.h===t})});
-  var base=S.cart.slice(),n=Math.min(o.n||base.length||5,20),minP=o.minP||.7,cats=o.cats.length?o.cats:CATS.filter(function(c){return o.ex.indexOf(c)<0});
+  var base=fresh?[]:S.cart.slice(),n=Math.min(o.n||base.length||5,20),minP=o.minP||(o.pl?.6:.7),cats=o.cats.length?o.cats:CATS.filter(function(c){return o.ex.indexOf(c)<0});
   var used={};base.forEach(function(c){used[c.id]=1});
   var pool=[];D.forEach(function(p){if(used[p.id])return;if(teams.length&&teams.indexOf(p.t)<0)return;cats.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;x.a=analyze(x);if(x.a.p>=minP)pool.push(x)})});
   pool.sort(function(a,b){return b.a.p-a.a.p});
-  var pick=[],pu={},tc={};pool.forEach(function(x){if(pick.length>=Math.max(0,20-base.length)||pu[x.id]||(tc[x.t]||0)>=3)return;pu[x.id]=1;tc[x.t]=(tc[x.t]||0)+1;pick.push(x)});
-  var all=base.concat(pick).slice(0,20);
+  /* up to 60 candidates, checked 20 at a time, so one app that lists few lines can still fill a big parlay */
+  var pick=[],pu={},tc={};pool.forEach(function(x){if(pick.length>=60||pu[x.id]||(tc[x.t]||0)>=6)return;pu[x.id]=1;tc[x.t]=(tc[x.t]||0)+1;pick.push(x)});
+  var all=base.concat(pick);
   if(!all.length)return say('There are no legs to check yet. Ask me to build a parlay first, or open the Picks page.');
-  say('Checking which of these legs real apps offer. This uses a few odds credits…');
-  fetch('/api/odds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({legs:all.map(function(c){return{n:c.n,t:c.t,opp:c.opp,s:c.s,bar:c.bar}})})}).then(function(r){return r.json().then(function(j){return{j:j,ok:r.ok}})}).then(function(x){
-    var d=x.j;if(d&&d.configured===false)return say('I can\'t check this without live odds. Odds are off, so I can\'t tell which legs apps offer. Add your odds key and I will filter for you.');
-    if(!x.ok||d.error)return say('I could not check the apps right now ('+(d.error||'no answer')+'). I left your slip alone.');
-    var want=null;if(o.pl)want=(d.books||[]).filter(function(b){return(BKLINK[b.key]||b.title)===o.pl})[0]||{legs:[],title:o.pl,none:true};
-    var who=all.map(function(_,i){return(d.books||[]).filter(function(b){return b.legs&&b.legs[i]!=null}).map(function(b){return BKLINK[b.key]||b.title})});
-    var ok=function(i){return want?(want.legs&&want.legs[i]!=null):who[i].length>0};
-    var keep=[],drop=[],add=[];
-    base.forEach(function(c,i){if(ok(i))keep.push(i);else drop.push(i)});
-    var final=keep.map(function(i){return all[i]});
-    var extra=[];for(var i=base.length;i<all.length&&final.length+extra.length<n;i++){if(ok(i))extra.push(i)}
-    if(!base.length||addMode)extra.forEach(function(i){if(final.length<n)final.push(all[i]),add.push(i)});
-    if(!final.length&&!base.length){return say('Nothing I found is offered'+(want?' on '+o.pl:' by any app')+' right now. Lines usually post later in the day.')}
-    S.cart=final.map(clean);save();renderSlip();renderProps();
-    var nm=function(i){return legName(all[i])},names=function(i){var w=who[i];return w.length?' ('+w.length+(w.length===1?' app':' apps')+': '+w.slice(0,3).join(', ')+(w.length>3?'…':'')+')':''};
-    var out=(drop.length?'Done. ':'All of your legs are offered. ')+(S.cart.length?'Your slip now has '+S.cart.length+(S.cart.length===1?' leg':' legs')+':\n':'')+final.map(function(c){var i=all.indexOf(c);return'- '+legName(c)+names(i)}).join('\n');
-    if(drop.length)out+='\nRemoved '+drop.length+(drop.length===1?' leg':' legs')+' that '+(want?o.pl+' does not offer':'no app offers')+': '+drop.map(nm).join(', ')+'.';
-    if(!final.length)out+='\nYour slip is empty now. Want me to build one from picks that are offered?';
-    
+  say('Checking which legs '+(o.pl?o.pl+' offers':'real apps offer')+' right now…');
+  var who=[],want=o.pl,ok=function(i){return !!who[i]&&(want?who[i].indexOf(want)>-1:who[i].length>0)};
+  var step=function(from){var chunk=all.slice(from,from+20);if(!chunk.length)return finish(null);
+    return fetch('/api/odds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({legs:chunk.map(function(c){return{n:c.n,t:c.t,opp:c.opp,s:c.s,bar:c.bar}})})}).then(function(r){return r.json().then(function(j){return{j:j,ok:r.ok}})}).then(function(x){
+      var d=x.j;if(d&&d.configured===false)return finish('off');if(!x.ok||d.error)return finish(d.error||'no answer');
+      chunk.forEach(function(_,k){who[from+k]=(d.books||[]).filter(function(b){return b.legs&&b.legs[k]!=null}).map(function(b){return BKLINK[b.key]||b.title})});
+      var got=0;for(var i=base.length;i<who.length;i++)if(ok(i))got++;
+      if((!base.length||addMode)&&got<n&&from+20<all.length&&from<40)return step(from+20);
+      finish(null)})};
+  var finish=function(err){
+    if(err==='off')return say('I can\'t check this without live odds. Odds are off, so I can\'t tell which legs apps offer.');
+    if(err&&!who.length)return say('I could not check the apps right now ('+err+'). I left your slip alone.');
+    var keep=[],drop=[];base.forEach(function(c,i){if(ok(i))keep.push(i);else drop.push(i)});
+    var final=keep.map(function(i){return all[i]}),cap=Math.max(3,Math.ceil(n/3)),tn={};final.forEach(function(c){tn[c.t]=(tn[c.t]||0)+1});
+    if(!base.length||addMode)for(var i=base.length;i<all.length&&final.length<n;i++){if(ok(i)&&(tn[all[i].t]||0)<cap){final.push(all[i]);tn[all[i].t]=(tn[all[i].t]||0)+1}}
+    if(!final.length&&!base.length)return say('Nothing I checked is offered'+(want?' on '+want:' by any app')+' right now. Lines usually post later in the day, so try again closer to tip-off.');
+    var hadOld=fresh&&S.cart.length;S.cart=final.map(clean);if(want){S.pl=want}save();renderSlip();renderProps();
+    var names=function(c){var w=who[all.indexOf(c)]||[];return want?'':w.length?' ('+w.length+(w.length===1?' app':' apps')+': '+w.slice(0,3).join(', ')+(w.length>3?'…':'')+')':''};
+    var out=(hadOld?'Started a fresh slip. ':'')+(drop.length?'Done. ':'')+'Your slip has '+S.cart.length+(S.cart.length===1?' leg':' legs')+(want?', all offered on '+want:'')+':\n'+final.map(function(c){return'- '+legName(c)+names(c)}).join('\n');
+    if(final.length<n&&(!base.length||addMode))out+='\nYou asked for '+n+', but only '+final.length+' of the strong picks I checked are on '+(want||'the apps')+' right now. I won\'t pad it with weak legs.';
+    if(drop.length)out+='\nRemoved '+drop.length+(drop.length===1?' leg':' legs')+' that '+(want?want+' does not offer':'no app offers')+': '+drop.map(function(i){return legName(all[i])}).join(', ')+'.';
     var r=rate(S.cart);if(r)out+='\nParlay score: '+r.score+' out of 100 ('+r.label+').';
-    say(out)}).catch(function(){say('Odds need your Parlay Pal server running, so I could not check the apps.')})}
+    say(out)};
+  step(0).catch(function(){say('Odds need your Parlay Pal server running, so I could not check the apps.')})}
 function aiRun(raw,fromDay){
   var o=parseAsk(raw),s=o.s;
   if(!fromDay){var dd=detectDay(' '+raw.toLowerCase()+' ');
@@ -1778,6 +1782,7 @@ function aiRun(raw,fromDay){
   if(o.pl){S.pl=o.pl;notes.push('Platform set to '+o.pl+'.')}
   if(notes.length){save();renderSlip()}
   if(offeredIntent(' '+raw.toLowerCase().replace(/[’']/g,'')+' ')||(o.pl&&S.cart.length&&/\bonly\b/.test(s)&&/\b(legs?|ones|picks?)\b/.test(s)&&!o.n)){aiOffered(o,raw,/\b(add|more|another|also|plus)\b/.test(s)&&S.cart.length>0);return}
+  if(o.pl&&(o.n!=null||/\b(parlay|slip|legs?|picks?|props?)\b/.test(s))&&/\b(build|make|create|give|find|get|want|need|only|just)\b/.test(s)&&!/\b(remove|drop|delete|clear)\b/.test(s)){var more=/\b(add|more|another|also|plus)\b/.test(s)&&S.cart.length>0;aiOffered(o,raw,more,!more&&/\b(build|make|create|give|new)\b/.test(s));return}
   if(aiCompound(raw))return;
   var wantsClear=/\b(clear|empty|reset|start over|wipe)\b/.test(s)&&/\b(cart|parlay|slip|everything|all)\b/.test(s);
   var wantsRemove=/\b(remove|drop|delete|take out|get rid of|cut|ditch)\b/.test(s);
@@ -1847,7 +1852,7 @@ function palCtx(){
   var raw=(CHAT.length?CHAT[CHAT.length-1].t:'').toLowerCase(),fp=findPlayerIn(' '+raw.replace(/[’']/g,'')+' ');
   var r=rate(S.cart);
   return{day:dayLabel(DAY)+' '+DAY,date:DAY,games:G.map(function(g){return g.a+' at '+g.h}),stake:S.stake,platform:S.pl,slip:cart,slipScore:r?{score:r.score,label:r.label,low:r.low}:null,
-    pool:pool.slice(0,70),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,note:'stat codes: pts points, reb rebounds, ast assists, tpm 3-Pointers. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
+    pool:pool.slice(0,70),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,lastPlayerDiscussed:PALM.p?PALM.p.n:null,playerPageOpen:(palOpen()||{}).n||null,apps:PLAT.map(function(p){return p[0]}),note:'stat codes: pts points, reb rebounds, ast assists, tpm 3-Pointers. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
 function palApply(res){
   var changes=[],fails=[];
   (res.actions||[]).forEach(function(a){if(!a||!a.op)return;
@@ -1935,6 +1940,7 @@ function palSummary(p){var rows=CATS.map(function(c){var v=(p[c]||[]).slice(0,10
   if(g)h+='\nPlays '+palWhen()+' '+(g.a===p.t?'at the '+tname(g.h):'against the '+tname(g.a))+', '+g.t+'.';else h+='\nNo game '+palWhen()+'.';
   if(p.inj)h+='\nInjury report: '+(p.inj.t||p.inj.s)+'.';return h}
 function palRank(s,tm,fn,n){var pool=D.filter(function(p){return!(p.inj&&p.inj.s==='out')&&palGame(p.t)&&(p[s]||[]).length>=5&&(!tm||p.t===tm)});return pool.map(function(p){return{p:p,v:fn(p)}}).sort(function(a,b){return b.v-a.v}).slice(0,n||5)}
+function palOpen(){var v=$('pmv');if(!PMS.id||!v||!v.classList.contains('open'))return null;return allPlayers().filter(function(p){return String(p.id)===String(PMS.id)})[0]||null}
 function palVs(p){var g=palGame(p.t);return g?(g.a===p.t?'at '+g.h:'vs '+g.a):''}
 function palSmart(raw){var t=palNm(raw),q=/^ (should|is|will|can|could|would|does|do|did|how|who|whos|what|whats|why|when|which|any|are|was|were|where) /.test(t)||/\?\s*$/.test(raw);
   var youAsk=/ (can|could|would|will) you /.test(t),act=/ (build|make|create|add|remove|drop|delete|clear|empty|reset|wipe|stake|replace|swap|switch|give me|find me|only) /.test(t)&&(!q||youAsk),ps=palFind(raw,t),s=palStOf(t),tm=palTeam(t),line=palLine(raw);
@@ -1956,7 +1962,9 @@ function palSmart(raw){var t=palNm(raw),q=/^ (should|is|will|can|could|would|doe
   /* what a term means */
   if(/ (what|whats|explain|define|meaning|mean|means|how does|how do|tell me about) /.test(t)&&!ps.length){for(var i=0;i<PALTERMS.length;i++)if(PALTERMS[i][0].test(t)){say(PALTERMS[i][1]);return true}}
   /* follow-ups keep talking about the same player */
-  if(!ps.length&&PALM.p&&(/ (him|he|his|that guy|what about|how about) /.test(t)||(/^ and /.test(t)))&&!tm)ps=[PALM.p];
+  var cur=PALM.p||palOpen(),them=/ (him|he|hes|his|that guy|this guy|that dude|this dude|that man|this man|that player|this player|my guy|what about|how about) /.test(t);
+  if(!ps.length&&cur&&(them||(/^ and /.test(t)))&&!tm)ps=[cur];
+  if(!ps.length&&!cur&&them&&!tm&&!/ (what about|how about) /.test(t)){say('Who do you mean? Tell me his name, like "is Tatum doing good?", or open his page and ask again.');return true}
   if(!s&&PALM.s&&line!=null&&ps.length===1&&ps[0]===PALM.p)s=PALM.s;
   /* two players */
   if(ps.length>=2){var a=ps[0],b=ps[1];PALM.p=b;PALM.weak=false;var cs=s?[s]:CATS;
@@ -1966,6 +1974,12 @@ function palSmart(raw){var t=palNm(raw),q=/^ (should|is|will|can|could|would|doe
     say(short(a.n)+' vs '+short(b.n)+', average over the last 10 games:\n'+rows.join('\n')+(lead?'\n'+lead:'')+(note.length?'\n'+note.join(' '):''));return true}
   /* one player */
   if(ps.length===1){var p=ps[0];PALM.p=p;PALM.weak=false;if(s)PALM.s=s;
+    /* "is he doing good", "how's he been": answer yes or no first, then the numbers */
+    if(line==null&&/ (doing|been|form|lately|recently|trending|looking|playing good|playing well|playing bad) /.test(t)&&!/ (should|take|bet|worth|lock|tail|hurt|injur\w*) /.test(t)){
+      var fs=s||'pts',fv=(p[fs]||[]).slice(0,10),n5=mvAvg(fv.slice(0,5)),o5=mvAvg(fv.slice(5,10)),fn=fs==='tpm'?'3-Pointers':ST[fs];
+      var lead=fv.length<6?'I only have '+fv.length+' recent games for '+short(p.n)+', so it\'s early to judge.':n5>=o5*1.12?'Yes, '+short(p.n)+' is playing well. He\'s averaging '+n5.toFixed(1)+' '+fn+' over his last 5, up from '+o5.toFixed(1)+' the 5 before.':n5<=o5*.88?'Not really, '+short(p.n)+' has cooled off. He\'s at '+n5.toFixed(1)+' '+fn+' over his last 5, down from '+o5.toFixed(1)+' the 5 before.':short(p.n)+' has been steady: '+n5.toFixed(1)+' '+fn+' over his last 5, about the same as the 5 before ('+o5.toFixed(1)+').';
+      var bx=palAway(p)?null:CATS.map(function(c){return palX(p,c)}).filter(Boolean).sort(function(u,w){return w.a.p-u.a.p})[0];
+      say(lead+'\n'+palSummary(p)+(bx?'\nHis most reliable line: '+palFact(bx)+'.':''));return true}
     if(/ (hurt|injur\w*|healthy|playing|out) /.test(t)&&!line){say(p.inj?p.n+': '+String(p.inj.t||p.inj.s).replace(/\.+$/,'')+'.':palGame(p.t)?'I don\'t see '+p.n+' on the injury report '+palWhen()+', and his team plays.':'I don\'t see '+p.n+' on the injury report, but his team doesn\'t play '+palWhen()+'.');return true}
     var asksBet=line!=null||/ (should|take|bet|good|worth|lock|safe|smash|tail|like) /.test(t);
     if(asksBet){var away=palAway(p);if(away){say(away);return true}
