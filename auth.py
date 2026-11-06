@@ -248,7 +248,19 @@ def _locker(u):
         lk["free"] = DAILY_SPINS
         lk["day"] = _today()
     lk["owned"] = {k: int(v) for k, v in (lk.get("owned") or {}).items() if k in MASCOTS and int(v) > 0} or {"ball": 1}
+    if _is_owner(u):                       # site owners always have every Pal
+        for k in MASCOTS:
+            lk["owned"][k] = max(1, lk["owned"].get(k, 0))
     return lk
+
+
+def _is_owner(u):
+    """Emails listed in the OWNER_EMAILS setting (comma separated, kept in Vercel, not in the code)."""
+    owners = {e.strip().lower() for e in os.environ.get("OWNER_EMAILS", "").split(",") if e.strip()}
+    try:
+        return bool(owners) and str(u["email"]).strip().lower() in owners
+    except (KeyError, IndexError, TypeError):
+        return False
 
 
 def _public(u):
