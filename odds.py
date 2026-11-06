@@ -139,7 +139,7 @@ def compare(legs):
         try:
             merge(sgo.leg_prices(legs), "SportsGameOdds")
         except Exception as e:
-            notes.append(f"SportsGameOdds didn't answer ({type(e).__name__}).")
+            notes.append(f"SportsGameOdds didn't answer ({type(e).__name__}: {str(e)[:140]}).")
     if api_key():
         try:
             rows, _, remaining = _oddsapi_prices(api_key(), legs)
