@@ -324,7 +324,7 @@ def _post(url, key, body):
     left = DEADLINE[0] - time.time()
     if left < 4:
         raise TimeoutError("out of time")
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + key})
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + key, "User-Agent": "ParlayPal/1.0"})
     with urllib.request.urlopen(req, timeout=min(20, left)) as r:
         return json.loads(r.read().decode())
 
