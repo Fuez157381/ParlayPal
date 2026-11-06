@@ -36,6 +36,8 @@ MAX_GAMES = 20                  # per player, newest first (previous season fill
 app = Flask(__name__)
 import auth  # noqa: E402
 app.register_blueprint(auth.bp, url_prefix="/api/auth")
+import pay  # noqa: E402
+app.register_blueprint(pay.bp, url_prefix="/api/pay")
 
 
 # ---------- cache ----------

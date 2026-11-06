@@ -92,6 +92,7 @@ class _Pg:
                 "CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, expires BIGINT NOT NULL)",
                 "CREATE TABLE IF NOT EXISTS tokens(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, kind TEXT NOT NULL, expires BIGINT NOT NULL)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS locker TEXT NOT NULL DEFAULT ''",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS billing TEXT NOT NULL DEFAULT ''",
             ):
                 self.con.cursor().execute(sql)
             self.con.commit()
@@ -140,7 +141,7 @@ def db():
         CREATE TABLE IF NOT EXISTS tokens(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, kind TEXT NOT NULL, expires INTEGER NOT NULL);
     """)
     have = {r["name"] for r in con.execute("PRAGMA table_info(users)")}
-    for col in ("photo", "mascot", "locker"):
+    for col in ("photo", "mascot", "locker", "billing"):
         if col not in have:
             con.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
     return con
@@ -240,15 +241,21 @@ def _locker(u):
         lk = {"owned": {"ball": 1}, "spins": START_SPINS, "day": _today()}
         if u["mascot"] and u["mascot"] in MASCOTS:
             lk["owned"][u["mascot"]] = 1
-    if lk.get("day") != _today():          # a new day: top back up to the free spins
-        lk["spins"] = max(int(lk.get("spins", 0)), DAILY_SPINS)
+    if "free" not in lk:                   # free spins still unused today (the rest of "spins" were bought)
+        lk["free"] = min(int(lk.get("spins", 0)), DAILY_SPINS)
+    if lk.get("day") != _today():          # a new day: the 3 free spins come back, bought spins stay
+        lk["spins"] = int(lk.get("spins", 0)) + DAILY_SPINS - int(lk.get("free", 0))
+        lk["free"] = DAILY_SPINS
         lk["day"] = _today()
     lk["owned"] = {k: int(v) for k, v in (lk.get("owned") or {}).items() if k in MASCOTS and int(v) > 0} or {"ball": 1}
     return lk
 
 
 def _public(u):
-    return {"id": u["id"], "name": u["name"], "email": u["email"], "verified": bool(u["verified"]), "start": u["start"], "team": u["team"], "color": u["color"], "photo": u["photo"], "mascot": u["mascot"], "locker": _locker(u)}
+    import pay
+    b = pay.billing(u)
+    return {"id": u["id"], "name": u["name"], "email": u["email"], "verified": bool(u["verified"]), "start": u["start"], "team": u["team"], "color": u["color"], "photo": u["photo"], "mascot": u["mascot"], "locker": _locker(u),
+            "pro": pay.is_pro(u), "proUntil": int(b.get("until", 0)), "proEnding": bool(b.get("cancelAtEnd")), "hasBilling": bool(b.get("customer"))}
 
 
 def _start_session(resp, con, uid):
@@ -501,6 +508,7 @@ def spin():
         new = got not in lk["owned"]
         lk["owned"][got] = lk["owned"].get(got, 0) + 1
         lk["spins"] -= 1
+        lk["free"] = max(0, int(lk.get("free", 0)) - 1)   # free ones get used first
         con.execute("UPDATE users SET locker=? WHERE id=?", (json.dumps(lk), u["id"]))
         con.commit()
         u = con.execute("SELECT * FROM users WHERE id=?", (u["id"],)).fetchone()

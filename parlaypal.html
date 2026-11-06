@@ -1224,7 +1224,8 @@ html[data-clash] .btn:not(.ghost):not(.wht),html[data-clash] .add.on,html[data-c
 .lkbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px;padding:10px 12px;border-radius:12px;background:var(--card2);border:1px solid var(--line)}
 .lkbar .cnt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mu)}.lkbar .cnt b{font-size:22px;color:var(--ink);font-weight:800}
 .lkbuy{height:36px;padding:0 14px;border:0;border-radius:10px;background:linear-gradient(135deg,#F5B82E,#FB8A2E);color:#241400;font-weight:800;font-size:13px;white-space:nowrap;box-shadow:0 4px 14px rgba(245,150,46,.35)}
-.lkbuy:hover{filter:brightness(1.08)}
+.lkbuy:hover{filter:brightness(1.08)}.lkbuys{display:flex;gap:6px}.lkbuys .lkbuy{padding:0 11px}
+@media (max-width:420px){.lkbar{flex-wrap:wrap}.lkbuys{width:100%}.lkbuys .lkbuy{flex:1}}
 /* the pull reveal */
 .lkrev{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;border-radius:16px;overflow:hidden;background:rgba(8,8,12,.92);padding:20px}
 .lkrev .rays{position:absolute;left:50%;top:42%;width:900px;height:900px;margin:-450px 0 0 -450px;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--rc) 55%,transparent) 0 9deg,transparent 9deg 22deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 62%);mask:radial-gradient(circle,#000 0,transparent 62%);animation:lkspinr 9s linear infinite;opacity:.9}
@@ -2120,7 +2121,7 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   else if(WS===8){sk.textContent='Not now';sk.dataset.act='welclose';
     h='<h2>Choose a new <span>password.</span></h2><p class="wp">You\'ll be signed in right after.</p><form class="frm" id="wfReset" novalidate><label>New password<input id="acP" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label><p class="err" id="wfErr" role="alert"></p><button class="btn big" type="submit">Save new password</button></form>'}
   else{var d=trialLeft(),ended=S.acct&&d<=0;sk.hidden=true;
-    var cta=!S.acct?'<button class="btn big wht" data-act="acct">Start your 3-day free trial</button>':(ended?(BILLING_LIVE?'<button class="btn big wht" data-act="welclose">Subscribe for $9.99/month</button>':'<button class="btn big wht" data-act="welclose">Keep using Parlay Pal</button>'):'<button class="btn big wht" data-act="welclose">Back to the app</button>');
+    var cta=!S.acct?'<button class="btn big wht" data-act="acct">Start your 3-day free trial</button>':S.acct.pro?'<button class="btn big wht" data-act="welclose">You have Pro. Back to the app</button>':(ended?(BILLING_LIVE?'<button class="btn big wht" data-act="paypro">Subscribe for $9.99/month</button>':'<button class="btn big wht" data-act="welclose">Keep using Parlay Pal</button>'):'<button class="btn big wht" data-act="welclose">Back to the app</button>');
     h='<h2>Parlay Pal <span>Pro</span></h2><p class="prosub">Unlock the full read</p>'+proPreview()+'<ul class="perks"><li>Unlimited parlays</li><li>Parlay Pal chat, every day</li><li>Every day\'s games and props</li></ul>'+
     '<div class="plan" role="radio" aria-checked="true"><div class="plt"><b>Monthly</b><span class="chk" aria-hidden="true">&#10003;</span></div><div class="plp">$9.99<small>/mo</small></div><p>Billed monthly after your free trial</p></div>'+
     '<p class="nopay">'+(BILLING_LIVE?'No payment due today. Cancel anytime.':'No payment due now. Payments aren\'t switched on yet, so nothing will be charged.')+'</p>'+
@@ -2129,7 +2130,7 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   el.innerHTML=h;if(WS===1)renderPhone()}
 var GMAX=3;   /* guests can hold this many legs; the next one needs a free account */
 function blocked(add){
-  if(S.acct){if(trialLeft()<=0&&BILLING_LIVE){openWel(4);return true}return false}
+  if(S.acct){if(trialLeft()<=0&&BILLING_LIVE&&!S.acct.pro){openWel(4);return true}return false}
   if(ACCT_OFF)return false;
   if(add&&S.cart.length>=GMAX){WWHY='legs';openWel(3,true);return true}
   if(S.gUsed&&(!add||S.cart.length===0)){WWHY='';openWel(3,true);return true}
@@ -2599,7 +2600,9 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='lktab'){LK.tab=d.t;lkDraw()}
   else if(a==='lkspin')lkSpin();
   else if(a==='lkrevx'){var rv=document.querySelector('.lkrev');if(rv)rv.remove();if(lkState().spins>0&&/again/i.test(b.textContent))lkSpin()}
-  else if(a==='lkbuy')toast('Spin packs are almost here. 10 spins for 50 cents, coming soon.');
+  else if(a==='paybuy')payGo(d.item);
+  else if(a==='paypro')payGo('pro');
+  else if(a==='payportal')payPortal();
   else if(a==='lkequip')lkEquip(d.k);
   else if(a==='lkjoin'){lkClose();openWel(3,true)}
   else if(a==='apmascot'){var mk=d.k;msSet(mk);acDraw();toast((mk==='goat'?'The goat':'The basketball')+' is your Pal now.');if(S.acct){S.acct.mascot=mk;save();acPost('mascot',{mascot:mk}).catch(function(x){toast(x.message)})}}
@@ -2733,7 +2736,7 @@ function lkDraw(){var b=$('lkbox');if(!b||$('lkov').hidden||LK.busy)return;var l
   if(tab==='spin'){
     var none=!(l.spins>0),why=!none?'Tap SPIN to roll.':(lkSrv()||ACCT_OFF?'Out of spins. 3 free spins come back tomorrow.':'Out of spins. Make a free account for 3 free spins every day.');
     h+='<div class="lkstage"><div class="lkwheel'+(LK.busy?' go':'')+'"><svg class="lkptr" viewBox="0 0 38 46" aria-hidden="true"><defs><linearGradient id="lkpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF3C4"/><stop offset="1" stop-color="#E0A21F"/></linearGradient></defs><path d="M19 44 L4 12 A15 15 0 1 1 34 12 Z" fill="url(#lkpg)" stroke="#1A1A1E" stroke-width="3" stroke-linejoin="round"/><circle cx="19" cy="14" r="5" fill="#1A1A1E"/></svg><div id="lkwrap">'+lkWheel(LK.pics)+'</div><div class="lkhubw"><button class="lkhub" type="button" data-act="lkspin"'+(none||LK.busy?' disabled':'')+'>SPIN<small>'+(l.spins>0?l.spins+' left':'0 left')+'</small></button></div></div></div>'+
-      '<div class="lkbar"><span class="cnt"><b>'+(l.spins||0)+'</b>'+((l.spins||0)===1?'spin':'spins')+' &middot; 3 free every day</span><button class="lkbuy" type="button" data-act="lkbuy">+10 spins &middot; 50&cent;</button></div>'+
+      '<div class="lkbar"><span class="cnt"><b>'+(l.spins||0)+'</b>'+((l.spins||0)===1?'spin':'spins')+' &middot; 3 free every day</span><span class="lkbuys"><button class="lkbuy" type="button" data-act="paybuy" data-item="spins10">+10 &middot; 50&cent;</button><button class="lkbuy" type="button" data-act="paybuy" data-item="spins25">+25 &middot; $1</button></span></div>'+
       '<p class="lksp">'+why+(!none||lkSrv()||ACCT_OFF?'':' <button class="lnk" type="button" data-act="lkjoin">Make an account</button>')+'</p>'+
       '<div class="lkodds">'+Object.keys(PODDS).map(function(k){var p=PALS[k];return'<span style="--rc:'+PRAR[p.r]+'"><i></i>'+esc(p.n)+' '+PODDS[k]+'%</span>'}).join('')+'</div><p class="lkfine">Pals are cosmetic only and never change any picks. The odds above are the real odds for every spin.</p>'}
   else{h+='<div class="lkgrid">'+lkKeys().map(function(k){var p=PALS[k],own=l.owned[k],on=S.mascot===k;
@@ -2779,7 +2782,7 @@ setTimeout(lkDot,0);
 var ACOL=['#FB8A2E','#22C55E','#38BDF8','#F43F5E','#A78BFA','#FBBF24'],APT='profile',APDEL=false,APCOL=null;
 function acIni(a){return esc(String(a&&a.name||'?').trim().charAt(0).toUpperCase()||'?')}
 function acAvatar(a,c){if(a&&a.photo)return'<i class="acav ph'+(c?' '+c:'')+'" aria-hidden="true"><img src="'+esc(a.photo)+'" alt=""></i>';var col=APCOL&&c==='lg'?APCOL:(a&&a.color)||'';return'<i class="acav'+(c?' '+c:'')+'" aria-hidden="true"'+(col?' style="background:'+esc(col)+';color:#14100A"':'')+'>'+acIni(a)+'</i>'}
-function acPlan(){var d=trialLeft();return d>0?'Free trial: '+d+(d===1?' day':' days')+' left':'Free trial ended'}
+function acPlan(){var a=S.acct;if(a&&a.pro)return'Parlay Pal Pro'+(a.proEnding&&a.proUntil?', ends '+new Date(a.proUntil*1000).toLocaleDateString():', renews monthly');var d=trialLeft();return d>0?'Free trial: '+d+(d===1?' day':' days')+' left':'Free trial ended'}
 function acMenuClose(){var m=$('amenu');if(m.hidden)return;m.hidden=true;$('acctChip').setAttribute('aria-expanded','false')}
 function acMenu(){var m=$('amenu'),b=$('acctChip');if(!m.hidden){acMenuClose();return}ntClose();var a=S.acct,r=b.getBoundingClientRect();
   m.innerHTML='<div class="amh">'+acAvatar(a)+'<div><b>'+esc(a.name)+'</b><span>'+esc(a.email)+'</span></div></div><p class="amp">'+acPlan()+'</p>'+
@@ -2794,7 +2797,7 @@ function acProfile(){var a=S.acct;if(!a)return acMascot()+'<div class="apempty">
     '<label class="apf">Email<input id="apE" type="email" autocomplete="email" maxlength="120" value="'+esc(a.email)+'"></label>'+
     '<label class="apf">Favorite team<select id="apT"><option value="">None</option>'+teams.map(function(t){return'<option value="'+t.t+'"'+(a.team===t.t?' selected':'')+'>'+esc(t.n)+'</option>'}).join('')+'</select><small>Their game shows first in Today\'s Matchups.</small></label>'+
     '<p class="err" id="apErr" role="alert"></p><button class="btn" type="submit">Save changes</button></form>'+
-    '<div class="aprow"><div><b>Plan</b><span>'+acPlan()+(BILLING_LIVE?'':'. Nothing is charged right now.')+'</span></div></div>'+
+    '<div class="aprow"><div><b>Plan</b><span>'+acPlan()+(BILLING_LIVE?'':'. Nothing is charged right now.')+'</span></div>'+(BILLING_LIVE?(a.hasBilling?'<button class="apb" type="button" data-act="payportal">Manage</button>':(a.pro?'':'<button class="apb" type="button" data-act="paypro">Get Pro</button>')):'')+'</div>'+
     '<div class="aprow"><div><b>Email status</b><span>'+(a.verified?'Verified':'Not verified yet')+'</span></div>'+(a.verified?'':'<button class="apb" type="button" data-act="acresend">Resend</button>')+'</div>'+
     '<form class="apsub" id="apPwForm" novalidate><b>Change password</b><input id="apPwC" type="password" autocomplete="current-password" placeholder="Current password" aria-label="Current password"><input id="apPwN" type="password" autocomplete="new-password" placeholder="New password, at least 8 characters" aria-label="New password"><p class="err" id="apPwErr" role="alert"></p><button class="apb" type="submit">Update password</button></form>'+
     '<div class="aprow"><div><b>Sign out</b><span>Your parlays stay on this device.</span></div><button class="apb" type="button" data-act="apout">Sign out</button></div>'+
@@ -2825,7 +2828,7 @@ document.addEventListener('input',function(e){if(e.target.id!=='apHue')return;va
 function acHueMark(h){Array.prototype.forEach.call(document.querySelectorAll('.apswatch button'),function(b){b.setAttribute('aria-checked',String(+b.dataset.h===h))});var r=$('apReset');if(r)r.hidden=h===27;var v=$('apHue');if(v&&document.activeElement!==v&&+v.value!==h)v.value=h}
 function acRefresh(){lkDot();save();renderAcct();renderHome();renderSlip()}
 function acPost(path,body){return fetch('/api/auth/'+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||'That didn\'t work. Please try again.');return j})},function(){throw new Error('Can\'t reach the server. Check your connection and try again.')})}
-function acSet(u){S.acct=u?{id:u.id,name:u.name,email:u.email,start:u.start,verified:u.verified,team:u.team,color:u.color,photo:u.photo||'',mascot:u.mascot||'',locker:u.locker||null}:null;if(u&&u.mascot)msSet(u.mascot,true);if(u){S.wel=true;S.guest=false}acRefresh()}
+function acSet(u){S.acct=u?{id:u.id,name:u.name,email:u.email,start:u.start,verified:u.verified,team:u.team,color:u.color,photo:u.photo||'',mascot:u.mascot||'',locker:u.locker||null,pro:!!u.pro,proUntil:u.proUntil||0,proEnding:!!u.proEnding,hasBilling:!!u.hasBilling}:null;if(u&&u.mascot)msSet(u.mascot,true);if(u){S.wel=true;S.guest=false}acRefresh()}
 var ACMAIL={};
 function acMailScreen(){var m=ACMAIL,a=S.acct,sent=m.emailSent,to=m.to||(a&&a.email)||'',reset=m.kind==='reset';
   var body=reset?'<p class="wp">If there\'s an account for <b>'+esc(to)+'</b>, a reset link is on its way. It works for 1 hour.</p>':sent?'<p class="wp">We sent a verification link to <b>'+esc(to)+'</b>. Open it to confirm your account.</p>':'<p class="wp">Your account is ready, but we couldn\'t send the verification email to <b>'+esc(to)+'</b>'+(m.mailProblem==='not_configured'?' because email isn\'t set up on this site yet.':'. Please try again.')+'</p>';
@@ -2834,7 +2837,7 @@ function acBar(){var b=$('vbar');if(!b)return;var a=S.acct;b.hidden=!(a&&!a.veri
 function acResend(){acPost('resend').then(function(j){if(j.alreadyVerified){if(S.acct)S.acct.verified=true;acRefresh();return}ACMAIL={kind:'verify',to:S.acct&&S.acct.email,emailSent:j.emailSent,mailProblem:j.mailProblem,devLink:j.devLink};if(j.emailSent)toast('Verification email sent.');if(j.emailSent&&!j.devLink&&$('wel').hidden)return;openWel(7,false)}).catch(function(e){toast(e.message)})}
 function acSignOut(){acMenuClose();acPost('logout').catch(function(){}).then(function(){if(!$('apanel').hidden)acClose();S.guest=true;S.gUsed=true;S.acct=null;acRefresh();toast('Signed out. Your parlays stay on this device.')})}
 var ACCT_OFF=false;   /* the server says accounts aren't set up (no lasting storage yet), so guests are never sent to sign-up */
-function acLoad(){fetch('/api/auth/me',{credentials:'same-origin'}).then(function(r){if(r.status===503)ACCT_OFF=true;return r.ok?r.json():null}).then(function(j){if(!j||(!j.user&&!S.acct))return;if(j.user&&S.acct&&JSON.stringify(j.user)===JSON.stringify({id:S.acct.id,name:S.acct.name,email:S.acct.email,verified:S.acct.verified,start:S.acct.start,team:S.acct.team,color:S.acct.color,photo:S.acct.photo||'',mascot:S.acct.mascot||'',locker:S.acct.locker||null}))return;acSet(j.user)}).catch(function(){});
+function acLoad(){fetch('/api/auth/me',{credentials:'same-origin'}).then(function(r){if(r.status===503)ACCT_OFF=true;return r.ok?r.json():null}).then(function(j){if(!j||(!j.user&&!S.acct))return;if(j.user&&S.acct&&JSON.stringify(j.user)===JSON.stringify({id:S.acct.id,name:S.acct.name,email:S.acct.email,verified:S.acct.verified,start:S.acct.start,team:S.acct.team,color:S.acct.color,photo:S.acct.photo||'',mascot:S.acct.mascot||'',locker:S.acct.locker||null,pro:!!S.acct.pro,proUntil:S.acct.proUntil||0,proEnding:!!S.acct.proEnding,hasBilling:!!S.acct.hasBilling}))return;acSet(j.user)}).catch(function(){});
   var q=new URLSearchParams(location.search),v=q.get('verified'),rs=q.get('reset');
   if(v!==null||rs){try{history.replaceState(null,'',location.pathname+location.hash)}catch(x){}}
   if(v==='1')setTimeout(function(){if(S.acct)S.acct.verified=true;acRefresh();toast('Your email is verified.')},350);else if(v==='0')setTimeout(function(){toast('That link has expired. Use Resend to get a new one.')},350);
@@ -2990,6 +2993,19 @@ PAL.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse'&&!PAL
     was=c}).observe(PAL,{attributes:true,attributeFilter:['class']});
   new MutationObserver(function(){if(PAL.getAttribute('aria-expanded')==='true'){MSP.tip();MSP.f('happy',1400)}}).observe(PAL,{attributes:true,attributeFilter:['aria-expanded']})})();
 
+/* ---------- payments (Stripe's own checkout page takes the card) ---------- */
+function payGo(item){
+  if(!BILLING_LIVE){toast(item==='pro'?'Pro payments switch on soon. Nothing is charged yet.':'Spin packs switch on soon. Nothing is charged yet.');return}
+  if(!S.acct){lkClose();closeWel();WWHY='';openWel(3,false);toast('Make a free account first, so your purchase is saved.');return}
+  toast('Opening secure checkout...');
+  fetch('/api/pay/checkout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:item})}).then(function(r){return r.json()}).then(function(j){if(j.url)location.href=j.url;else toast(j.error||'Checkout did not open. Try again.')}).catch(function(){toast('Can\'t reach the server. Try again.')})}
+function payPortal(){fetch('/api/pay/portal',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json()}).then(function(j){if(j.url)location.href=j.url;else toast(j.error||'Billing did not open.')}).catch(function(){toast('Can\'t reach the server.')})}
+fetch('/api/pay/config').then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.live){BILLING_LIVE=true;renderAcct()}}).catch(function(){});
+(function(){var pd='';try{pd=new URLSearchParams(location.search).get('paid')||''}catch(e){}if(!pd)return;
+  try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+  if(pd==='no'){setTimeout(function(){toast('Checkout canceled. Nothing was charged.')},800);return}
+  setTimeout(function(){toast(pd==='pro'?'Welcome to Parlay Pal Pro!':'Payment done! Your spins are in the locker.');confetti()},900);
+  [2500,6000,12000].forEach(function(ms){setTimeout(acLoad,ms)})})();
 window.__pp={ms:function(){return MSP},msl:function(){return MSL},S:function(){return S},cheat:function(c){return cheatRows(c).map(function(x){return[x.n,x.tag||'',x.bar,x.a.hits]})},go:go,blocked:blocked,ai:aiRun,parse:parseAsk,rate:rate,analyze:analyze,load:loadDay};
 renderAll();palPlace();go((location.hash||'').slice(1)||'home',true);mvReady=true;ntBadge();renderTrk();acLoad();loadDay('');
 if(!S.wel){S.wel=true;S.guest=true;save()}
