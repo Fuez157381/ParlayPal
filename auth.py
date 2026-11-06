@@ -221,7 +221,7 @@ MASCOTS = {
     "ball": 0, "baseball": 30, "chip": 30, "dice": 20, "eight": 11.5, "goat": 6, "coin": 2, "dad": 0.5,
 }
 START_SPINS = 3          # a new account starts with these
-DAILY_SPINS = 1          # plus one free spin every day
+DAILY_SPINS = 3          # topped back up to 3 free spins every day
 
 
 def _today():
@@ -240,7 +240,7 @@ def _locker(u):
         lk = {"owned": {"ball": 1}, "spins": START_SPINS, "day": _today()}
         if u["mascot"] and u["mascot"] in MASCOTS:
             lk["owned"][u["mascot"]] = 1
-    if lk.get("day") != _today():          # a new day: top up the free spin
+    if lk.get("day") != _today():          # a new day: top back up to the free spins
         lk["spins"] = max(int(lk.get("spins", 0)), DAILY_SPINS)
         lk["day"] = _today()
     lk["owned"] = {k: int(v) for k, v in (lk.get("owned") or {}).items() if k in MASCOTS and int(v) > 0} or {"ball": 1}
@@ -490,7 +490,7 @@ def spin():
             return _err("Slow down a little and try again.", 429)
         lk = _locker(u)
         if lk["spins"] <= 0:
-            return _err("No spins left today. You get a free spin every day.", 409)
+            return _err("No spins left today. You get 3 free spins every day.", 409)
         pool = [(k, w) for k, w in MASCOTS.items() if w > 0]
         roll, got = secrets.randbelow(10 ** 6) / 10 ** 6 * sum(w for _, w in pool), pool[-1][0]
         for k, w in pool:
