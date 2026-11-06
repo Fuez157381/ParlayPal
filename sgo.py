@@ -65,25 +65,72 @@ def _fetch(key):
     return out
 
 
+def _shared_get():
+    """The last fetch, kept in the accounts database so every server copy shares one cache."""
+    try:
+        import auth
+        if not auth.pg_url():
+            return None
+        with auth.db() as con:
+            con.execute("CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY, t BIGINT NOT NULL, v TEXT NOT NULL)")
+            r = con.execute("SELECT t, v FROM kv WHERE k=?", ("sgo",)).fetchone()
+            return {"t": r["t"], **json.loads(r["v"])} if r else None
+    except Exception:
+        return None
+
+
+def _shared_put(rec):
+    try:
+        import auth
+        if not auth.pg_url():
+            return
+        with auth.db() as con:
+            con.execute("CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY, t BIGINT NOT NULL, v TEXT NOT NULL)")
+            con.execute("DELETE FROM kv WHERE k=?", ("sgo",))
+            con.execute("INSERT INTO kv(k, t, v) VALUES(?,?,?)", ("sgo", int(rec["t"]), json.dumps({k: v for k, v in rec.items() if k != "t"})))
+    except Exception:
+        pass
+
+
+BACKOFF = 600   # after "too many requests", wait 10 minutes before asking again
+
+
 def events():
     key = api_key()
     if not key:
         return None
-    if _mem["v"] is not None and time.time() - _mem["t"] < TTL:
+    now = time.time()
+    if _mem["v"] is not None and now - _mem["t"] < TTL:
         return _mem["v"]
-    try:   # a saved copy survives restarts, so a restart does not spend more of the free allowance
-        with open(CACHE_FILE, encoding="utf-8") as f:
-            disk = json.load(f)
-        if time.time() - disk.get("t", 0) < TTL:
-            _mem.update(t=disk["t"], v=disk["v"])
-            return _mem["v"]
-    except (OSError, ValueError, KeyError):
-        pass
-    evs = _fetch(key)
-    _mem.update(t=time.time(), v=evs)
+    rec = _shared_get()
+    if rec is None:
+        try:   # a saved copy survives restarts
+            with open(CACHE_FILE, encoding="utf-8") as f:
+                rec = json.load(f)
+        except (OSError, ValueError):
+            rec = None
+    if rec and rec.get("v") is not None and now - rec.get("t", 0) < TTL:
+        _mem.update(t=rec["t"], v=rec["v"])
+        return _mem["v"]
+    if rec and now - rec.get("failT", 0) < BACKOFF:     # failed recently: use the last good prices, or give up quietly
+        if rec.get("v") is not None:
+            return rec["v"]
+        raise RuntimeError("SportsGameOdds is cooling down after a rate limit. Trying again in a few minutes.")
+    try:
+        evs = _fetch(key)
+    except RuntimeError:
+        bad = dict(rec or {}, failT=now)
+        bad.setdefault("t", 0)
+        _shared_put(bad)
+        if rec and rec.get("v") is not None:
+            return rec["v"]
+        raise
+    new = {"t": now, "v": evs}
+    _mem.update(t=now, v=evs)
+    _shared_put(new)
     try:
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump({"t": _mem["t"], "v": evs}, f)
+            json.dump(new, f)
     except OSError:
         pass
     return evs

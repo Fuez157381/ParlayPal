@@ -36,6 +36,15 @@ MAX_GAMES = 20                  # per player, newest first (previous season fill
 app = Flask(__name__)
 import auth  # noqa: E402
 app.register_blueprint(auth.bp, url_prefix="/api/auth")
+
+
+@app.before_request
+def _send_old_copies_home():
+    """Old copies of the site (like the one on Render) send everyone to the real site."""
+    from flask import redirect
+    if os.environ.get("RENDER"):
+        return redirect("https://www.parlaypal.us" + request.full_path.rstrip("?"), code=301)
+    return None
 import pay  # noqa: E402
 app.register_blueprint(pay.bp, url_prefix="/api/pay")
 
