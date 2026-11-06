@@ -141,7 +141,7 @@ def api_key():
 
 # Free brains, tried in order when no Claude key is set. Each uses the OpenAI-style chat API.
 FREE = [
-    ("GROQ_API_KEY", "https://api.groq.com/openai/v1/chat/completions", "GROQ_MODEL", "llama-3.3-70b-versatile,openai/gpt-oss-120b"),
+    ("GROQ_API_KEY", "https://api.groq.com/openai/v1/chat/completions", "GROQ_MODEL", "auto"),
     ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "GEMINI_MODEL", "gemini-flash-lite-latest,gemini-flash-latest,gemini-3.8-flash"),
 ]
 
@@ -329,7 +329,25 @@ def _post(url, key, body):
         return json.loads(r.read().decode())
 
 
+PREFER = ("gpt-oss-120b", "llama-4-maverick", "kimi", "qwen3", "llama-4", "70b", "gpt-oss-20b")
+
+
+def _pick_model(url, key):
+    """Ask the AI service which models it has now and pick the strongest one we know of."""
+    req = urllib.request.Request(url.replace("/chat/completions", "/models"), headers={"Authorization": "Bearer " + key, "User-Agent": "ParlayPal/1.0"})
+    with urllib.request.urlopen(req, timeout=8) as r:
+        ids = [m.get("id", "") for m in json.loads(r.read().decode()).get("data", [])]
+    print("free AI models:", ids)
+    for want in PREFER:
+        for i in ids:
+            if want in i.lower() and not any(x in i.lower() for x in ("guard", "whisper", "tts", "safeguard")):
+                return i
+    raise ValueError("no usable model")
+
+
 def _ask_free(key, url, mdl, message, history, context, load_day, compare):
+    if mdl == "auto":
+        mdl = _pick_model(url, key)
     ctx = dict(context or {})
     if isinstance(ctx.get("pool"), list):
         ctx["pool"] = ctx["pool"][:45]  # free plans allow fewer words per minute
@@ -345,7 +363,9 @@ def _ask_free(key, url, mdl, message, history, context, load_day, compare):
         m = res["choices"][0]["message"]
         calls = m.get("tool_calls") or []
         if not calls:
-            return _finish(m.get("content"))
+            out = _finish(m.get("content"))
+            out["brain"] = mdl
+            return out
         msgs.append({"role": "assistant", "content": m.get("content") or "", "tool_calls": calls})
         for c in calls:
             lookups += 1
@@ -357,7 +377,9 @@ def _ask_free(key, url, mdl, message, history, context, load_day, compare):
             msgs.append({"role": "tool", "tool_call_id": c.get("id"), "content": json.dumps(out, separators=(",", ":"))})
     msgs.append({"role": "user", "content": "Answer now with what you have, as the JSON object."})
     res = _post(url, key, {"model": mdl, "messages": msgs, "temperature": 0.4, "max_tokens": 4000})
-    return _finish(res["choices"][0]["message"].get("content"))
+    out = _finish(res["choices"][0]["message"].get("content"))
+    out["brain"] = mdl
+    return out
 
 
 def ask(message, history, context, load_day=None, compare=None):
@@ -369,7 +391,7 @@ def ask(message, history, context, load_day=None, compare=None):
     for key, url, mdl in free_brains():
         try:
             out = _ask_free(key, url, mdl, message, history, context, load_day, compare)
-            out["brain"] = mdl
+            out.setdefault("brain", mdl)
             return out
         except (urllib.error.URLError, KeyError, IndexError, ValueError, TimeoutError) as e:
             err = e  # out of free uses or down: try the next one
