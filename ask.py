@@ -140,8 +140,8 @@ def api_key():
 
 # Free brains, tried in order when no Claude key is set. Each uses the OpenAI-style chat API.
 FREE = [
-    ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "GEMINI_MODEL", "gemini-2.5-flash"),
-    ("GROQ_API_KEY", "https://api.groq.com/openai/v1/chat/completions", "GROQ_MODEL", "llama-3.3-70b-versatile"),
+    ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "GEMINI_MODEL", "gemini-flash-latest,gemini-3.8-flash,gemini-flash-lite-latest"),
+    ("GROQ_API_KEY", "https://api.groq.com/openai/v1/chat/completions", "GROQ_MODEL", "llama-3.3-70b-versatile,openai/gpt-oss-120b"),
 ]
 
 
@@ -157,7 +157,12 @@ def _env_or_file(name):
 
 
 def free_brains():
-    return [(k, url, os.environ.get(mv, "").strip() or md) for name, url, mv, md in FREE for k in [_env_or_file(name)] if k]
+    out = []
+    for name, url, mv, md in FREE:
+        k = _env_or_file(name)
+        if k:
+            out += [(k, url, m.strip()) for m in (os.environ.get(mv, "").strip() or md).split(",") if m.strip()]
+    return out
 
 
 def configured():
