@@ -1896,9 +1896,9 @@ function palAddPlayer(p,st,bar){
   addLeg(x);return{x:x}}
 function palCtx(){
   var cart=S.cart.map(function(c){var a=analyze(c);return{ref:c.id+':'+c.s,name:c.n,team:c.t,vs:c.opp,stat:c.s,bar:c.bar,hit:a.hits+'/'+a.n,avg:+a.avg.toFixed(1),p:Math.round(a.p*100),risk:a.risk}});
-  var pool=[];D.forEach(function(p){CATS.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;var a=analyze(x);if(a.p>=.55)pool.push({ref:x.id+':'+st,name:x.n,team:x.t,vs:x.opp,stat:st,bar:x.bar,hit:a.hits+'/'+a.n,avg:+a.avg.toFixed(1),p:Math.round(a.p*100),risk:a.risk})})});
+  var pool=[];D.forEach(function(p){CATS.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;var a=analyze(x);if(a.p>=.55)pool.push({ref:x.id+':'+st+':'+x.bar,name:x.n,team:x.t,vs:x.opp,stat:st,bar:x.bar,hit:a.hits+'/'+a.n,avg:+a.avg.toFixed(1),p:Math.round(a.p*100),risk:a.risk})})});
   pool.sort(function(a,b){return b.p-a.p});
-  var bold=[];D.forEach(function(p){CATS.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;x.a=analyze(x);var y=riskyPick(x);if(y&&y.bar>x.bar)bold.push({ref:y.id+':'+st,name:y.n,team:y.t,vs:y.opp,stat:st,bar:y.bar,hit:y.a.hits+'/'+y.a.n,avg:+y.a.avg.toFixed(1),p:Math.round(y.a.p*100)})})});
+  var bold=[];D.forEach(function(p){CATS.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;x.a=analyze(x);var y=riskyPick(x);if(y&&y.bar>x.bar)bold.push({ref:y.id+':'+st+':'+y.bar,name:y.n,team:y.t,vs:y.opp,stat:st,bar:y.bar,hit:y.a.hits+'/'+y.a.n,avg:+y.a.avg.toFixed(1),p:Math.round(y.a.p*100)})})});
   bold.sort(function(a,b){return b.p-a.p});
   var inj=[];D.forEach(function(p){if(p.inj)inj.push({name:p.n,team:p.t,status:p.inj.s,note:String(p.inj.t||'').slice(0,80)})});
   var raw=(CHAT.length?CHAT[CHAT.length-1].t:'').toLowerCase(),fp=findPlayerIn(' '+raw.replace(/[’']/g,'')+' ');
@@ -1911,11 +1911,11 @@ function palApply(res){
     if(a.op==='clear'){if(S.cart.length){S.cart=[];changes.push('Cleared the slip.')}}
     else if(a.op==='stake'&&isFinite(+a.value)&&+a.value>0){S.stake=String(+a.value);changes.push('Stake set to $'+(+a.value)+'.')}
     else if(a.op==='platform'){var pn=PLAT.filter(function(x){return x[0].toLowerCase()===String(a.value||'').toLowerCase()})[0];if(pn){S.pl=pn[0];changes.push('Platform set to '+pn[0]+'.')}}
-    else if(a.op==='remove'){var hit=S.cart.filter(function(c){return a.ref?(c.id+':'+c.s===a.ref):(a.player&&norm(c.n).indexOf(norm(a.player))>-1&&(!a.stat||c.s===a.stat))});
+    else if(a.op==='remove'){var hit=S.cart.filter(function(c){return a.ref?(c.id+':'+c.s===String(a.ref).split(':').slice(0,2).join(':')):(a.player&&norm(c.n).indexOf(norm(a.player))>-1&&(!a.stat||c.s===a.stat))});
       if(!hit.length){fails.push('I could not find '+(a.player||a.ref)+' in your slip.');return}
       S.cart=S.cart.filter(function(c){return hit.indexOf(c)<0});hit.forEach(function(c){changes.push('Removed '+legName(c)+'.')})}
     else if(a.op==='add'){var p=null,st=a.stat;
-      if(a.ref){var m=String(a.ref).split(':');p=D.filter(function(q){return String(q.id)===m[0]})[0];st=st||m[1]}
+      if(a.ref){var m=String(a.ref).split(':');p=D.filter(function(q){return String(q.id)===m[0]})[0];st=st||m[1];if(a.bar==null&&m[2]!=null&&m[2]!=='')a.bar=+m[2]}
       else if(a.player)p=findPlayerIn(' '+norm(a.player)+' ');
       if(!p){fails.push('I could not find '+(a.player||a.ref)+' playing '+dayLabel(DAY).toLowerCase()+'.');return}
       if(CATS.indexOf(st)<0)st=null;
