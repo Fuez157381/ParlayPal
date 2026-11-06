@@ -1698,8 +1698,16 @@ function parseAsk(raw){
   var codes=Object.keys(TEAMS);G.forEach(function(g){[g.a,g.h].forEach(function(t){if(codes.indexOf(t)<0)codes.push(t)})});
   codes.forEach(function(t){var hit=new RegExp('\\b'+t+'\\b').test(raw)||(TEAMS[t]||[]).some(function(n){return new RegExp('\\b'+n+'\\b').test(s)});if(hit)o.teams.push(t)});
   o.perTeam=/different teams?|each team (?:once|only once)|one (?:player |leg |pick )?per team|1 per team|same team (?:twice|more than once)|no repeat/.test(s);
-  if(/\b(safest|safe|conservative|most consistent)\b/.test(s))o.minP=.8;else if(/\b(riskier|risky|aggressive|longshot|long shot)\b/.test(s))o.minP=.6;
+  if(/\b(safest|safe|conservative|most consistent)\b/.test(s))o.minP=.8;else if(/\b(riskier|risky|risk|aggressive|longshots?|long shots?|lotto|bigger (?:payout|odds|win)|more (?:money|payout)|pay ?out more|spicy|spicier|bold|bolder|higher lines?)\b/.test(s)){o.minP=.35;o.risky=true}
+  o.diff=/\b(different|another|new|other|else|switch it up|change it up|not the same|fresh)\b/.test(s);
   o.s=s;return o}
+/* a harder version of a pick: the next line up, for riskier parlays */
+function bump(x){var b=null;
+  if(x.al&&x.al.length){for(var i=0;i<x.al.length;i++)if(x.al[i]>x.bar){b=x.al[i];break}}
+  else{b=x.bar+({pts:5,reb:2,ast:2,tpm:1}[x.s]||1);if(b>Math.max.apply(null,x.v))b=null}
+  if(b==null)return null;var y={};for(var k in x)y[k]=x[k];y.bar=b;y.ov=b!==x.def;y.a=analyze(y);return y}
+function riskyPick(x,lo,hi){lo=lo||.38;hi=hi||.68;var best=null,y=x;for(var i=0;i<4&&y;i++){if(y.a.p>=lo&&y.a.p<=hi&&(!best||y.a.p>best.a.p))best=y;y=bump(y)}return best}
+var RECENT=[];   /* players in the last few slips Pal built, so "another one" really is new */
 function detectDay(s){
   if(/\btomorrow\b/.test(s))return{d:addDays(TODAY||DAY,1),w:/\btomorrow\b/};
   if(/\b(today|tonight)\b/.test(s))return{d:TODAY||DAY,w:/\b(today|tonight)\b/};
@@ -1713,19 +1721,23 @@ function ratingText(){var r=rate(S.cart);if(!r)return'Your slip is empty. Ask me
 function aiBuild(o,addMode){
   var names=o.teams.map(tname),teams=o.teams.filter(function(t){return G.some(function(g){return g.a===t||g.h===t})});
   if(o.teams.length&&!teams.length)return'The '+names.join(' and ')+(names.length>1?' aren\'t':' aren\'t')+' playing '+dayLabel(DAY).toLowerCase()+'. Pick another day above, or ask about a team that is.';
-  var n=Math.min(o.n||5,20),minP=o.minP||.7,cats=o.cats.length?o.cats:CATS.filter(function(c){return o.ex.indexOf(c)<0});
+  var n=Math.min(o.n||(addMode&&/\b(another|an?|one|1) (?:more )?(leg|pick|player|prop)\b/.test(o.s||'')?1:0)||((o.diff||o.risky)&&!addMode&&S.cart.length)||5,20),minP=o.minP||.7,cats=o.cats.length?o.cats:CATS.filter(function(c){return o.ex.indexOf(c)<0});
   if(!cats.length)return'That leaves no stats to use. Try asking for points, rebounds, assists or 3-Pointers.';
+  var cur=S.cart.length?S.cart.reduce(function(t,c){return t+analyze(c).p},0)/S.cart.length:1,lo=.38,hi=.68;
+  if(o.risky&&cur<.66){lo=.22;hi=.5}   /* already bold: go bolder still */
   var base=addMode?S.cart.slice():[],used={},tc={};base.forEach(function(c){used[c.id]=1;tc[c.t]=(tc[c.t]||0)+1});
-  var pool=[];D.forEach(function(p){if(teams.length&&teams.indexOf(p.t)<0)return;cats.forEach(function(s){var x=snap(p,s);if(!x||x.inj)return;x.a=analyze(x);if(x.a.p>=minP)pool.push(x)})});
+  var skip={};if(o.diff&&!addMode){S.cart.forEach(function(c){skip[c.id]=1});RECENT.forEach(function(id){skip[id]=1})}   /* "a different one": new players */
+  var pool=[];D.forEach(function(p){if(skip[p.id])return;if(teams.length&&teams.indexOf(p.t)<0)return;cats.forEach(function(s){var x=snap(p,s);if(!x||x.inj)return;x.a=analyze(x);if(o.risky){x=riskyPick(x,lo,hi);if(x)pool.push(x)}else if(x.a.p>=minP)pool.push(x)})});
   pool.sort(function(a,b){return b.a.p-a.a.p||((b.a.avg-b.bar)/b.a.avg)-((a.a.avg-a.bar)/a.a.avg)});
+  if(o.diff||o.risky){pool.forEach(function(x){x.jit=x.a.p+Math.random()*.12});pool.sort(function(a,b){return b.jit-a.jit})}   /* mix it up so it's not the same slip */
   var cap=o.perTeam?1:Math.max(3,Math.ceil(n/3)),picks=[];
   for(var i=0;i<pool.length&&picks.length<n&&base.length+picks.length<20;i++){var x=pool[i];if(used[x.id])continue;if((tc[x.t]||0)>=cap+(o.perTeam?0:0))continue;used[x.id]=1;tc[x.t]=(tc[x.t]||0)+1;picks.push(x)}
   var what=o.cats.length?' '+o.cats.map(function(c){return ST[c]}).join(' and '):'';
   if(!picks.length)return'Nothing clears '+Math.round(minP*100)+'%'+(what?' for'+what:'')+(teams.length?' in that game':'')+' with the games logged, so I left your slip alone. I won\'t pad it with weak picks. Try fewer restrictions or ask for a riskier mix.';
   var hadOld=S.cart.length>0&&!addMode;
-  if(!addMode)S.cart=[];picks.forEach(function(x){addLeg(x)});save();renderSlip();renderProps();
+  if(!addMode){S.cart.forEach(function(c){RECENT.push(c.id)});RECENT=RECENT.slice(-24);S.cart=[]}picks.forEach(function(x){addLeg(x)});save();renderSlip();renderProps();
   var r=rate(S.cart);
-  var out=(hadOld?'Started a fresh slip. ':'')+(addMode?'Added ':'Built ')+picks.length+(picks.length===1?' leg':' legs')+(picks.length<n?' (only '+picks.length+' cleared '+Math.round(minP*100)+'%, so I stopped there)':'')+':\n'+picks.map(function(x){return'- '+legName(x)+' ('+x.a.risk.toLowerCase()+' risk)'}).join('\n');
+  var out=(hadOld?'Started a fresh slip. ':'')+(o.risky?'Going bolder with higher lines. ':'')+(addMode?'Added ':'Built ')+picks.length+(picks.length===1?' leg':' legs')+(picks.length<n?' (only '+picks.length+' cleared '+Math.round(minP*100)+'%, so I stopped there)':'')+':\n'+picks.map(function(x){return'- '+legName(x)+' ('+x.a.risk.toLowerCase()+' risk)'}).join('\n');
   return out+'\nParlay score: '+r.score+' out of 100 ('+r.label+'). Estimates come from past games, not live odds. Say "only legs offered by apps" and I will check real apps.'}
 var playerReply='';
 function findPlayerIn(s){var all=allPlayers(),best=null;for(var i=0;i<all.length;i++){var p=all[i],nm=norm(p.n),last=nm.split(' ').pop();
@@ -1781,15 +1793,15 @@ function aiRun(raw,fromDay){
   if(o.stake!=null){S.stake=String(o.stake);notes.push('Stake set to $'+o.stake+'.')}
   if(o.pl){S.pl=o.pl;notes.push('Platform set to '+o.pl+'.')}
   if(notes.length){save();renderSlip()}
-  if(offeredIntent(' '+raw.toLowerCase().replace(/[’']/g,'')+' ')||(o.pl&&S.cart.length&&/\bonly\b/.test(s)&&/\b(legs?|ones|picks?)\b/.test(s)&&!o.n)){aiOffered(o,raw,/\b(add|more|another|also|plus)\b/.test(s)&&S.cart.length>0);return}
-  if(o.pl&&(o.n!=null||/\b(parlay|slip|legs?|picks?|props?)\b/.test(s))&&/\b(build|make|create|give|find|get|want|need|only|just)\b/.test(s)&&!/\b(remove|drop|delete|clear)\b/.test(s)){var more=/\b(add|more|another|also|plus)\b/.test(s)&&S.cart.length>0;aiOffered(o,raw,more,!more&&/\b(build|make|create|give|new)\b/.test(s));return}
+  if(offeredIntent(' '+raw.toLowerCase().replace(/[’']/g,'')+' ')||(o.pl&&S.cart.length&&/\bonly\b/.test(s)&&/\b(legs?|ones|picks?)\b/.test(s)&&!o.n)){aiOffered(o,raw,/\b(add|more|another(?! (?:one|parlay|slip|set|combo|ticket|1)\b)|also|plus)\b/.test(s)&&S.cart.length>0);return}
+  if(o.pl&&(o.n!=null||/\b(parlay|slip|legs?|picks?|props?)\b/.test(s))&&/\b(build|make|create|give|find|get|want|need|only|just)\b/.test(s)&&!/\b(remove|drop|delete|clear)\b/.test(s)){var more=/\b(add|more|another(?! (?:one|parlay|slip|set|combo|ticket|1)\b)|also|plus)\b/.test(s)&&S.cart.length>0;aiOffered(o,raw,more,!more&&/\b(build|make|create|give|new)\b/.test(s));return}
   if(aiCompound(raw))return;
   var wantsClear=/\b(clear|empty|reset|start over|wipe)\b/.test(s)&&/\b(cart|parlay|slip|everything|all)\b/.test(s);
   var wantsRemove=/\b(remove|drop|delete|take out|get rid of|cut|ditch)\b/.test(s);
   var wantsReplace=/\b(replace|swap|switch out)\b/.test(s);
   var asks=/\b(rate|rating|score|how (?:safe|likely|good|risky)|chances?|weakest|riskiest|explain|why|what(?:s| is)|analy[sz]e|review|check)\b/.test(s);
   var buildVerb=/\b(build|make|find|give|add|create|suggest|show|more|another)\b/.test(s);
-  var addMode=/\b(add|more|another|also|plus)\b/.test(s)&&S.cart.length>0;
+  var addMode=/\b(add|more|another(?! (?:one|parlay|slip|set|combo|ticket|1)\b)|also|plus)\b/.test(s)&&S.cart.length>0;
   var weakRef=/\b(riskiest|weakest|worst|least safe|shakiest)\b/.test(s);
   function legTargets(){var idx=[];
     if(weakRef){var r=rate(S.cart);if(r)idx.push(S.cart.indexOf(r.ws.c))}
@@ -1848,11 +1860,13 @@ function palCtx(){
   var cart=S.cart.map(function(c){var a=analyze(c);return{ref:c.id+':'+c.s,name:c.n,team:c.t,vs:c.opp,stat:c.s,bar:c.bar,hit:a.hits+'/'+a.n,avg:+a.avg.toFixed(1),p:Math.round(a.p*100),risk:a.risk}});
   var pool=[];D.forEach(function(p){CATS.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;var a=analyze(x);if(a.p>=.55)pool.push({ref:x.id+':'+st,name:x.n,team:x.t,vs:x.opp,stat:st,bar:x.bar,hit:a.hits+'/'+a.n,avg:+a.avg.toFixed(1),p:Math.round(a.p*100),risk:a.risk})})});
   pool.sort(function(a,b){return b.p-a.p});
+  var bold=[];D.forEach(function(p){CATS.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;x.a=analyze(x);var y=riskyPick(x);if(y&&y.bar>x.bar)bold.push({ref:y.id+':'+st,name:y.n,team:y.t,vs:y.opp,stat:st,bar:y.bar,hit:y.a.hits+'/'+y.a.n,avg:+y.a.avg.toFixed(1),p:Math.round(y.a.p*100)})})});
+  bold.sort(function(a,b){return b.p-a.p});
   var inj=[];D.forEach(function(p){if(p.inj)inj.push({name:p.n,team:p.t,status:p.inj.s,note:String(p.inj.t||'').slice(0,80)})});
   var raw=(CHAT.length?CHAT[CHAT.length-1].t:'').toLowerCase(),fp=findPlayerIn(' '+raw.replace(/[’']/g,'')+' ');
   var r=rate(S.cart);
   return{day:dayLabel(DAY)+' '+DAY,date:DAY,games:G.map(function(g){return g.a+' at '+g.h}),stake:S.stake,platform:S.pl,slip:cart,slipScore:r?{score:r.score,label:r.label,low:r.low}:null,
-    pool:pool.slice(0,70),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,lastPlayerDiscussed:PALM.p?PALM.p.n:null,playerPageOpen:(palOpen()||{}).n||null,apps:PLAT.map(function(p){return p[0]}),note:'stat codes: pts points, reb rebounds, ast assists, tpm 3-Pointers. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
+    pool:pool.slice(0,60),boldPool:bold.slice(0,30),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,lastPlayerDiscussed:PALM.p?PALM.p.n:null,playerPageOpen:(palOpen()||{}).n||null,apps:PLAT.map(function(p){return p[0]}),note:'stat codes: pts points, reb rebounds, ast assists, tpm 3-Pointers. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
 function palApply(res){
   var changes=[],fails=[];
   (res.actions||[]).forEach(function(a){if(!a||!a.op)return;
