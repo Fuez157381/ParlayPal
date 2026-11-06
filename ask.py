@@ -365,7 +365,9 @@ def ask(message, history, context, load_day=None, compare=None):
     DEADLINE[0] = time.time() + 48
     for key, url, mdl in free_brains():
         try:
-            return _ask_free(key, url, mdl, message, history, context, load_day, compare)
+            out = _ask_free(key, url, mdl, message, history, context, load_day, compare)
+            out["brain"] = mdl
+            return out
         except (urllib.error.URLError, KeyError, IndexError, ValueError, TimeoutError) as e:
             err = e  # out of free uses or down: try the next one
             detail = e.read().decode()[:300] if isinstance(e, urllib.error.HTTPError) else str(e)
