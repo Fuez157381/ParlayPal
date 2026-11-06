@@ -141,7 +141,7 @@ def api_key():
 
 # Free brains, tried in order when no Claude key is set. Each uses the OpenAI-style chat API.
 FREE = [
-    ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "GEMINI_MODEL", "gemini-flash-latest,gemini-3.8-flash,gemini-flash-lite-latest"),
+    ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "GEMINI_MODEL", "gemini-flash-latest,gemini-flash-lite-latest,gemini-3.8-flash"),
     ("GROQ_API_KEY", "https://api.groq.com/openai/v1/chat/completions", "GROQ_MODEL", "llama-3.3-70b-versatile,openai/gpt-oss-120b"),
 ]
 
@@ -322,7 +322,7 @@ def _post(url, key, body):
     if left < 4:
         raise TimeoutError("out of time")
     req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + key})
-    with urllib.request.urlopen(req, timeout=min(30, left)) as r:
+    with urllib.request.urlopen(req, timeout=min(20, left)) as r:
         return json.loads(r.read().decode())
 
 
@@ -373,7 +373,7 @@ def ask(message, history, context, load_day=None, compare=None):
             if isinstance(e, TimeoutError) and str(e) == "out of time":
                 break
     if err:
-        return {"configured": True, "error": "the free AI is out of uses for now"}
+        return {"configured": True, "error": "the free AI is busy, try again in a minute"}
     return {"configured": False}
 
 
