@@ -1351,7 +1351,7 @@ do{i=Math.floor(Math.random()*H.length)}while(i===last);try{sessionStorage.setIt
 <div class="popov" id="pop" hidden role="dialog" aria-modal="true"><div class="popbox" id="popbox"></div></div>
 
 <script>
-try{var pc=localStorage.getItem('pp_calm');if(pc==='1'||(pc===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))document.documentElement.classList.add('calm')}catch(e){} /* the phone's "reduce motion" setting turns animations off until the visitor chooses */
+try{var pc=localStorage.getItem('pp_calm');if(pc==='1')document.documentElement.classList.add('calm')}catch(e){} /* the phone's "reduce motion" setting turns animations off until the visitor chooses */
 (function(){
 'use strict';
 var $=function(id){return document.getElementById(id)};
@@ -2099,7 +2099,7 @@ function renderAcct(){var b=$('acctChip');if(!b)return;b.hidden=false;
   $('hsign').hidden=!!S.acct;acBar()}
 var WS=0,WGATE=false;
 function openWel(step,gate){WS=step;WGATE=!!gate;$('wel').hidden=false;renderWel()}
-function closeWel(){$('wel').hidden=true;renderAcct();renderSlip()}
+function closeWel(){$('wel').hidden=true;WWHY='';renderAcct();renderSlip()}
 function dots(){var h='<div class="dots">';for(var i=0;i<3;i++)h+='<i'+(i===WS?' class="on"':'')+'></i>';return h+'</div>'}
 function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   sk.hidden=false;sk.textContent='Skip';sk.dataset.act='welskip';
@@ -2107,11 +2107,11 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   else if(WS===1){h='<h2>Add props. Get a <span>parlay score.</span></h2><p class="wp">Tap Add on the props you like. You get a score out of 100 and the weakest leg.</p><div class="phoneBox" id="phone" hidden></div><div class="stack"><button class="btn big wht" data-act="welnext">Next</button></div>'+dots()}
   else if(WS===2){h='<h2>Let\'s <span>get started.</span></h2><p class="wp">Free to try. No card needed.</p><div class="stack"><button class="btn big" data-act="welnext">Get started</button></div>'+dots()}
   else if(WS===3){sk.hidden=!WGATE;sk.textContent='Not now';sk.dataset.act='welclose';
-    h='<h2>'+(WGATE?'Make an account <span>to keep going.</span>':'Create your <span>free account.</span>')+'</h2><p class="wp">'+(WGATE?'You used your free parlay. An account gets you 3 days of full access.':'Get 3 days of full access, free.')+'</p>'+
+    h='<h2>'+(WWHY==='nudge'?'Nice pick. <span>Save it.</span>':WGATE?'Make an account <span>to keep going.</span>':'Create your <span>free account.</span>')+'</h2><p class="wp">'+(WWHY==='nudge'?'Make a free account so your parlay, your Pals and your spins are saved. You also get 3 days of full access and 3 free spins every day.':WWHY==='legs'?'Guests can add up to '+GMAX+' legs. Make a free account to keep building. It takes 10 seconds and gets you 3 days of full access.':WGATE?'You used your free parlay. An account gets you 3 days of full access.':'Get 3 days of full access, free, plus 3 free spins every day.')+'</p>'+
     '<form class="frm" id="wfSignup" novalidate><label>Name<input id="acN" type="text" autocomplete="name" placeholder="Your name"></label><label>Email<input id="acE" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="acP" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label><p class="err" id="wfErr" role="alert"></p><button class="btn big" type="submit">Create account</button></form>'+
     '<p class="wsw">Already have an account? <button class="lnk" type="button" data-act="acsignin">Sign in</button></p>'+
     (WGATE?'':'<div class="or">or</div><div class="stack"><button class="btn big ghost" data-act="guest">Continue as guest</button></div>')+
-    '<p class="wfine">Guests can build one parlay and see its score. Parlay Pal gives estimates from past games, not guarantees. You must be of legal betting age where you live.</p>'}
+    '<p class="wfine">Guests can add up to '+GMAX+' legs. Parlay Pal gives estimates from past games, not guarantees. You must be of legal betting age where you live.</p>'}
   else if(WS===5){sk.textContent='Not now';sk.dataset.act='welclose';
     h='<h2>Welcome <span>back.</span></h2><p class="wp">Sign in to your account.</p><form class="frm" id="wfLogin" novalidate><label>Email<input id="acE" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="acP" type="password" autocomplete="current-password" placeholder="Your password"></label><p class="err" id="wfErr" role="alert"></p><button class="btn big" type="submit">Sign in</button></form><p class="wsw"><button class="lnk" type="button" data-act="wstep" data-s="6">Forgot your password?</button></p><p class="wsw">New here? <button class="lnk" type="button" data-act="wstep" data-s="3">Create an account</button></p>'}
   else if(WS===6){sk.textContent='Not now';sk.dataset.act='welclose';
@@ -2127,10 +2127,16 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
     (S.acct?'<p class="wp">'+(ended?'Your free trial has ended.':'You have '+d+(d===1?' day':' days')+' of free trial left.')+'</p>':'')+
     '<div class="stack">'+cta+(S.acct&&!ended?'':'<button class="lnk" data-act="welclose">Not now</button>')+'</div>'}
   el.innerHTML=h;if(WS===1)renderPhone()}
+var GMAX=3;   /* guests can hold this many legs; the next one needs a free account */
 function blocked(add){
   if(S.acct){if(trialLeft()<=0&&BILLING_LIVE){openWel(4);return true}return false}
   if(ACCT_OFF)return false;
-  if(S.gUsed&&(!add||S.cart.length===0)){openWel(3,true);return true}return false}
+  if(add&&S.cart.length>=GMAX){WWHY='legs';openWel(3,true);return true}
+  if(S.gUsed&&(!add||S.cart.length===0)){WWHY='';openWel(3,true);return true}
+  if(add&&S.cart.length===1){var seen=false;try{seen=sessionStorage.getItem('pp_nudge')==='1';sessionStorage.setItem('pp_nudge','1')}catch(e){}
+    if(!seen)setTimeout(function(){if($('wel').hidden&&!S.acct&&!TON){WWHY='nudge';openWel(3,false)}},1100)}
+  return false}
+var WWHY='';
 
 
 /* ---------- navigation ---------- */
@@ -2256,8 +2262,7 @@ function renderHome(){renderResume();var el=$('homeBody');if(!el)return;HM={};va
 
 
 /* ---------- opening slideshow (first visit to Home this session) ---------- */
-var SHOWN=false,SI=0,STM=null,SUSER=false;
-try{SHOWN=sessionStorage.getItem('pp_show')==='1'}catch(e){}
+var SHOWN=true,SI=0,STM=null,SUSER=false;   /* the old intro slideshow is gone: Home opens right away */
 function slideRows(pk,key){pk.forEach(function(x){HM[x.key]=x});var r=rate(pk),w=pk.reduce(function(m,x){return x.a.hits/x.a.n<m.a.hits/m.a.n?x:m},pk[0]);
   return pk.map(hRow).join('')+'<div class="hstat"><span>Each leg hit in at least '+w.a.hits+' of last '+w.a.n+' games</span><b>'+Math.round(100*w.a.hits/w.a.n)+'%</b></div><div class="hstat"><span>Parlay score</span><b>'+r.score+' · '+r.label+'</b></div><button class="btn" data-act="addall" data-keys="'+pk.map(function(x){return esc(x.key)}).join(',')+'">Add these to my parlay</button>'}
 function slideList(){var sl=[],ready=!LOADING&&!ERR&&G.length,dl=dayLabel(DAY).toLowerCase();
@@ -2489,11 +2494,11 @@ function turnOnAlerts(){X.alerts=true;X.alertAns='on';xsave();
   else toast('Saved. Phone alerts start working once Parlay Pal runs on a secure web address.');renderHome()}
 setInterval(function(){if(TON||!$('wel').hidden||$('pmv').classList.contains('open')||!PP.hidden||!$('pop').hidden)return;
   var ready=!LOADING&&!ERR&&G.length&&SHOWN;
-  if(FORCE&&ready){var f=FORCE;FORCE='';if(f==='tour'){startTour()}else if(f==='rate'||f==='alerts'){showPop(f)}return}
-  if(!tourDone()&&V==='home'&&Date.now()-T0>3500){startTour();return}
+  if(FORCE&&ready){var f=FORCE;FORCE='';if(f==='tour'){startTour()}else if(f==='rate'||f==='alerts'){if(f!=='alerts'||X.alertAns!=='on')showPop(f)}return}
+  if(!tourDone()&&V==='home'&&Date.now()-T0>(ready?1500:8000)){startTour();return}
   if(!ready||V!=='home')return;
   if(Date.now()-T0<20000)return;var k=popDue();if(k)showPop(k)},2500);
-setTimeout(function(){if(!palOpened&&!TON&&$('wel').hidden)palSay(5600)},3800);
+setTimeout(function(){if(!palOpened&&!TON&&$('wel').hidden&&tourDone())palSay(5600)},3800);
 setInterval(function(){try{var c=+(sessionStorage.getItem('pp_said')||0);if(c>=3||palOpened||TON||!$('wel').hidden)return;sessionStorage.setItem('pp_said',c+1);palSay(5200)}catch(e){}},90000);
 
 /* ---------- events ---------- */
@@ -2550,8 +2555,8 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='snext')sMove(SI+1);
   else if(a==='sprev')sMove(Math.max(0,SI-1));
   else if(a==='sdot')sMove(+d.i);
-  else if(a==='replayshow'){SHOWN=false;SUSER=false;SI=0;try{sessionStorage.removeItem('pp_show')}catch(x){}go('home');renderShow()}
-  else if(a==='howto'){if(!$('apanel').hidden){$('apanel').hidden=true;document.body.classList.remove('apopen')}openWel(0)}
+  else if(a==='replayshow'){go('home');startTour()}
+  else if(a==='howto'){if(!$('apanel').hidden){$('apanel').hidden=true;document.body.classList.remove('apopen')}startTour()}
   else if(a==='tour'){acMenuClose();if(!$('apanel').hidden){$('apanel').hidden=true;document.body.classList.remove('apopen')}startTour()}
   else if(a==='tnext'){if(TI>=TOUR.length-1)endTour();else tourShow(TI+1)}
   else if(a==='tback'){if(TI>0)tourShow(TI-1)}
@@ -2843,7 +2848,7 @@ document.addEventListener('submit',function(e){var f=e.target,id=f.id;if(!/^wf(S
   if((id==='wfSignup'||id==='wfReset')&&pw.length<8)return fail('Use at least 8 characters for your password.');
   if(id==='wfLogin'&&!pw)return fail('Please enter your password.');
   btn.disabled=true;
-  var go2=id==='wfSignup'?acPost('signup',{name:n,email:m,password:pw}).then(function(j){acSet(j.user);ACMAIL={kind:'verify',to:j.user.email,emailSent:j.emailSent,mailProblem:j.mailProblem,devLink:j.devLink};WS=7;renderWel()})
+  var go2=id==='wfSignup'?acPost('signup',{name:n,email:m,password:pw}).then(function(j){acSet(j.user);FORCE='alerts';ACMAIL={kind:'verify',to:j.user.email,emailSent:j.emailSent,mailProblem:j.mailProblem,devLink:j.devLink};WS=7;renderWel()})
     :id==='wfLogin'?acPost('login',{email:m,password:pw}).then(function(j){acSet(j.user);closeWel();toast('Welcome back, '+String(j.user.name).split(' ')[0]+'!')})
     :id==='wfForgot'?acPost('forgot',{email:m}).then(function(j){ACMAIL={kind:'reset',to:m,devLink:j.devLink};WS=7;renderWel()})
     :acPost('reset',{token:ACRESET,password:pw}).then(function(j){ACRESET='';acSet(j.user);closeWel();toast('Password updated. You\'re signed in.')});
@@ -2987,7 +2992,7 @@ PAL.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse'&&!PAL
 
 window.__pp={ms:function(){return MSP},msl:function(){return MSL},S:function(){return S},cheat:function(c){return cheatRows(c).map(function(x){return[x.n,x.tag||'',x.bar,x.a.hits]})},go:go,blocked:blocked,ai:aiRun,parse:parseAsk,rate:rate,analyze:analyze,load:loadDay};
 renderAll();palPlace();go((location.hash||'').slice(1)||'home',true);mvReady=true;ntBadge();renderTrk();acLoad();loadDay('');
-if(!S.wel)openWel(0);
+if(!S.wel){S.wel=true;S.guest=true;save()}
 })();
 
 </script>
