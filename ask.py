@@ -303,7 +303,7 @@ def _finish(text):
 
 FREE_FORMAT = """
 
-Reply format: your final message must be ONLY a JSON object, no other text: {"reply": "what you say to the user", "actions": [{"op": "add", "ref": "...", "player": null, "stat": null, "bar": null, "value": null}]}. Use "actions": [] when nothing should change."""
+Reply format: your final message must be ONLY a JSON object, no other text: {"reply": "what you say to the user", "actions": [{"op": "add", "ref": "...", "player": null, "stat": null, "bar": null, "value": null}]}. Use "actions": [] when nothing should change. Write this JSON as your normal message text. It is not a tool, so never call a tool named json."""
 
 def _plain(x):
     """Drop schema words some free AIs reject."""
@@ -345,6 +345,21 @@ def _pick_model(url, key):
     raise ValueError("no usable model")
 
 
+def _salvage(e):
+    """Some models send the final answer as a made-up tool call. Keep the answer instead of failing."""
+    if e.code != 400:
+        return None
+    try:
+        err = json.loads(e.read().decode()).get("error", {})
+        gen = json.loads(err.get("failed_generation") or "")
+    except ValueError:
+        return None
+    args = gen.get("arguments") if isinstance(gen, dict) else None
+    if isinstance(args, dict) and "reply" in args:
+        return _finish(json.dumps(args))
+    return None
+
+
 def _ask_free(key, url, mdl, message, history, context, load_day, compare):
     if mdl == "auto":
         mdl = _pick_model(url, key)
@@ -359,7 +374,14 @@ def _ask_free(key, url, mdl, message, history, context, load_day, compare):
             body["reasoning_effort"] = "low"  # quicker answers
         if lookups <= MAX_LOOKUPS:
             body["tools"] = OAI_TOOLS
-        res = _post(url, key, body)
+        try:
+            res = _post(url, key, body)
+        except urllib.error.HTTPError as e:
+            saved = _salvage(e)
+            if saved is None:
+                raise
+            saved["brain"] = mdl
+            return saved
         m = res["choices"][0]["message"]
         calls = m.get("tool_calls") or []
         if not calls:
