@@ -37,7 +37,12 @@ def _hook_secret():
 
 
 def live():
-    return bool(_key() and _hook_secret())
+    """Real payments only. Test keys (sk_test_) keep the paywall off, so nobody gets Pro with a fake test card,
+    unless PAY_TEST=1 is set while testing."""
+    k = _key()
+    if not (k and _hook_secret()):
+        return False
+    return not k.startswith(("sk_test_", "rk_test_")) or os.environ.get("PAY_TEST", "").strip() == "1"
 
 
 def _site():
