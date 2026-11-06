@@ -16,3 +16,6 @@ sgo_cache.json
 smtp_settings.json
 auth_dev_mode.txt
 snapshot-log.txt
+
+gemini_api_key.txt
+groq_api_key.txt

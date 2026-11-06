@@ -1,11 +1,18 @@
 """Parlay Pal's AI brain: answers with Claude, which can look up any player's real games while it thinks.
-Needs your own key in anthropic_key.txt (or env ANTHROPIC_API_KEY). Without it Pal uses his built-in brain in the page.
+Uses Claude if ANTHROPIC_API_KEY is set. Otherwise a free AI: GEMINI_API_KEY (Google AI Studio) first, then GROQ_API_KEY.
+If none is set, or the free ones are out of uses, Pal uses his built-in brain in the page.
 Model comes from anthropic_model.txt, default below."""
 import json
 import os
+import re
 import unicodedata
+import urllib.error
+import urllib.request
 
-import anthropic
+try:
+    import anthropic
+except ImportError:  # only needed for the paid Claude brain
+    anthropic = None
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_DEFAULT = "claude-opus-5-5"
@@ -131,6 +138,32 @@ def api_key():
     return ""
 
 
+# Free brains, tried in order when no Claude key is set. Each uses the OpenAI-style chat API.
+FREE = [
+    ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "GEMINI_MODEL", "gemini-2.5-flash"),
+    ("GROQ_API_KEY", "https://api.groq.com/openai/v1/chat/completions", "GROQ_MODEL", "llama-3.3-70b-versatile"),
+]
+
+
+def _env_or_file(name):
+    k = os.environ.get(name, "").strip()
+    if k:
+        return k
+    p = os.path.join(HERE, name.lower() + ".txt")
+    if os.path.exists(p):
+        with open(p, encoding="utf-8") as f:
+            return f.read().strip()
+    return ""
+
+
+def free_brains():
+    return [(k, url, os.environ.get(mv, "").strip() or md) for name, url, mv, md in FREE for k in [_env_or_file(name)] if k]
+
+
+def configured():
+    return bool(api_key() or free_brains())
+
+
 def model():
     p = os.path.join(HERE, "anthropic_model.txt")
     if os.path.exists(p):
@@ -236,18 +269,101 @@ def _history(history):
     return msgs
 
 
-def ask(message, history, context, load_day=None, compare=None):
-    key = api_key()
-    if not key:
-        return {"configured": False}
-    client = anthropic.Anthropic(api_key=key, timeout=50.0, max_retries=1)
-    load_day = load_day or (lambda: {})
+def _user_turns(message, history, context):
     msgs = _history(history)
     user = "CONTEXT (live from the site):\n" + json.dumps(context, separators=(",", ":")) + "\n\nUSER MESSAGE: " + str(message)[:4000]
     if msgs and msgs[-1]["role"] == "user":
         msgs[-1]["content"] += "\n" + user
     else:
         msgs.append({"role": "user", "content": user})
+    return msgs
+
+
+def _finish(text):
+    text = (text or "").strip()
+    m = re.search(r"\{.*\}", text, re.S)
+    try:
+        out = json.loads(m.group(0) if m else text)
+        if not isinstance(out, dict):
+            raise ValueError
+    except ValueError:
+        return {"configured": True, "reply": text, "actions": []}
+    acts = [{k: v for k, v in a.items() if v is not None} for a in (out.get("actions") or []) if isinstance(a, dict) and a.get("op")]
+    return {"configured": True, "reply": str(out.get("reply", "")).strip(), "actions": acts[:12]}
+
+
+FREE_FORMAT = """
+
+Reply format: your final message must be ONLY a JSON object, no other text: {"reply": "what you say to the user", "actions": [{"op": "add", "ref": "...", "player": null, "stat": null, "bar": null, "value": null}]}. Use "actions": [] when nothing should change."""
+
+def _plain(x):
+    """Drop schema words some free AIs reject."""
+    if isinstance(x, dict):
+        return {k: _plain(v) for k, v in x.items() if k != "additionalProperties"}
+    if isinstance(x, list):
+        return [_plain(v) for v in x]
+    return x
+
+
+OAI_TOOLS = [{"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": _plain(t["input_schema"])}} for t in TOOLS]
+
+
+def _post(url, key, body):
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + key})
+    with urllib.request.urlopen(req, timeout=40) as r:
+        return json.loads(r.read().decode())
+
+
+def _ask_free(key, url, mdl, message, history, context, load_day, compare):
+    ctx = dict(context or {})
+    if isinstance(ctx.get("pool"), list):
+        ctx["pool"] = ctx["pool"][:45]  # free plans allow fewer words per minute
+    msgs = [{"role": "system", "content": SYSTEM + FREE_FORMAT}] + _user_turns(message, history, ctx)
+    lookups = 0
+    for _ in range(6):
+        body = {"model": mdl, "messages": msgs, "temperature": 0.4, "max_tokens": 2000}
+        if lookups <= MAX_LOOKUPS:
+            body["tools"] = OAI_TOOLS
+        res = _post(url, key, body)
+        m = res["choices"][0]["message"]
+        calls = m.get("tool_calls") or []
+        if not calls:
+            return _finish(m.get("content"))
+        msgs.append({"role": "assistant", "content": m.get("content") or "", "tool_calls": calls})
+        for c in calls:
+            lookups += 1
+            try:
+                args = json.loads(c["function"].get("arguments") or "{}")
+            except ValueError:
+                args = {}
+            out = _run_tool(c["function"]["name"], args, load_day, compare) if lookups <= MAX_LOOKUPS else {"error": "Lookup limit reached. Answer now."}
+            msgs.append({"role": "tool", "tool_call_id": c.get("id"), "content": json.dumps(out, separators=(",", ":"))})
+    msgs.append({"role": "user", "content": "Answer now with what you have, as the JSON object."})
+    res = _post(url, key, {"model": mdl, "messages": msgs, "temperature": 0.4, "max_tokens": 2000})
+    return _finish(res["choices"][0]["message"].get("content"))
+
+
+def ask(message, history, context, load_day=None, compare=None):
+    load_day = load_day or (lambda: {})
+    if api_key():
+        return _ask_claude(message, history, context, load_day, compare)
+    err = None
+    for key, url, mdl in free_brains():
+        try:
+            return _ask_free(key, url, mdl, message, history, context, load_day, compare)
+        except (urllib.error.URLError, KeyError, IndexError, ValueError, TimeoutError) as e:
+            err = e  # out of free uses or down: try the next one
+            detail = e.read().decode()[:300] if isinstance(e, urllib.error.HTTPError) else str(e)
+            print("free AI failed:", url, detail)
+    if err:
+        return {"configured": True, "error": "the free AI is out of uses for now"}
+    return {"configured": False}
+
+
+def _ask_claude(message, history, context, load_day=None, compare=None):
+    key = api_key()
+    client = anthropic.Anthropic(api_key=key, timeout=50.0, max_retries=1)
+    msgs = _user_turns(message, history, context)
 
     params = {
         "model": model(),

@@ -373,7 +373,7 @@ def api_ask():
     try:
         return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), context, lambda: day_data(context.get("date")), odds.compare)))
     except Exception as e:
-        return cors(jsonify({"configured": bool(ask.api_key()), "error": f"{type(e).__name__}: {e}"})), 502
+        return cors(jsonify({"configured": ask.configured(), "error": f"{type(e).__name__}: {e}"})), 502
 
 
 @app.route("/api/polymarket/probe")
