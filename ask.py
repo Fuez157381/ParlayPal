@@ -5,6 +5,7 @@ Model comes from anthropic_model.txt, default below."""
 import json
 import os
 import re
+import time
 import unicodedata
 import urllib.error
 import urllib.request
@@ -313,9 +314,15 @@ def _plain(x):
 OAI_TOOLS = [{"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": _plain(t["input_schema"])}} for t in TOOLS]
 
 
+DEADLINE = [0.0]  # stop trying free AIs before Vercel's 60-second limit
+
+
 def _post(url, key, body):
+    left = DEADLINE[0] - time.time()
+    if left < 4:
+        raise TimeoutError("out of time")
     req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + key})
-    with urllib.request.urlopen(req, timeout=40) as r:
+    with urllib.request.urlopen(req, timeout=min(30, left)) as r:
         return json.loads(r.read().decode())
 
 
@@ -355,13 +362,16 @@ def ask(message, history, context, load_day=None, compare=None):
     if api_key():
         return _ask_claude(message, history, context, load_day, compare)
     err = None
+    DEADLINE[0] = time.time() + 48
     for key, url, mdl in free_brains():
         try:
             return _ask_free(key, url, mdl, message, history, context, load_day, compare)
         except (urllib.error.URLError, KeyError, IndexError, ValueError, TimeoutError) as e:
             err = e  # out of free uses or down: try the next one
             detail = e.read().decode()[:300] if isinstance(e, urllib.error.HTTPError) else str(e)
-            print("free AI failed:", url, detail)
+            print("free AI failed:", url, mdl, detail)
+            if isinstance(e, TimeoutError) and str(e) == "out of time":
+                break
     if err:
         return {"configured": True, "error": "the free AI is out of uses for now"}
     return {"configured": False}
