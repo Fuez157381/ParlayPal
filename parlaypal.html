@@ -1764,7 +1764,7 @@ function aiBuild(o,addMode){
   var cur=S.cart.length?S.cart.reduce(function(t,c){return t+analyze(c).p},0)/S.cart.length:1,lo=.38,hi=.68;
   if(o.risky&&cur<.66){lo=.22;hi=.5}   /* already bold: go bolder still */
   var base=addMode?S.cart.slice():[],used={},tc={};base.forEach(function(c){used[c.id]=1;tc[c.t]=(tc[c.t]||0)+1});
-  var skip={};if(o.diff&&!addMode){S.cart.forEach(function(c){skip[c.id]=1});RECENT.forEach(function(id){skip[id]=1})}   /* "a different one": new players */
+  var skip={};if(o.diff&&!addMode){S.cart.forEach(function(c){skip[c.id]=1});RECENT.forEach(function(id){skip[id]=1});var pt=placedToday();for(var pid in pt)skip[pid]=1}   /* "a different one": new players */
   var pool=[];D.forEach(function(p){if(skip[p.id])return;if(teams.length&&teams.indexOf(p.t)<0)return;cats.forEach(function(s){var x=snap(p,s);if(!x||x.inj)return;x.a=analyze(x);if(o.risky){x=riskyPick(x,lo,hi);if(x)pool.push(x)}else if(x.a.p>=minP)pool.push(x)})});
   pool.sort(function(a,b){return b.a.p-a.a.p||((b.a.avg-b.bar)/b.a.avg)-((a.a.avg-a.bar)/a.a.avg)});
   if(o.diff||o.risky){pool.forEach(function(x){x.jit=x.a.p+Math.random()*.12});pool.sort(function(a,b){return b.jit-a.jit})}   /* mix it up so it's not the same slip */
@@ -1904,7 +1904,7 @@ function palCtx(){
   var raw=(CHAT.length?CHAT[CHAT.length-1].t:'').toLowerCase(),fp=findPlayerIn(' '+raw.replace(/[’']/g,'')+' ');
   var r=rate(S.cart);
   return{day:dayLabel(DAY)+' '+DAY,date:DAY,games:G.map(function(g){return g.a+' at '+g.h}),stake:S.stake,platform:S.pl,slip:cart,slipScore:r?{score:r.score,label:r.label,low:r.low}:null,
-    pool:pool.slice(0,60),boldPool:bold.slice(0,30),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,lastPlayerDiscussed:PALM.p?PALM.p.n:null,playerPageOpen:(palOpen()||{}).n||null,apps:PLAT.map(function(p){return p[0]}),note:'stat codes: pts points, reb rebounds, ast assists, tpm 3-Pointers. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
+    pool:pool.slice(0,60),boldPool:bold.slice(0,30),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,lastPlayerDiscussed:PALM.p?PALM.p.n:null,placedToday:(function(){var o=[];(TRK||[]).forEach(function(t){if(t.date===DAY)(t.legs||[]).forEach(function(l){o.push(l.n)})});return o})(),playerPageOpen:(palOpen()||{}).n||null,apps:PLAT.map(function(p){return p[0]}),note:'stat codes: pts points, reb rebounds, ast assists, tpm 3-Pointers. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
 function palApply(res){
   var changes=[],fails=[];
   (res.actions||[]).forEach(function(a){if(!a||!a.op)return;
@@ -2060,7 +2060,65 @@ function palSmart(raw){var t=palNm(raw),q=/^ (should|is|will|can|could|would|doe
   if(q){say('I can\'t answer that one, because I only have recent NBA game logs, injuries, matchups and lines for the days on this site. Try a player, a team, "who\'s hot?", or "what\'s a parlay?".');return true}
   return false}
 function palLocal(t){if(!palSmart(t))aiRun(t)}
+
+/* ---------- several separate parlays at once: "make me 3 separate 6-leg parlays, one on Hard Rock, one on Kalshi, split $30" ---------- */
+var PLAL=[['hard rock bet','Hard Rock'],['hard rock','Hard Rock'],['hardrock','Hard Rock'],['draft kings','DraftKings'],['draftkings','DraftKings'],['fan duel','FanDuel'],['fanduel','FanDuel'],['kalshi','Kalshi'],['polymarket','Polymarket'],['prize picks','PrizePicks'],['prizepicks','PrizePicks'],['underdog','Underdog'],['sleeper','Sleeper'],['caesars','Caesars'],['betmgm','BetMGM'],['mgm','BetMGM'],['fanatics','Fanatics'],['espn bet','ESPN BET'],['bet365','bet365'],['betrivers','BetRivers'],['bovada','Bovada'],['fliff','Fliff']];
+var NUMW={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,couple:2,few:3};
+function multiAsk(raw){var s=' '+raw.toLowerCase().replace(/[’']/g,'').replace(/-/g,' ')+' ',m;
+  m=s.match(/\b(\d+|two|three|four|five|couple|few)\s+(?:of\s+)?(?:separate|seperate|different|diff|other|more|new|good|solid|safe|risky|risk|bold)?\s*(?:good|safe|solid|risky|separate|different)?\s*(?:\d+\s*legs?\s*|(?:two|three|four|five|six|seven|eight|nine|ten)\s*legs?\s*)?(parlays|parleys|parlies|slips|bets|tickets)\b/);
+  if(!m)return null;var k=NUMW[m[1]]||+m[1];if(!(k>=2&&k<=5))return null;
+  var o=parseAsk(raw);o.k=k;
+  var lg=s.match(/\b(\d+|two|three|four|five|six|seven|eight|nine|ten)\s*legs?\b/);o.legs=lg?(NUMW[lg[1]]||+lg[1]):null;if(o.legs!=null&&(o.legs<2||o.legs>12))o.legs=null;
+  var hits=[],used=[];PLAL.forEach(function(a){var re=new RegExp('\\b'+a[0]+'\\b','g'),x;while((x=re.exec(s))){var at=x.index;if(used.some(function(u){return at>=u[0]&&at<u[1]}))continue;used.push([at,at+a[0].length]);hits.push([at,a[1]])}});
+  hits.sort(function(a,b){return a[0]-b[0]});o.apps=hits.map(function(h){return h[1]});
+  var mo=s.match(/\$\s*(\d+(?:\.\d+)?)/)||s.match(/(\d+(?:\.\d+)?)\s*(?:dollars|bucks)/);o.money=mo?parseFloat(mo[1]):null;
+  o.each=/\b(each|apiece|per parlay|per slip|on every)\b/.test(s);
+  o.fresh=/\b(nothing to do with|not the same|different from|other than|new players|havent|already (?:bet|placed)|just (?:bet|placed|hit|played)|i placed|ones? i)\b/.test(s);
+  return o}
+function placedToday(){var ids={};(TRK||[]).forEach(function(t){if(t.date===DAY)(t.legs||[]).forEach(function(l){if(l.pid!=null)ids[l.pid]=1})});return ids}
+function aiMulti(o){
+  var k=o.k,n=o.legs||5,apps=[];for(var i=0;i<k;i++)apps.push(o.apps.length?o.apps[i%o.apps.length]:(o.apps[0]||null));
+  var per=o.money!=null?(o.each?o.money:Math.floor(o.money/k*100)/100):null;
+  var skip=placedToday();if(o.fresh||o.diff){S.cart.forEach(function(c){skip[c.id]=1});RECENT.forEach(function(id){skip[id]=1})}
+  var cats=o.cats.length?o.cats:CATS.filter(function(c){return o.ex.indexOf(c)<0});
+  var pool=[];D.forEach(function(p){if(skip[p.id])return;cats.forEach(function(st){var x=snap(p,st);if(!x||x.inj)return;x.a=analyze(x);if(o.risky){x=riskyPick(x);if(x)pool.push(x)}else if(x.a.p>=(o.minP||.62))pool.push(x)})});
+  pool.sort(function(a,b){return b.a.p-a.a.p});
+  var seen={},cand=[];pool.forEach(function(x){if(cand.length<80&&!seen[x.key]){seen[x.key]=1;cand.push(x)}});
+  if(cand.length<n*k*.6&&!o.risky)say('Heads up: there aren\'t many strong legs '+dayLabel(DAY).toLowerCase()+', so some of these parlays may come out shorter.');
+  var needApps=apps.some(function(a){return a});
+  say('Building '+k+' separate parlays'+(n?' of '+n+' legs':'')+(needApps?', checking which legs '+uniq(apps.filter(Boolean)).join(' and ')+' list':'')+'…');
+  var who=[];
+  var build=function(oddsOk){
+    var usedP={},out=[];
+    for(var i=0;i<k;i++){var app=apps[i],tc={},legs=[];
+      for(var j=0;j<cand.length&&legs.length<n;j++){var x=cand[j];if(usedP[x.id]||(tc[x.t]||0)>=Math.max(2,Math.ceil(n/3)))continue;
+        if(app&&oddsOk&&appKnown(app)&&!(who[j]&&who[j].indexOf(app)>-1))continue;
+        legs.push(x);usedP[x.id]=1;tc[x.t]=(tc[x.t]||0)+1}
+      out.push({app:app,legs:legs})}
+    return out};
+  var appKnown=function(app){return who.some(function(w){return w&&w.indexOf(app)>-1})};
+  var finish=function(oddsOk,note){
+    var res=build(oddsOk);if(!res.some(function(r){return r.legs.length})){say('I couldn\'t find enough strong legs for that right now. Try fewer legs or fewer parlays.');return}
+    S.saved=S.saved||[];var lines=[];
+    res.forEach(function(r,i){if(!r.legs.length)return;var legs=r.legs.map(clean),sc=rate(legs),nm='Pal #'+(i+1)+(r.app?' · '+r.app:'')+(per!=null?' · $'+per:'');
+      S.saved.unshift({name:nm.slice(0,40),legs:JSON.parse(JSON.stringify(legs)),ts:Date.now()+i,pl:r.app||null,stake:per!=null?String(per):null});
+      var conf=r.app?(oddsOk&&appKnown(r.app)?' (all listed on '+r.app+')':' ('+r.app+' prices aren\'t available right now, so double-check these lines in the app)'):'';
+      lines.push('Parlay '+(i+1)+(r.app?' · '+r.app:'')+(per!=null?' · $'+per:'')+conf+':\n'+r.legs.map(function(x){return'- '+legName(x)+' ('+Math.round(x.a.p*100)+'%)'}).join('\n')+(sc?'\nScore: '+sc.score+' out of 100 ('+sc.label+')':'')+(r.legs.length<n?'\nOnly '+r.legs.length+' strong legs fit here, so I stopped instead of padding it.':''))});
+    S.saved=S.saved.slice(0,20);
+    var first=res.filter(function(r){return r.legs.length})[0];S.cart=first.legs.map(clean);if(first.app)S.pl=first.app;if(per!=null)S.stake=String(per);
+    save();renderSlip();renderProps();renderHome();
+    say(lines.join('\n\n')+'\n\nNo player is in more than one of these, so one bad night can\'t sink them all. All '+lines.length+' are saved under Saved parlays on the Parlay page. Parlay 1 is open in your slip now.'+(note?'\n'+note:''))};
+  if(!needApps){finish(false);return}
+  var step=function(from){var chunk=cand.slice(from,from+20);if(!chunk.length)return finish(true);
+    fetch('/api/odds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({legs:chunk.map(function(c){return{n:c.n,t:c.t,opp:c.opp,s:c.s,bar:c.bar}})})}).then(function(r){return r.json()}).then(function(d){
+      if(!d||d.configured===false||d.error)return finish(false,'Live prices are off, so I picked from game stats only.');
+      chunk.forEach(function(_,q){who[from+q]=(d.books||[]).filter(function(b){return b.legs&&b.legs[q]!=null}).map(function(b){return BKLINK[b.key]||b.title})});
+      if(from+20<cand.length&&from<60)return step(from+20);finish(true)}).catch(function(){finish(false,'I couldn\'t reach live prices, so I picked from game stats only.')})};
+  step(0)}
+function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
+
 function aiAsk(t){t=(t||'').trim();if(!t)return;if(blocked())return;
+  var mo=multiAsk(t);if(mo){say(t,'u');aiMulti(mo);return}
   if(PAL.busy){toast('One second, I am still thinking about your last message.');return}
   var hist=CHAT.filter(function(m){return !m.th}).slice(-10).map(function(m){return{r:m.r,t:m.t}});
   say(t,'u');PAL.busy=true;palThink(true);
@@ -2526,7 +2584,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='ntrm')ntDismiss(d.id,b);
   else if(a==='ntclear')ntClearAll();
   else if(a==='savep'){if(!S.cart.length)return;var nm=(window.prompt('Name this parlay','Parlay '+((S.saved||[]).length+1))||'').trim();if(!nm)return;S.saved=S.saved||[];S.saved.unshift({name:nm.slice(0,40),legs:JSON.parse(JSON.stringify(S.cart)),ts:Date.now()});S.saved=S.saved.slice(0,20);save();renderSlip();renderHome();toast('Saved')}
-  else if(a==='loadp'){var sp=S.saved[+d.i];if(sp){S.cart=JSON.parse(JSON.stringify(sp.legs));save();renderSlip();renderProps();renderHome();go('parlay');toast('Opened '+sp.name)}}
+  else if(a==='loadp'){var sp=S.saved[+d.i];if(sp){S.cart=JSON.parse(JSON.stringify(sp.legs));if(sp.pl)S.pl=sp.pl;if(sp.stake)S.stake=sp.stake;save();renderSlip();renderProps();renderHome();go('parlay');toast('Opened '+sp.name)}}
   else if(a==='dupp'){var sd=S.saved[+d.i];if(sd){S.saved.splice(+d.i+1,0,{name:sd.name+' copy',legs:JSON.parse(JSON.stringify(sd.legs)),ts:Date.now()});save();renderSlip();renderHome()}}
   else if(a==='renp'){var sr=S.saved[+d.i];if(sr){var n2=(window.prompt('Rename parlay',sr.name)||'').trim();if(n2){sr.name=n2.slice(0,40);save();renderSlip();renderHome()}}}
   else if(a==='delp'){S.saved.splice(+d.i,1);save();renderSlip();renderHome()}
