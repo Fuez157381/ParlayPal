@@ -326,7 +326,9 @@ def _ask_free(key, url, mdl, message, history, context, load_day, compare):
     msgs = [{"role": "system", "content": SYSTEM + FREE_FORMAT}] + _user_turns(message, history, ctx)
     lookups = 0
     for _ in range(6):
-        body = {"model": mdl, "messages": msgs, "temperature": 0.4, "max_tokens": 2000}
+        body = {"model": mdl, "messages": msgs, "temperature": 0.4, "max_tokens": 4000}
+        if "generativelanguage" in url:
+            body["reasoning_effort"] = "low"  # quicker answers
         if lookups <= MAX_LOOKUPS:
             body["tools"] = OAI_TOOLS
         res = _post(url, key, body)
@@ -344,7 +346,7 @@ def _ask_free(key, url, mdl, message, history, context, load_day, compare):
             out = _run_tool(c["function"]["name"], args, load_day, compare) if lookups <= MAX_LOOKUPS else {"error": "Lookup limit reached. Answer now."}
             msgs.append({"role": "tool", "tool_call_id": c.get("id"), "content": json.dumps(out, separators=(",", ":"))})
     msgs.append({"role": "user", "content": "Answer now with what you have, as the JSON object."})
-    res = _post(url, key, {"model": mdl, "messages": msgs, "temperature": 0.4, "max_tokens": 2000})
+    res = _post(url, key, {"model": mdl, "messages": msgs, "temperature": 0.4, "max_tokens": 4000})
     return _finish(res["choices"][0]["message"].get("content"))
 
 
