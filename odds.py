@@ -12,6 +12,9 @@ import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE = os.environ.get("ODDS_BASE", "https://api.the-odds-api.com")
+# Only the apps Parlay Pal shows. Asking by name costs 1 credit per market per game (instead of 1 per region x3).
+BOOKS = [b.strip() for b in os.environ.get("ODDS_BOOKS", "fanduel,hardrockbet,prizepicks,underdog,sleeper").split(",") if b.strip()]
+SHOWN = set(BOOKS) | {"kalshi"}
 REGIONS = "us,us2,us_dfs"                 # sportsbooks, more books (Hard Rock, ESPN BET, Fanatics, Fliff), pick'em apps (Underdog, PrizePicks, Sleeper, Pick6, Betr); each region multiplies the credit cost
 TTL = 2 * 3600                             # seconds an event's odds are reused (makes the free 500 credits last)
 
@@ -87,7 +90,7 @@ def _events_list(key):
 
 
 def _event_odds(key, eid, markets):
-    ck = (eid, ",".join(sorted(markets)))
+    ck = (eid, ",".join(sorted(markets)) + "|" + ",".join(BOOKS))
     hit = _cache.get(ck)
     if hit and time.time() - hit[0] < TTL:
         return hit[1], None
@@ -96,10 +99,11 @@ def _event_odds(key, eid, markets):
     if shared is not None:
         _cache[ck] = (time.time(), shared)
         return shared, None
-    params = {"apiKey": key, "regions": REGIONS, "markets": ",".join(sorted(markets)), "oddsFormat": "american"}
+    params = {"apiKey": key, "bookmakers": ",".join(BOOKS), "markets": ",".join(sorted(markets)), "oddsFormat": "american"}
     r = _get(f"/v4/sports/basketball_nba/events/{eid}/odds", params)
-    if r.status_code == 422:                       # a region name this plan does not know: use plain US books
-        params["regions"] = "us"
+    if r.status_code == 422:                       # the plan refused the app list: fall back to regions
+        params.pop("bookmakers", None)
+        params["regions"] = REGIONS
         r = _get(f"/v4/sports/basketball_nba/events/{eid}/odds", params)
     if r.status_code != 200:
         raise RuntimeError(f"odds provider said {r.status_code}: {r.text[:120]}")
@@ -145,7 +149,8 @@ def compare(legs):
             used.append(name)
         for d, r in zip(per_leg, rows):
             for k, v in r.items():
-                d.setdefault(k, v)
+                if k in SHOWN:             # only the apps Parlay Pal shows
+                    d.setdefault(k, v)
 
     if sgo.api_key():
         try:
