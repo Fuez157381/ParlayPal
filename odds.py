@@ -73,10 +73,16 @@ def _get(path, params):
 def _events_list(key):
     if _events["v"] is not None and time.time() - _events["t"] < TTL:
         return _events["v"]
+    import kv
+    shared = kv.get("oddsapi:events", TTL)
+    if shared is not None:
+        _events["v"], _events["t"] = shared, time.time()
+        return shared
     r = _get("/v4/sports/basketball_nba/events", {"apiKey": key, "dateFormat": "iso"})
     if r.status_code != 200:
         raise RuntimeError(f"odds provider said {r.status_code}: {r.text[:120]}")
     _events["v"], _events["t"] = r.json(), time.time()
+    kv.put("oddsapi:events", _events["v"])
     return _events["v"]
 
 
@@ -85,6 +91,11 @@ def _event_odds(key, eid, markets):
     hit = _cache.get(ck)
     if hit and time.time() - hit[0] < TTL:
         return hit[1], None
+    import kv
+    shared = kv.get("oddsapi:" + ck[0] + ":" + ck[1], TTL)
+    if shared is not None:
+        _cache[ck] = (time.time(), shared)
+        return shared, None
     params = {"apiKey": key, "regions": REGIONS, "markets": ",".join(sorted(markets)), "oddsFormat": "american"}
     r = _get(f"/v4/sports/basketball_nba/events/{eid}/odds", params)
     if r.status_code == 422:                       # a region name this plan does not know: use plain US books
@@ -93,6 +104,7 @@ def _event_odds(key, eid, markets):
     if r.status_code != 200:
         raise RuntimeError(f"odds provider said {r.status_code}: {r.text[:120]}")
     _cache[ck] = (time.time(), r.json())
+    kv.put("oddsapi:" + ck[0] + ":" + ck[1], r.json())
     return r.json(), r.headers.get("x-requests-remaining")
 
 
