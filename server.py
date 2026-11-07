@@ -47,6 +47,8 @@ def _send_old_copies_home():
     return None
 import pay  # noqa: E402
 app.register_blueprint(pay.bp, url_prefix="/api/pay")
+import social  # noqa: E402
+app.register_blueprint(social.bp, url_prefix="/api/social")
 
 
 # ---------- cache ----------

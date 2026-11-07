@@ -569,6 +569,9 @@ def password():
 @bp.route("/delete", methods=["POST"])
 def delete():
     pw = str(_body().get("password", ""))
+    import social
+    with social._db():      # makes sure the social tables exist before cleaning them up
+        pass
     with db() as con:
         u = _current(con)
         if not u:
@@ -579,6 +582,9 @@ def delete():
             return _err("That password isn't right.", 401)
         for table, col in (("sessions", "uid"), ("tokens", "uid"), ("users", "id")):
             con.execute(f"DELETE FROM {table} WHERE {col}=?", (u["id"],))
+        for sql in ("DELETE FROM likes WHERE uid=?", "DELETE FROM comments WHERE uid=?", "DELETE FROM follows WHERE uid=? OR fid=?",
+                    "DELETE FROM reports WHERE uid=?", "DELETE FROM posts WHERE uid=?"):
+            con.execute(sql, (u["id"],) * sql.count("?"))
         con.commit()
     resp = make_response(jsonify({"ok": True}))
     resp.delete_cookie(COOKIE, path="/")
