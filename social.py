@@ -483,3 +483,11 @@ def gifs():
             out.append({"id": g.get("id"), "s": u, "u": f, "w": int(small.get("width") or 200), "h": int(small.get("height") or 150)})
     more = (pg.get("offset", off) + pg.get("count", len(data))) < min(pg.get("total_count", 0), 4999)
     return jsonify({"configured": True, "gifs": out, "more": bool(more and data)})
+
+
+@bp.route("/oops", methods=["POST"])
+def oops():
+    """The app reports requests that never reached the server, so they show up in Vercel's logs."""
+    b = _body()
+    print("SOCIAL CLIENT ERROR", json.dumps({k: str(b.get(k, ""))[:300] for k in ("path", "err", "size", "ua", "url", "try")}), flush=True)
+    return jsonify({"ok": True})

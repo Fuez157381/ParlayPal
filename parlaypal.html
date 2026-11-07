@@ -3325,8 +3325,13 @@ window.__pp={ms:function(){return MSP},msl:function(){return MSL},S:function(){r
 
 /* ---------- Social: posts, screenshots, graded parlays, records ---------- */
 var SO={gifsOn:false,view:'feed',full:{},seen2:{},tab:'new',posts:[],busy:false,end:false,open:{},cm:{},draft:{text:'',legs:null,stake:'',payout:'',img:'',app:'',gif:'',odds:''},lead:null,seen:0,poll:null};
-function soApi(path,body){var o={credentials:'same-origin'};if(body){o.method='POST';o.headers={'Content-Type':'application/json'};o.body=JSON.stringify(body)}
-  return fetch('/api/social/'+path,o).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||'That didn\'t work. Try again.');return j})},function(){throw new Error('Can\'t reach the server. Check your connection.')})}
+function soApi(path,body,tries){var o={credentials:'same-origin',cache:'no-store'},bs='';if(body){bs=JSON.stringify(body);o.method='POST';o.headers={'Content-Type':'application/json'};o.body=bs}
+  tries=tries||0;
+  return fetch('/api/social/'+path,o).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||('That didn\'t work (error '+r.status+'). Try again.'));return j})},function(e){
+    try{var rep=JSON.stringify({path:path.split('?')[0],err:(e&&(e.name+': '+e.message))||String(e),size:bs.length,ua:navigator.userAgent,url:location.href,'try':tries});
+      if(navigator.sendBeacon)navigator.sendBeacon('/api/social/oops',new Blob([rep],{type:'application/json'}))}catch(x){}
+    if(tries<2)return new Promise(function(res){setTimeout(res,700*(tries+1))}).then(function(){return soApi(path,body,tries+1)});
+    throw new Error('Couldn\'t send that ('+((e&&e.message)||'network error')+'). Check your connection and try again.')})}
 function soAgo(t){var s=Math.max(1,Math.floor(Date.now()/1000-t));if(s<60)return'now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';if(s<604800)return Math.floor(s/86400)+'d';return new Date(t*1000).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function soRec(r){if(!r||(!r.w&&!r.l))return'';return'<span class="sorec'+(r.w>r.l?' up':r.l>r.w?' dn':'')+'">'+r.w+'-'+r.l+'</span>'}
 function soMoney(v){var n=+v;if(!n)return'';return'$'+(n%1?n.toFixed(2):n)}
