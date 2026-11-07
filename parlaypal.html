@@ -2173,7 +2173,8 @@ function proPreview(){var pk=[];try{pk=topPicks(4)}catch(e){}if(pk.length<2)retu
   var r=rate(pk.slice(0,3)),cards=pk.map(function(x){return'<div class="pvc">'+av(x.n,x.id,'sm')+'<div><b>'+esc(short(x.n))+'</b><span>'+x.bar+'+ '+esc(ST[x.s])+'</span></div><em>'+x.a.hits+'/'+x.a.n+'</em></div>'}).join('');
   var gm=(G||[]).slice(0,3).map(function(g){return'<div class="pvg">'+matchup(g)+'</div>'}).join('');
   return'<div class="provw" aria-hidden="true"><div class="pvgrid"><div class="pvcol">'+cards+'</div><div class="pvcol"><div class="pvs"><div class="ring" style="width:84px;height:84px">'+ringSvg(r.score,r.tone,84)+'<div class="n" style="font-size:26px"><div>'+r.score+'</div></div></div><b>'+esc(r.label)+'</b><span>Parlay score</span></div>'+gm+'</div></div></div>'}
-function trialLeft(){if(!S.acct)return 0;return Math.max(0,Math.ceil((S.acct.start+TRIAL_DAYS*864e5-Date.now())/864e5))}
+function trialLeft(){var a=S.acct;if(!a||!a.trial||!a.proUntil)return 0;return Math.max(0,Math.ceil((a.proUntil*1000-Date.now())/864e5))}
+function needPay(){var a=S.acct;return!!(a&&BILLING_LIVE&&!a.pro&&!a.owner)}
 function renderAcct(){var b=$('acctChip');if(!b)return;b.hidden=false;
   if(S.acct){b.className='chipbtn tr';b.setAttribute('aria-haspopup','menu');b.setAttribute('aria-expanded','false');b.setAttribute('aria-label','Account menu for '+S.acct.name);b.innerHTML=acAvatar(S.acct)+'<span class="acn">'+esc(String(S.acct.name).split(' ')[0])+'</span><svg class="accar" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'}
   else{b.className='chipbtn';b.removeAttribute('aria-haspopup');b.removeAttribute('aria-expanded');b.removeAttribute('aria-label');b.textContent='Sign up'}
@@ -2200,17 +2201,20 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   else if(WS===7){sk.hidden=true;h=acMailScreen()}
   else if(WS===8){sk.textContent='Not now';sk.dataset.act='welclose';
     h='<h2>Choose a new <span>password.</span></h2><p class="wp">You\'ll be signed in right after.</p><form class="frm" id="wfReset" novalidate><label>New password<input id="acP" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label><p class="err" id="wfErr" role="alert"></p><button class="btn big" type="submit">Save new password</button></form>'}
-  else{var d=trialLeft(),ended=S.acct&&d<=0;sk.hidden=true;
-    var cta=!S.acct?'<button class="btn big wht" data-act="acct">Start your 3-day free trial</button>':S.acct.pro?'<button class="btn big wht" data-act="welclose">You have Pro. Back to the app</button>':(ended?(BILLING_LIVE?'<button class="btn big wht" data-act="paypro">Subscribe for $9.99/month</button>':'<button class="btn big wht" data-act="welclose">Keep using Parlay Pal</button>'):'<button class="btn big wht" data-act="welclose">Back to the app</button>');
-    h='<h2>Parlay Pal <span>Pro</span></h2><p class="prosub">Unlock the full read</p>'+proPreview()+'<ul class="perks"><li>Unlimited parlays</li><li>Parlay Pal chat, every day</li><li>Every day\'s games and props</li></ul>'+
-    '<div class="plan" role="radio" aria-checked="true"><div class="plt"><b>Monthly</b><span class="chk" aria-hidden="true">&#10003;</span></div><div class="plp">$9.99<small>/mo</small></div><p>Billed monthly after your free trial</p></div>'+
-    '<p class="nopay">'+(BILLING_LIVE?'No payment due today. Cancel anytime.':'No payment due now. Payments aren\'t switched on yet, so nothing will be charged.')+'</p>'+
-    (S.acct?'<p class="wp">'+(ended?'Your free trial has ended.':'You have '+d+(d===1?' day':' days')+' of free trial left.')+'</p>':'')+
-    '<div class="stack">'+cta+(S.acct&&!ended?'':'<button class="lnk" data-act="welclose">Not now</button>')+'</div>'}
+  else{var a=S.acct,used=!!(a&&a.trialUsed),end=new Date(Date.now()+TRIAL_DAYS*864e5).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    sk.hidden=!(a&&a.pro);sk.textContent='Close';sk.dataset.act='welclose';
+    var cta=!a?'<button class="btn big wht" data-act="acct">Start your 3-day free trial</button>':a.pro?'<button class="btn big wht" data-act="welclose">You have Pro. Back to the app</button>':
+      (!BILLING_LIVE?'<button class="btn big wht" data-act="welclose">Back to the app</button>':used?'<button class="btn big wht" data-act="paypro">Subscribe for $9.99/month</button>':'<button class="btn big wht" data-act="paypro">Start my free trial</button>');
+    h='<h2>'+(a&&a.pro?'Parlay Pal <span>Pro</span>':used?'Your trial <span>is over.</span>':'Try Pro <span>free for 3 days.</span>')+'</h2><p class="prosub">'+(used&&!(a&&a.pro)?'Subscribe to keep building parlays':'Unlock the full read')+'</p>'+proPreview()+
+    '<ul class="perks"><li>Unlimited parlays</li><li>Parlay Pal chat, every day</li><li>Every day\'s games and props</li>'+(used?'':'<li>+10 free spins in the locker</li>')+'</ul>'+
+    '<div class="plan" role="radio" aria-checked="true"><div class="plt"><b>Monthly</b><span class="chk" aria-hidden="true">&#10003;</span></div><div class="plp">'+(used?'$9.99<small>/mo</small>':'$0 <small>today</small>')+'</div><p>'+(used?'Billed monthly. Cancel anytime.':'Then $9.99/month, starting '+end+'.')+'</p></div>'+
+    '<p class="nopay">'+(!BILLING_LIVE?'Payments aren\'t switched on yet, so nothing will be charged.':used?'Cancel anytime from your account menu.':'Card required. Cancel anytime before '+end+' and you won\'t be charged.')+'</p>'+
+    (a&&a.trial?'<p class="wp">'+trialLeft()+' day'+(trialLeft()===1?'':'s')+' left in your free trial.</p>':'')+
+    '<div class="stack">'+cta+(a&&!a.pro&&BILLING_LIVE?'<button class="lnk" data-act="apout">Sign out</button>':(!a?'<button class="lnk" data-act="welclose">Not now</button>':''))+'</div>'}
   el.innerHTML=h;if(WS===1)renderPhone()}
 var GMAX=3;   /* guests can hold this many legs; the next one needs a free account */
 function blocked(add){
-  if(S.acct){if(trialLeft()<=0&&BILLING_LIVE&&!S.acct.pro){openWel(4);return true}return false}
+  if(S.acct){if(needPay()){openWel(4);return true}return false}
   if(ACCT_OFF)return false;
   if(add&&S.cart.length>=GMAX){WWHY='legs';openWel(3,true);return true}
   if(S.gUsed&&(!add||S.cart.length===0)){WWHY='';openWel(3,true);return true}
@@ -2682,6 +2686,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='lkrevx'){var rv=document.querySelector('.lkrev');if(rv)rv.remove();if(lkState().spins>0&&/again/i.test(b.textContent))lkSpin()}
   else if(a==='paybuy')payGo(d.item);
   else if(a==='paypro')payGo('pro');
+  else if(a==='paywall')openWel(4);
   else if(a==='payportal')payPortal();
   else if(a==='lkequip')lkEquip(d.k);
   else if(a==='lkjoin'){lkClose();openWel(3,true)}
@@ -2862,7 +2867,7 @@ setTimeout(lkDot,0);
 var ACOL=['#FB8A2E','#22C55E','#38BDF8','#F43F5E','#A78BFA','#FBBF24'],APT='profile',APDEL=false,APCOL=null;
 function acIni(a){return esc(String(a&&a.name||'?').trim().charAt(0).toUpperCase()||'?')}
 function acAvatar(a,c){if(a&&a.photo)return'<i class="acav ph'+(c?' '+c:'')+'" aria-hidden="true"><img src="'+esc(a.photo)+'" alt=""></i>';var col=APCOL&&c==='lg'?APCOL:(a&&a.color)||'';return'<i class="acav'+(c?' '+c:'')+'" aria-hidden="true"'+(col?' style="background:'+esc(col)+';color:#14100A"':'')+'>'+acIni(a)+'</i>'}
-function acPlan(){var a=S.acct;if(a&&a.pro)return'Parlay Pal Pro'+(a.proEnding&&a.proUntil?', ends '+new Date(a.proUntil*1000).toLocaleDateString():', renews monthly');var d=trialLeft();return d>0?'Free trial: '+d+(d===1?' day':' days')+' left':'Free trial ended'}
+function acPlan(){var a=S.acct;if(a&&a.owner)return'Owner: everything unlocked';if(a&&a.pro&&a.trial){var d=trialLeft();return'Free trial: '+d+(d===1?' day':' days')+' left'+(a.proEnding?', won\'t renew':', then $9.99/mo')}if(a&&a.pro)return'Parlay Pal Pro'+(a.proEnding&&a.proUntil?', ends '+new Date(a.proUntil*1000).toLocaleDateString():', renews monthly');return BILLING_LIVE?'No plan yet. Start your free trial.':'Free plan'}
 function acMenuClose(){var m=$('amenu');if(m.hidden)return;m.hidden=true;$('acctChip').setAttribute('aria-expanded','false')}
 function acMenu(){var m=$('amenu'),b=$('acctChip');if(!m.hidden){acMenuClose();return}ntClose();var a=S.acct,r=b.getBoundingClientRect();
   m.innerHTML='<div class="amh">'+acAvatar(a)+'<div><b>'+esc(a.name)+'</b><span>'+esc(a.email)+'</span></div></div><p class="amp">'+acPlan()+'</p>'+
@@ -2908,11 +2913,11 @@ document.addEventListener('input',function(e){if(e.target.id!=='apHue')return;va
 function acHueMark(h){Array.prototype.forEach.call(document.querySelectorAll('.apswatch button'),function(b){b.setAttribute('aria-checked',String(+b.dataset.h===h))});var r=$('apReset');if(r)r.hidden=h===27;var v=$('apHue');if(v&&document.activeElement!==v&&+v.value!==h)v.value=h}
 function acRefresh(){lkDot();save();renderAcct();renderHome();renderSlip()}
 function acPost(path,body){return fetch('/api/auth/'+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||'That didn\'t work. Please try again.');return j})},function(){throw new Error('Can\'t reach the server. Check your connection and try again.')})}
-function acSet(u){S.acct=u?{id:u.id,name:u.name,email:u.email,start:u.start,verified:u.verified,team:u.team,color:u.color,photo:u.photo||'',mascot:u.mascot||'',locker:u.locker||null,pro:!!u.pro,proUntil:u.proUntil||0,proEnding:!!u.proEnding,hasBilling:!!u.hasBilling}:null;if(u&&u.mascot)msSet(u.mascot,true);if(u){S.wel=true;S.guest=false}acRefresh()}
+function acSet(u){S.acct=u?{id:u.id,name:u.name,email:u.email,start:u.start,verified:u.verified,team:u.team,color:u.color,photo:u.photo||'',mascot:u.mascot||'',locker:u.locker||null,pro:!!u.pro,proUntil:u.proUntil||0,proEnding:!!u.proEnding,hasBilling:!!u.hasBilling,trial:!!u.trial,trialUsed:!!u.trialUsed,owner:!!u.owner}:null;if(u&&u.mascot)msSet(u.mascot,true);if(u){S.wel=true;S.guest=false}acRefresh()}
 var ACMAIL={};
 function acMailScreen(){var m=ACMAIL,a=S.acct,sent=m.emailSent,to=m.to||(a&&a.email)||'',reset=m.kind==='reset';
   var body=reset?'<p class="wp">If there\'s an account for <b>'+esc(to)+'</b>, a reset link is on its way. It works for 1 hour.</p>':sent?'<p class="wp">We sent a verification link to <b>'+esc(to)+'</b>. Open it to confirm your account.</p>':'<p class="wp">Your account is ready, but we couldn\'t send the verification email to <b>'+esc(to)+'</b>'+(m.mailProblem==='not_configured'?' because email isn\'t set up on this site yet.':'. Please try again.')+'</p>';
-  return'<h2>Check your <span>email.</span></h2>'+body+(m.devLink?'<div class="wdev"><b>Test mode</b><span>No email service is connected, so here\'s the link that would be emailed:</span><a href="'+esc(m.devLink)+'">Open '+(reset?'reset':'verification')+' link</a></div>':'')+'<div class="stack"><button class="btn big" data-act="welclose">Continue</button>'+(!reset&&a&&!a.verified?'<button class="lnk" type="button" data-act="acresend">Send it again</button>':'')+'</div>'}
+  return'<h2>Check your <span>email.</span></h2>'+body+(m.devLink?'<div class="wdev"><b>Test mode</b><span>No email service is connected, so here\'s the link that would be emailed:</span><a href="'+esc(m.devLink)+'">Open '+(reset?'reset':'verification')+' link</a></div>':'')+'<div class="stack"><button class="btn big" data-act="'+(!reset&&needPay()?'paywall':'welclose')+'">Continue</button>'+(!reset&&a&&!a.verified?'<button class="lnk" type="button" data-act="acresend">Send it again</button>':'')+'</div>'}
 function acBar(){var b=$('vbar');if(!b)return;var a=S.acct;b.hidden=!(a&&!a.verified);if(!b.hidden)b.innerHTML='<span>Please verify your email, <b>'+esc(a.email)+'</b>.</span><button type="button" data-act="acresend">Resend email</button>'}
 function acResend(){acPost('resend').then(function(j){if(j.alreadyVerified){if(S.acct)S.acct.verified=true;acRefresh();return}ACMAIL={kind:'verify',to:S.acct&&S.acct.email,emailSent:j.emailSent,mailProblem:j.mailProblem,devLink:j.devLink};if(j.emailSent)toast('Verification email sent.');if(j.emailSent&&!j.devLink&&$('wel').hidden)return;openWel(7,false)}).catch(function(e){toast(e.message)})}
 function acSignOut(){acMenuClose();acPost('logout').catch(function(){}).then(function(){if(!$('apanel').hidden)acClose();S.guest=true;S.gUsed=true;S.acct=null;acRefresh();toast('Signed out. Your parlays stay on this device.')})}
@@ -3089,7 +3094,7 @@ fetch('/api/pay/config').then(function(r){return r.ok?r.json():null}).then(funct
 (function(){var pd='';try{pd=new URLSearchParams(location.search).get('paid')||''}catch(e){}if(!pd)return;
   try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
   if(pd==='no'){setTimeout(function(){toast('Checkout canceled. Nothing was charged.')},800);return}
-  setTimeout(function(){toast(pd==='pro'?'Welcome to Parlay Pal Pro!':'Payment done! Your spins are in the locker.');confetti()},900);
+  setTimeout(function(){toast(pd==='pro'?'You\'re in! Enjoy Parlay Pal Pro.':'Payment done! Your spins are in the locker.');confetti()},900);
   [2500,6000,12000].forEach(function(ms){setTimeout(acLoad,ms)})})();
 window.__pp={ms:function(){return MSP},msl:function(){return MSL},S:function(){return S},cheat:function(c){return cheatRows(c).map(function(x){return[x.n,x.tag||'',x.bar,x.a.hits]})},go:go,blocked:blocked,ai:aiRun,parse:parseAsk,rate:rate,analyze:analyze,load:loadDay};
 renderAll();palPlace();go((location.hash||'').slice(1)||'home',true);mvReady=true;ntBadge();renderTrk();acLoad();loadDay('');

@@ -267,7 +267,8 @@ def _public(u):
     import pay
     b = pay.billing(u)
     return {"id": u["id"], "name": u["name"], "email": u["email"], "verified": bool(u["verified"]), "start": u["start"], "team": u["team"], "color": u["color"], "photo": u["photo"], "mascot": u["mascot"], "locker": _locker(u),
-            "pro": pay.is_pro(u), "proUntil": int(b.get("until", 0)), "proEnding": bool(b.get("cancelAtEnd")), "hasBilling": bool(b.get("customer"))}
+            "pro": pay.is_pro(u) or _is_owner(u), "proUntil": int(b.get("until", 0)), "proEnding": bool(b.get("cancelAtEnd")), "hasBilling": bool(b.get("customer")),
+            "trial": b.get("status") == "trialing", "trialUsed": bool(b.get("trialUsed")), "owner": _is_owner(u)}
 
 
 def _start_session(resp, con, uid):

@@ -21,6 +21,9 @@ import auth
 bp = Blueprint("pay", __name__)
 API = "https://api.stripe.com/v1"
 
+TRIAL_DAYS = 3        # card goes in up front; Stripe charges $9.99 automatically after 3 days unless canceled
+TRIAL_SPINS = 10      # bonus spins for starting the trial
+
 ITEMS = {
     "pro": {"name": "Parlay Pal Pro", "cents": 999, "monthly": True},
     "spins10": {"name": "10 spins", "cents": 50, "spins": 10},
@@ -112,6 +115,10 @@ def checkout():
         if it.get("monthly"):
             data["line_items[0][price_data][recurring][interval]"] = "month"
             data["subscription_data[metadata][uid]"] = str(u["id"])
+            data["payment_method_collection"] = "always"          # card required even though today is $0
+            if not b.get("trialUsed"):                             # one free trial per account
+                data["subscription_data[trial_period_days]"] = TRIAL_DAYS
+                data["subscription_data[trial_settings][end_behavior][missing_payment_method]"] = "cancel"
         if b.get("customer"):
             data["customer"] = b["customer"]
         else:
@@ -196,7 +203,15 @@ def webhook():
                 if item.get("spins"):
                     lk["spins"] = int(lk.get("spins", 0)) + item["spins"]
                 if item.get("monthly"):
-                    b.update(status="active", sub=obj.get("subscription"), until=int(time.time()) + 32 * 86400)
+                    first = not b.get("trialUsed")
+                    b["sub"] = obj.get("subscription")
+                    if b.get("status") not in ("active", "trialing"):   # the subscription event may have landed first
+                        b["status"] = "trialing" if first else "active"
+                        b["until"] = int(time.time()) + (TRIAL_DAYS if first else 32) * 86400
+                    if (first or b.get("status") == "trialing") and not b.get("trialSpins"):
+                        b["trialSpins"] = True
+                        lk["spins"] = int(lk.get("spins", 0)) + TRIAL_SPINS
+                    b["trialUsed"] = True
             _save(con, uid, paid)
         elif kind in ("customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"):
             def sub(b, lk):
@@ -208,5 +223,7 @@ def webhook():
                 if end:
                     b["until"] = int(end)
                 b["cancelAtEnd"] = bool(obj.get("cancel_at_period_end"))
+                if obj.get("trial_end"):
+                    b["trialUsed"] = True
             _save(con, uid, sub)
     return jsonify({"ok": True})
