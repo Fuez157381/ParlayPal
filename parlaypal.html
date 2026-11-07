@@ -1271,6 +1271,18 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 .sodrop{animation:soDrop .5s cubic-bezier(.2,.9,.3,1.2) both}
 @keyframes soDrop{from{opacity:0;transform:translateY(-16px) scale(.98)}to{opacity:1;transform:none}}
 html.calm .soc,html.calm .sobox{animation:none}
+.onsoc #palsay{display:none!important}
+.sogmodal{padding:4vh 10px}
+.sogbox{max-width:640px;display:flex;flex-direction:column;max-height:92vh}
+.soghd{display:flex;align-items:center;justify-content:space-between}.soghd h3{margin:0;font-size:20px}.soghd .soxx{position:static}
+.sogcat{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;flex:none}.sogcat::-webkit-scrollbar{display:none}
+.sogcat button{flex:none;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:none;color:var(--ink);font-weight:600;font-size:13.5px;white-space:nowrap}
+.sogcat button[aria-selected=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sogbox #sogq{flex:none;height:42px;margin:12px 0 10px}.sogbox .sogg{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;grid-template-columns:repeat(3,1fr);grid-auto-rows:112px;align-content:start}.sogbox .sogg button{height:100%;aspect-ratio:auto;display:block}.sogbox .soghd,.sogbox .sogcat,.sogbox .sogby{flex:none}
+@media (min-width:560px){.sogbox .sogg{grid-template-columns:repeat(4,1fr);grid-auto-rows:136px}}
+.sogg .somu{grid-column:1/-1;text-align:center;padding:30px 0}
+.sogifb{gap:6px}
+
 /* the bet slip (stays a dark ticket in both themes, like a printed slip) */
 .soslip{position:relative;max-width:400px;margin:12px 0 6px;border-radius:14px;background:#101117;isolation:isolate;overflow:visible;font-variant-numeric:tabular-nums;color:#F3F3F7}
 .soslip::before{content:"";position:absolute;inset:-1.5px;border-radius:15.5px;padding:2px;background:linear-gradient(135deg,#7DD3FC,#C4B5FD 28%,#F9A8D4 52%,#FDE68A 76%,#86EFAC);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:-1}
@@ -2439,6 +2451,7 @@ function go(v,keep){if(VIEWS.indexOf(v)<0)v='home';var from=V;V=v;var fb=$('fcar
   mvSwap(from,v,function(){VIEWS.forEach(function(k){$('v-'+k).hidden=(k!==V)});if(!keep)window.scrollTo(0,0);document.querySelectorAll('.hwrap').forEach(harUpd)});
   Array.prototype.forEach.call(document.querySelectorAll('.nav button'),function(b){if(b.dataset.v===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   try{history.replaceState(null,'','#'+v)}catch(e){}
+  document.body.classList.toggle('onsoc',v==='social');var ps=$('palsay');if(ps&&v==='social')ps.hidden=true;
   if(v==='social'&&from!=='social')soOpen();
   closePal()}
 
@@ -3360,11 +3373,26 @@ function soProfPage(){var j=SO.pd;if(!j)return'<div class="soempty"><span>Loadin
     '<div class="sostats"><div><b class="'+(r.w>r.l?'up':r.l>r.w?'dn':'')+'">'+r.w+'-'+r.l+'</b><span>Record</span></div><div><b>'+(pct==null?'--':pct+'%')+'</b><span>Win rate</span></div><div><b class="'+(r.profit>0?'up':r.profit<0?'dn':'')+'">'+(r.profit==null?'--':(r.profit<0?'-$':'+$')+Math.abs(r.profit).toFixed(0))+'</b><span>Profit</span></div><div><b>'+(u.streak?(u.streak>0?'W':'L')+Math.abs(u.streak):'--')+'</b><span>Streak</span></div></div></div>'+
     '<div class="sopposts">'+(j.posts.length?j.posts.map(soCard).join(''):'<div class="soempty"><span>No posts yet.</span></div>')+'</div>'}
 /* GIFs */
-function soGifs(q){var m=document.querySelector('#sogif .sogg');if(m)m.innerHTML='<p class="somu">Loading...</p>';
-  soApi('gifs?q='+encodeURIComponent(q||'')).then(function(j){var m=document.querySelector('#sogif .sogg');if(!m)return;if(!j.configured){m.innerHTML='<p class="somu">GIFs switch on once the GIPHY key is added.</p>';return}
-    m.innerHTML=j.gifs.length?j.gifs.map(function(g){return'<button type="button" data-act="sogifpick" data-u="'+esc(g.u)+'"><img loading="lazy" src="'+esc(g.s)+'" alt="GIF"></button>'}).join(''):'<p class="somu">No GIFs found.</p>'}).catch(function(x){var m=document.querySelector('#sogif .sogg');if(m)m.innerHTML='<p class="somu">'+esc(x.message)+'</p>'})}
-function soGifOpen(){var m=document.createElement('div');m.className='somodal';m.id='sogif';m.innerHTML='<div class="sobox sogbox" role="dialog" aria-label="Pick a GIF"><button class="soxx" type="button" data-act="soclose" aria-label="Close">&times;</button><h3>GIFs</h3><input id="sogq" type="search" placeholder="Search GIFs" aria-label="Search GIFs" autocomplete="off"><div class="sogg"></div><p class="sogby">Powered by GIPHY</p></div>';document.body.appendChild(m);
-  var t,i=$('sogq');i.focus();i.addEventListener('input',function(){clearTimeout(t);t=setTimeout(function(){soGifs(i.value)},350)});soGifs('')}
+var GIFCAT=[['','Trending'],['celebration','Celebrate'],['money rain','Cash'],['lets go','Hype'],['bad beat','Bad beat'],['crying','Pain'],['basketball dunk','Hoops'],['nba reaction','NBA'],['lock it in','Locked in'],['no way','No way'],['laughing','LOL'],['bye','Bye']];
+var GF={q:'',off:0,busy:false,end:false};
+function soGifs(q,more){var m=document.querySelector('#sogif .sogg');if(!m)return;if(!more){GF={q:q||'',off:0,busy:false,end:false};m.innerHTML='<p class="somu sogld">Loading GIFs...</p>';m.scrollTop=0}
+  if(GF.busy||GF.end)return;GF.busy=true;var want=GF.q,off=GF.off;
+  soApi('gifs?q='+encodeURIComponent(want)+'&offset='+off).then(function(j){GF.busy=false;var m=document.querySelector('#sogif .sogg');if(!m||GF.q!==want)return;
+    if(!j.configured){m.innerHTML='<p class="somu">GIFs switch on once the GIPHY key is added.</p>';return}
+    var ld=m.querySelector('.sogld');if(ld)ld.remove();
+    if(!j.gifs.length&&!off){m.innerHTML='<p class="somu">No GIFs found. Try another word.</p>';GF.end=true;return}
+    m.insertAdjacentHTML('beforeend',j.gifs.map(function(g){return'<button type="button" data-act="sogifpick" data-u="'+esc(g.u)+'"><img loading="lazy" src="'+esc(g.s)+'" alt="GIF"></button>'}).join(''));
+    GF.off=off+j.gifs.length;GF.end=!j.more||!j.gifs.length;
+    if(m.scrollHeight<=m.clientHeight+40&&!GF.end)soGifs(want,true)}).catch(function(x){GF.busy=false;var m=document.querySelector('#sogif .sogg');if(m&&!off)m.innerHTML='<p class="somu">'+esc(x.message)+'</p>'})}
+function soGifOpen(){if(!S.acct){WWHY='';openWel(3,false);return}var m=document.createElement('div');m.className='somodal sogmodal';m.id='sogif';
+  m.innerHTML='<div class="sobox sogbox" role="dialog" aria-label="Pick a GIF"><div class="soghd"><h3>GIFs</h3><button class="soxx" type="button" data-act="soclose" aria-label="Close">&times;</button></div>'+
+    '<input id="sogq" type="search" placeholder="Search GIFs" aria-label="Search GIFs" autocomplete="off">'+
+    '<div class="sogcat" role="tablist">'+GIFCAT.map(function(c,i){return'<button type="button" role="tab" aria-selected="'+(i===0)+'" data-act="sogcat" data-q="'+esc(c[0])+'">'+esc(c[1])+'</button>'}).join('')+'</div>'+
+    '<div class="sogg"></div><p class="sogby">Powered by GIPHY</p></div>';document.body.appendChild(m);
+  var t,i=$('sogq'),g=m.querySelector('.sogg');
+  i.addEventListener('input',function(){clearTimeout(t);t=setTimeout(function(){m.querySelectorAll('.sogcat button').forEach(function(b){b.setAttribute('aria-selected','false')});soGifs(i.value.trim())},350)});
+  g.addEventListener('scroll',function(){if(g.scrollTop+g.clientHeight>g.scrollHeight-300)soGifs(GF.q,true)});
+  soGifs('')}
 /* live: legs update during games, new posts slide in on their own */
 function soTick(){if(V!=='social'||document.hidden||SO.view==='lead')return;
   if(SO.view==='prof'){if(SO.pu)soApi('user/'+SO.pu).then(function(j){if(SO.view!=='prof'||!SO.pd||!SO.pd.posts)return;soMerge(SO.pd.posts,j.posts,false)}).catch(function(){});return}
@@ -3397,7 +3425,7 @@ function soComposer(){var d=SO.draft,a=S.acct;
     (d.legs?'<div class="sodl">'+soLegs({id:0,legs:d.legs,res:'wait',stake:d.stake,payout:d.payout,app:d.app,odds:d.odds})+'<div class="sodm"><label>Bet $<input id="sostake" inputmode="decimal" value="'+esc(d.stake)+'"></label><label>To pay $<input id="sopay" inputmode="decimal" value="'+esc(d.payout)+'" placeholder="optional"></label><button class="lnk" type="button" data-act="sorml">Remove</button></div></div>':'')+
     (d.gif?'<div class="sodg"><img src="'+esc(d.gif)+'" alt="Your GIF"><button type="button" data-act="sormg" aria-label="Remove GIF">&times;</button></div>':'')+(d.img?'<div class="sodi"><img src="'+d.img+'" alt="Your picture"><button type="button" data-act="sormi" aria-label="Remove picture">&times;</button></div>':'')+
     '<div class="socbar">'+(d.legs?'':'<button class="sotool sopill" type="button" data-act="sopick">'+soIco('tick')+'<span>Add a parlay</span></button>')+
-    '<label class="sotool" title="Add a screenshot"><input type="file" id="sofile" accept="image/*" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-9 8"/></svg><span class="sotl">Screenshot</span></label>'+(SO.gifsOn&&!d.gif?'<button class="sotool sogifb" type="button" data-act="sogif" aria-label="Add a GIF"><b>GIF</b></button>':'')+
+    '<label class="sotool" title="Add a screenshot"><input type="file" id="sofile" accept="image/*" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-9 8"/></svg><span class="sotl">Screenshot</span></label>'+(SO.gifsOn&&!d.gif?'<button class="sotool sogifb" type="button" data-act="sogif" aria-label="Add a GIF"><b>GIF</b><span class="sotl">GIFs</span></button>':'')+
     '<span class="sp"></span><span class="socnt" id="socnt">'+((d.text||'').length>400?500-(d.text||'').length:'')+'</span><button class="btn sopost" type="button" data-act="sopost"'+(has?'':' disabled')+'>Post</button></div></div></div>'}
 function soPicker(){var opts=[];if(S.cart.length)opts.push({k:'cart',t:'Your current slip',s:S.cart.length+' legs'});
   TRK.forEach(function(t,i){if(!t.sample)opts.push({k:'t'+i,t:dayLabel(t.date)+' parlay',s:t.legs.length+' legs'+(t.res==='hit'?' · HIT':t.res==='miss'?' · missed':'')})});
@@ -3463,6 +3491,7 @@ function soAct(a,d,t){
   else if(a==='sonewpost'){if(!S.acct){WWHY='';openWel(3,false);return true}soKeep();SO.view='feed';soDraw();var tx=$('sotext');if(tx){tx.scrollIntoView({block:'center'});tx.focus()}}
   else if(a==='sofull'){SO.full[d.id]=1;soRedraw(d.id)}
   else if(a==='sogif')soGifOpen();
+  else if(a==='sogcat'){var q=$('sogq');if(q)q.value='';document.querySelectorAll('.sogcat button').forEach(function(x){x.setAttribute('aria-selected',String(x===b))});soGifs(d.q)}
   else if(a==='sogifpick'){soKeep();SO.draft.gif=d.u;soClose();soDraw()}
   else if(a==='sormg'){soKeep();SO.draft.gif='';soDraw()}
   else if(a==='soreload'){soLoad(true)}

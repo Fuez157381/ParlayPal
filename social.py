@@ -460,12 +460,18 @@ def gifs():
         return jsonify({"configured": False, "gifs": []})
     q = str(request.args.get("q", "")).strip()[:50]
     path = "search" if q else "trending"
-    params = {"api_key": key, "limit": 24, "rating": "pg-13", "bundle": "messaging_non_clips"}
+    try:
+        off = max(0, min(4900, int(request.args.get("offset") or 0)))
+    except ValueError:
+        off = 0
+    params = {"api_key": key, "limit": 48, "offset": off, "rating": "pg-13", "bundle": "messaging_non_clips"}
     if q:
         params["q"] = q
     try:
         r = requests.get(f"https://api.giphy.com/v1/gifs/{path}", params=params, timeout=10)
-        data = r.json().get("data") or []
+        body = r.json()
+        data = body.get("data") or []
+        pg = body.get("pagination") or {}
     except (requests.RequestException, ValueError):
         return _err("GIFs aren't loading right now.", 502)
     out = []
@@ -475,4 +481,5 @@ def gifs():
         u, f = small.get("webp") or small.get("url"), full.get("url")
         if u and f and GIF_OK.match(u) and GIF_OK.match(f):
             out.append({"id": g.get("id"), "s": u, "u": f, "w": int(small.get("width") or 200), "h": int(small.get("height") or 150)})
-    return jsonify({"configured": True, "gifs": out})
+    more = (pg.get("offset", off) + pg.get("count", len(data))) < min(pg.get("total_count", 0), 4999)
+    return jsonify({"configured": True, "gifs": out, "more": bool(more and data)})
