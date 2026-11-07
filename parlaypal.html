@@ -1144,91 +1144,136 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 .fbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;padding:9px 44px 9px 16px;position:relative;background:linear-gradient(90deg,rgba(251,138,46,.16),rgba(168,85,247,.16));border-bottom:1px solid var(--line);font-size:13px;color:var(--ink);text-align:center}
 .fbar[hidden]{display:none}
 /* ---------- Social ---------- */
-.sowrap{display:grid;grid-template-columns:200px minmax(0,700px);gap:36px;justify-content:center;align-items:start;padding:24px 0 90px}
-.sorail{position:sticky;top:76px;display:flex;flex-direction:column;gap:4px}
-.sorail button{text-align:left;height:40px;padding:0 14px;border:0;border-radius:12px;background:none;color:var(--ink);font-weight:600;font-size:14.5px}
-.sorail button:hover{background:var(--card)}.sorail button.on{background:var(--card);font-weight:700}
-.sorail .sorb{text-align:center;height:44px;margin-top:8px;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--line2);font-weight:700}
-.sorail .sorb span{font-size:18px;margin-right:4px}
-.sohd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-.sohd h1{margin:0;font-size:38px;font-weight:900;letter-spacing:-.03em;font-stretch:condensed}
-.someb{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);font-size:15px}.someb .acav{width:38px;height:38px;font-size:16px}
-.sobody{border:1px solid var(--line2);border-radius:26px;overflow:hidden;background:var(--paper)}
-.somain .btn,.somodal .btn,.socomp .btn{height:40px;margin:0;padding:0 20px;border:0;border-radius:999px;background:var(--pal-f);color:var(--on);font-weight:800;font-size:14px}
-.btn.sec{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line2)}
-.socomp{padding:18px 22px 14px;border-bottom:1px solid var(--line2)}
-.socomp.soguest{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(120deg,rgba(var(--pal-rgb),.14),rgba(168,85,247,.12))}
-.socomp.soguest b{display:block;font-size:16px}.socomp.soguest span{color:var(--mu);font-size:14px}
-.socb textarea{width:100%;resize:none;min-height:56px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;padding:2px 0;outline:none}
+/* Contract: the bet-slip ticket is the hero, the graded record is the trust signal, orange only for Post and Tail, green/red only for results. */
+.sowrap{display:grid;grid-template-columns:184px minmax(0,600px) 272px;gap:28px;justify-content:center;align-items:start;padding:28px 0 96px;--sobg:var(--paper)}
+.sorail{position:sticky;top:80px;display:flex;flex-direction:column;gap:2px}
+.soni{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border:0;border-radius:8px;background:none;color:var(--mu);font-weight:600;font-size:14.5px;text-align:left;white-space:nowrap}
+.soni svg{flex:none}.soni:hover{background:var(--card);color:var(--ink)}
+.soni.on{background:var(--card2);color:var(--ink)}.soni.on svg{color:var(--pal)}
+.sorb{display:flex;align-items:center;justify-content:center;gap:8px;height:42px;margin-top:14px;border:0;border-radius:10px;background:var(--pal-f);color:var(--on);font-weight:700;font-size:14.5px;white-space:nowrap}
+.sorb:hover{filter:brightness(1.07)}
+.sorl{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;border:0;background:none;color:var(--mu);font-weight:600;font-size:13.5px}.sorl:hover{color:var(--ink)}
+.sohd{margin:0 0 16px}
+.sohd h1{margin:0;font-size:28px;font-weight:800;line-height:1.15;letter-spacing:-.03em;animation:none}
+.sohd p{margin:4px 0 0;color:var(--mu);font-size:14px}
+.somain .btn,.somodal .btn,.socomp .btn,.soaside .btn{width:auto;max-width:none;height:36px;margin:0;padding:0 18px;border:0;border-radius:8px;background:var(--pal-f);color:var(--on);font-weight:700;font-size:14px;white-space:nowrap}
+.somain .btn:disabled{background:var(--card2);color:var(--mu);box-shadow:inset 0 0 0 1px var(--line2);cursor:not-allowed}.somain .btn.busy:disabled{background:var(--pal-f);color:var(--on);opacity:.7}
+.btn.sec{background:transparent!important;color:var(--ink)!important;box-shadow:inset 0 0 0 1px var(--line2)}
+.btn.sec:hover{background:var(--card2)!important}
+/* composer */
+.socomp{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;margin-bottom:6px;padding:14px 16px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);--sobg:var(--card)}
+.socomp:focus-within{border-color:var(--line2)}
+.socav .acav{width:40px;height:40px;font-size:16px}
+.socomp.soguest{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 18px;border-left:3px solid var(--pal)}
+.socomp.soguest b{display:block;font-size:15.5px}.socomp.soguest span{color:var(--mu);font-size:13.5px}
+.socb{min-width:0}
+.socb textarea{display:block;width:100%;min-height:48px;resize:none;border:0;background:transparent;color:var(--ink);font:inherit;font-size:15.5px;line-height:1.45;padding:9px 0 4px;outline:none}
 .socb textarea::placeholder{color:var(--mu)}
-.socbar{display:flex;align-items:center;gap:8px;margin-top:6px}.socbar .sp{flex:1}
-.sotool{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:999px;color:var(--ink);font-weight:700;font-size:13.5px;cursor:pointer}
-.sotool:hover{background:var(--card)}
-.sopill{height:44px;padding:0 20px;border:0;border-radius:999px;background:#ECECF1;color:#111;font-weight:700;font-size:15px}
-.sopill:hover{background:#fff}
-.sodl{margin:6px 0 8px}.sodm{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px;font-size:13.5px;color:var(--mu)}
-.sodm input{width:80px;height:34px;margin-left:4px;border-radius:10px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);padding:0 9px}
-.sodi{position:relative;display:inline-block;margin:6px 0}.sodi img{display:block;max-height:240px;max-width:100%;border-radius:14px}
-.sodi button{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:18px;line-height:1}
-.sotabs{display:flex;gap:8px;padding:16px 22px 6px}
-.sotabs button{height:36px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--ink);font-weight:700;font-size:14px;box-shadow:inset 0 0 0 1.5px var(--line2)}
-.sotabs button[aria-selected=true]{background:var(--card);box-shadow:inset 0 0 0 1.5px var(--mu)}
-.sonewb{display:block;margin:10px auto 0;height:36px;padding:0 18px;border:0;border-radius:999px;background:var(--pal-f);color:var(--on);font-weight:800;box-shadow:0 6px 20px rgba(0,0,0,.35)}
-.soc{padding:18px 22px 10px;border-bottom:1px solid var(--line2)}.soc:last-child{border-bottom:0}
+.socbar{display:flex;align-items:center;gap:2px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line)}.socbar .sp{flex:1}
+.sotool{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--mu);font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap;flex:none}
+.sotool:hover{background:var(--card2);color:var(--ink)}
+.sotool.sopill{color:var(--ink);background:var(--card2);box-shadow:inset 0 0 0 1px var(--line2)}.sotool.sopill svg{color:var(--pal)}
+.sotool.sopill:hover{box-shadow:inset 0 0 0 1px var(--pal)}
+.sogifb b{font-size:10.5px;font-weight:800;letter-spacing:.05em;border:1.5px solid currentColor;border-radius:4px;padding:1px 4px}
+.socnt{margin-right:10px;color:var(--mu);font-size:12.5px;font-variant-numeric:tabular-nums}
+.sopost.busy{opacity:.7}
+.sodl{margin:6px 0 4px}.sodm{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:10px;font-size:13.5px;color:var(--mu)}
+.sodm input{width:84px;height:34px;margin-left:6px;border-radius:8px;border:1px solid var(--line2);background:var(--paper);color:var(--ink);padding:0 10px;font-variant-numeric:tabular-nums}
+.sodm input:focus{border-color:var(--pal);outline:none}
+.sodi{position:relative;display:inline-block;margin:6px 0}.sodi img{display:block;max-height:240px;max-width:100%;border-radius:10px}
+.sodi button,.sodg button{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.72);color:#fff;font-size:18px;line-height:1}
+.sodg{position:relative;display:inline-block}.sodg button{top:14px}
+/* feed tabs: underline, like the rest of the site */
+.sotabs{display:flex;gap:2px;margin:14px 0 0;border-bottom:1px solid var(--line)}
+.sotabs button{position:relative;flex:none;height:44px;padding:0 14px;border:0;background:none;color:var(--mu);font-weight:600;font-size:14.5px;white-space:nowrap}
+.sotabs button:hover{color:var(--ink)}
+.sotabs button[aria-selected=true]{color:var(--ink)}
+.sotabs button[aria-selected=true]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;border-radius:2px;background:var(--pal)}
+/* a post */
+.soc{padding:18px 0 12px;border-bottom:1px solid var(--line)}
 .soc.soin{animation:soIn .35s ease both}
 @keyframes soIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.soch{display:flex;align-items:center;gap:12px}
-.soav{border:0;background:none;padding:0;line-height:0}.soav .acav{width:38px;height:38px;font-size:16px}
-.socn{flex:1;min-width:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.soname{border:0;background:none;padding:0;color:var(--ink);font-weight:700;font-size:15px}.soname:hover{text-decoration:underline}
-.sot{color:var(--mu);font-size:13px}
-.sorec{font-size:12px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--mu)}
+.soch{display:flex;align-items:flex-start;gap:12px}
+.soav{flex:none;border:0;background:none;padding:0;line-height:0}.soav .acav{width:40px;height:40px;font-size:16px}
+.socn{flex:1;min-width:0;padding-top:1px}
+.socn1{display:flex;align-items:baseline;gap:5px;min-width:0}
+.soname{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;background:none;padding:0;color:var(--ink);font-weight:700;font-size:15px}.soname:hover{text-decoration:underline}
+.sot{flex:none;color:var(--mu);font-size:13px}
+.socn2{display:flex;align-items:center;gap:7px;margin-top:3px}
+.sorec{font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:5px;background:var(--card2);color:var(--mu);font-variant-numeric:tabular-nums}
 .sorec.up{background:var(--okbg);color:var(--ok)}.sorec.dn{background:var(--badbg);color:var(--bad)}
-.somore{border:0;background:none;color:var(--mu);font-size:20px;width:34px;height:34px;border-radius:50%}.somore:hover{background:var(--line)}
-.sobd{padding-left:50px}
-.sotx{margin:2px 0 6px;font-size:15.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
-.soimg{display:block;width:100%;max-width:420px;border:0;padding:0;margin:10px 0 4px;background:none;border-radius:16px;overflow:hidden}
-.soimg img{display:block;width:100%;max-height:520px;object-fit:cover;border-radius:16px;border:1px solid var(--line2)}
-.soact{display:flex;gap:2px;margin:4px -10px 0;max-width:380px}
-.soact button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 10px;border:0;border-radius:999px;background:none;color:var(--mu);font-weight:600;font-size:13.5px}
-.soact button:hover{background:var(--card);color:var(--ink)}.soact button:last-child{margin-left:auto}
+.soprofit{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}.soprofit.up{color:var(--ok)}.soprofit.dn{color:var(--bad)}
+.somore{flex:none;border:0;background:none;color:var(--mu);font-size:20px;width:34px;height:34px;margin:-4px -6px 0 0;border-radius:8px}.somore:hover{background:var(--card2);color:var(--ink)}
+.sobd{padding-left:52px}
+.sotx{margin:8px 0 4px;font-size:15.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.soimg{display:block;width:100%;max-width:420px;border:0;padding:0;margin:10px 0 4px;background:none;border-radius:12px;overflow:hidden}
+.soimg img{display:block;width:100%;max-height:520px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.sogifv img,.sodg img{display:block;max-width:300px;width:100%;border-radius:12px;margin:8px 0 4px}
+.soact{display:flex;align-items:center;gap:2px;margin:8px -8px 0}
+.soact button{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 9px;border:0;border-radius:8px;background:none;color:var(--mu);font-weight:600;font-size:13.5px;font-variant-numeric:tabular-nums}
+.soact button:hover{background:var(--card2);color:var(--ink)}
 .soact button.on{color:#F43F5E}.soact button.on svg{animation:soPop .35s ease}
 @keyframes soPop{40%{transform:scale(1.35)}}
-.socms{border-top:1px solid var(--line);margin-top:6px;padding:8px 0 6px}
-.socmt{display:flex;gap:9px;padding:6px 0}.socmt .acav{width:28px;height:28px;font-size:12px;flex:none}.socmt p{margin:2px 0 0;font-size:14.5px;overflow-wrap:anywhere}.socmt .soname{font-size:13.5px}
+.soact .sotail{margin-left:auto;margin-right:8px;height:32px;padding:0 13px 0 10px;border:1px solid rgba(var(--pal-rgb),.5);color:var(--pal);font-weight:700}
+.soact .sotail:hover{background:var(--pal-l);color:var(--pal)}
+.socms{margin-top:8px;padding:10px 0 4px;border-top:1px solid var(--line)}
+.socmt{display:flex;gap:10px;padding:6px 0}.socmt .acav{width:28px;height:28px;font-size:12px;flex:none}.socmt p{margin:2px 0 0;font-size:14.5px;overflow-wrap:anywhere}.socmt .soname{font-size:13.5px}
 .socdel{font-size:12px;padding:0 4px}
-.socf{display:flex;gap:8px;margin-top:6px}.socf input{flex:1;min-width:0;height:40px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);padding:0 14px}
+.socf{display:flex;gap:8px;margin-top:8px}.socf input{flex:1;min-width:0;height:38px;border-radius:8px;border:1px solid var(--line2);background:var(--card);color:var(--ink);padding:0 12px}
+.socf input:focus{border-color:var(--pal);outline:none}
 .somu{color:var(--mu);font-size:13.5px;margin:6px 0}
-.soempty{text-align:center;padding:48px 20px;display:flex;flex-direction:column;align-items:center;gap:6px}
-.soempty b{font-size:17px}.soempty span{color:var(--mu);font-size:14px;max-width:340px}.soempty .btn{margin-top:8px}
-.soend{text-align:center;color:var(--mu);font-size:13.5px;padding:16px}
-.somorebtn{display:block;margin:12px auto}
-.soleadwrap{border:1px solid var(--line2);border-radius:22px;padding:6px 18px;margin-top:12px}
-.sold{list-style:none;margin:0;padding:0}.sold li{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.sold li:first-child{border-top:0}
-.sold button{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;color:var(--ink);text-align:left}.sold button b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sold .acav{width:36px;height:36px;font-size:15px;flex:none}
-.sorank{width:22px;color:var(--mu);font-weight:900;font-size:15px}.sold li:nth-child(1) .sorank{color:#F5B82E}.sold li:nth-child(2) .sorank{color:#CBD5E1}.sold li:nth-child(3) .sorank{color:#D97706}
-.sopct{color:var(--mu);font-size:13.5px;font-weight:600}
-.sopop{position:absolute;z-index:60;width:180px;background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:6px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
-.sopop button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:9px;font-size:14px;color:var(--ink)}.sopop button:hover{background:var(--line)}
-.somodal{position:fixed;inset:0;z-index:80;background:rgba(5,5,10,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:5vh 12px;backdrop-filter:blur(4px)}
-.sobox{position:relative;width:100%;max-width:600px;background:var(--paper);border:1px solid var(--line2);border-radius:26px;padding:22px;animation:soIn .25s ease both}
-.sobox h3{margin:0 0 4px}
-.sopko{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px;margin:8px 0;border-radius:14px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink)}
-.sopko:hover{border-color:var(--pal)}.sopko span{color:var(--mu);font-size:13.5px}
-.soxx{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:0;background:var(--line);color:var(--ink);font-size:20px;line-height:1}
-.soph{display:flex;align-items:center;gap:14px;padding-right:36px}.soph h2{margin:0;font-size:22px}
-.soph .acav.lg{width:68px;height:68px;font-size:28px;box-shadow:0 0 0 3px var(--paper),0 0 0 5px var(--pal)}
-.sostats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0 12px}
-.sostats div{background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:12px 6px;text-align:center}
-.sostats b{display:block;font-size:20px;font-weight:800}.sostats b.up{color:var(--ok)}.sostats b.dn{color:var(--bad)}.sostats span{font-size:12px;color:var(--mu)}
-.sofol{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--mu);margin-bottom:14px}.sofol b{color:var(--ink)}.sofol .btn{margin-left:auto}
-.sopp{border:1px solid var(--line2);border-radius:20px;overflow:hidden}
-.soimgv{align-items:center;cursor:zoom-out}.soimgv img{max-width:100%;max-height:90vh;border-radius:14px}
+.soempty{text-align:center;padding:52px 20px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.soempty b{font-size:16.5px}.soempty span{color:var(--mu);font-size:14px;max-width:340px}.soempty .btn{margin-top:10px}
+.soend{text-align:center;color:var(--mu);font-size:13.5px;padding:18px}
+.somorebtn{display:block;margin:16px auto}
+/* loading skeletons */
+.soskc{padding:18px 0 14px;border-bottom:1px solid var(--line)}
+.soskc i,.soskl i{display:block;border-radius:6px;background:linear-gradient(90deg,var(--card) 0,var(--card2) 50%,var(--card) 100%);background-size:200% 100%;animation:soShim 1.3s linear infinite}
+.soskh{display:flex;align-items:center;gap:12px}.soskh .c{width:40px;height:40px;border-radius:50%}.soskh .l1{width:150px;height:12px}
+.soskc .l2{width:55%;height:12px;margin:12px 0 0 52px}.soskc .tk{max-width:400px;height:150px;margin:12px 0 0 52px;border-radius:14px}
+.soskl i{height:34px;margin:10px 0}.soskl.lg{padding:8px 0}.soskl.lg i{height:44px}
+@keyframes soShim{to{background-position:-200% 0}}
+/* right column */
+.soaside{position:sticky;top:80px;display:flex;flex-direction:column;gap:14px}
+.soaw{padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.soaw h2{margin:0;font-size:14px;font-weight:700;letter-spacing:-.01em}
+.soawh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.soawh .lnk{padding:0;font-size:13px}
+.soaw p{margin:6px 0 0;color:var(--mu);font-size:13px;line-height:1.5}
+/* leaderboard */
+.sobody.soleadwrap,.sobody:not(#sofeed){border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden;--sobg:var(--card)}
+.soleadwrap{padding:4px 18px 6px}
+.soldh,.sold li{display:grid;grid-template-columns:28px minmax(0,1fr) 110px 40px 60px;align-items:center;gap:12px}
+.soldh{grid-template-columns:28px minmax(0,1fr) 162px 60px;padding:12px 0 9px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mu2,var(--mu))}
+.soldh span:last-child{text-align:right}
+.sold{list-style:none;margin:0;padding:0}.sold li{padding:11px 0;border-top:1px solid var(--line)}.sold li:first-child{border-top:0}
+.sold button{min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;color:var(--ink);text-align:left}.sold button:hover b{text-decoration:underline}
+.sold button b{min-width:0;font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sold .acav{width:34px;height:34px;font-size:14px;flex:none}
+.sorank{color:var(--mu);font-weight:800;font-size:14px;font-variant-numeric:tabular-nums}.sold li:nth-child(1) .sorank{color:var(--warn)}
+.sopbar{height:6px;border-radius:3px;background:var(--card2);overflow:hidden}.sopbar i{display:block;height:100%;border-radius:3px;background:var(--ok)}
+.sopct{color:var(--mu);font-size:13px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.sold .sorec{justify-self:end}
+.sold.sm li{grid-template-columns:18px minmax(0,1fr) auto auto;gap:8px;padding:8px 0}.sold.sm .acav{width:28px;height:28px;font-size:12px}.sold.sm button b{font-size:13.5px}
+/* menus and dialogs */
+.sopop{position:absolute;z-index:60;width:180px;background:var(--card);border:1px solid var(--line2);border-radius:10px;padding:5px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.sopop button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 11px;border-radius:7px;font-size:14px;color:var(--ink)}.sopop button:hover{background:var(--card2)}
+.somodal{position:fixed;inset:0;z-index:80;background:rgba(5,5,10,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:8vh 12px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.sobox{position:relative;width:100%;max-width:520px;background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:20px;animation:soIn .25s ease both;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.sobox h3{margin:0 0 4px;font-size:18px}
+.sopko{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:13px 14px;margin:8px 0;border-radius:10px;border:1px solid var(--line2);background:var(--card2);color:var(--ink);text-align:left}
+.sopko:hover{border-color:var(--pal)}.sopko span{color:var(--mu);font-size:13.5px;white-space:nowrap}
+.soxx{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:8px;border:1px solid var(--line2);background:var(--card2);color:var(--ink);font-size:20px;line-height:1}
+.sogbox input{width:100%;height:40px;border-radius:8px;border:1px solid var(--line2);background:var(--paper);color:var(--ink);padding:0 14px;margin:10px 0 12px;font-size:15px}
+.sogg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:56vh;overflow-y:auto}
+.sogg button{border:0;padding:0;background:var(--card2);border-radius:8px;overflow:hidden;aspect-ratio:1}.sogg img{width:100%;height:100%;object-fit:cover;display:block}
+.sogby{margin:10px 0 0;font-size:11px;color:var(--mu);text-align:right;letter-spacing:.04em}
+.soimgv{align-items:center;cursor:zoom-out}.soimgv img{max-width:100%;max-height:90vh;border-radius:12px}
+.sodrop{animation:soDrop .5s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes soDrop{from{opacity:0;transform:translateY(-16px) scale(.98)}to{opacity:1;transform:none}}
 html.calm .soc,html.calm .sobox{animation:none}
-/* the bet slip */
-.soslip{position:relative;max-width:380px;margin:10px 0 6px;border-radius:16px;background:#101117;isolation:isolate;overflow:visible;font-variant-numeric:tabular-nums}
-.soslip::before{content:"";position:absolute;inset:-1.5px;border-radius:17.5px;padding:2px;background:linear-gradient(135deg,#7DD3FC,#C4B5FD 28%,#F9A8D4 52%,#FDE68A 76%,#86EFAC);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:-1}
+/* the bet slip (stays a dark ticket in both themes, like a printed slip) */
+.soslip{position:relative;max-width:400px;margin:12px 0 6px;border-radius:14px;background:#101117;isolation:isolate;overflow:visible;font-variant-numeric:tabular-nums;color:#F3F3F7}
+.soslip::before{content:"";position:absolute;inset:-1.5px;border-radius:15.5px;padding:2px;background:linear-gradient(135deg,#7DD3FC,#C4B5FD 28%,#F9A8D4 52%,#FDE68A 76%,#86EFAC);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:-1}
 .soslip.wait::before,.soslip.lv::before{background-size:300% 300%;animation:soHolo 6s linear infinite}
 .soslip.live::before{animation-duration:2.4s}
 @keyframes soHolo{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
@@ -1237,59 +1282,67 @@ html.calm .soc,html.calm .sobox{animation:none}
 .soslip.miss{box-shadow:0 10px 30px -14px rgba(239,68,68,.5)}
 .soflash{animation:soFlash 1.1s ease}
 @keyframes soFlash{30%{transform:scale(1.015);box-shadow:0 0 0 3px rgba(196,181,253,.5)}}
-.sosh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 10px;border-bottom:1px solid rgba(255,255,255,.07)}
-.sotag{display:flex;flex-direction:column;line-height:1.15}.sotk{font-size:12px;font-weight:900;letter-spacing:.07em;color:#F3F3F7}.sotag small{font-size:12px;color:#8C8CA1;font-weight:600}
-.sotot{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.01em}
-.sol{display:grid;grid-template-columns:44px 1fr;column-gap:11px;align-items:start;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sosh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 11px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sotag{display:flex;flex-direction:column;line-height:1.2}.sotk{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:#F3F3F7}.sotag small{font-size:12px;color:#8C8CA1;font-weight:600}
+.sotot{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.sol{display:grid;grid-template-columns:42px 1fr;column-gap:12px;align-items:start;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
 .sopic{position:relative;width:42px;height:42px}
 .sopic .av{width:42px!important;height:42px!important;min-width:42px;border-radius:50%;font-size:12px;background:#22232C;border:1px solid rgba(255,255,255,.1);color:#9A9AAE}
 .soi{position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:900;border:2px solid #101117;background:#3A3B48;color:#C8C8D4}
 .sol.wait .soi{display:none}.sol.hit .soi{background:#22C55E;color:#03140a}.sol.miss .soi{background:#EF4444;color:#fff}
 .soln{min-width:0}
-.solt{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.solt b{font-size:14.5px;font-weight:800;color:#F3F3F7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.soo{font-size:14px;font-weight:800;color:#E5E7EB;flex:none}
+.solt{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.solt b{font-size:14.5px;font-weight:700;color:#F3F3F7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.soo{font-size:14px;font-weight:700;color:#E5E7EB;flex:none}
 .solm{display:block;font-size:13.5px;font-weight:600;color:#C9C9D6;margin-top:1px}
 .solg{display:block;font-size:12px;color:#7E7E92;margin-top:2px}.solg em{font-style:normal;font-weight:800;color:#C9C9D6}
 .sol.hit .solg em{color:#4ADE80}.sol.miss .solg em{color:#F87171}
 .solb{height:4px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:7px;overflow:hidden}.solb i{display:block;height:100%;background:linear-gradient(90deg,#C4B5FD,#7DD3FC);border-radius:4px;transition:width .6s ease}
 .sol.hit .solb i{background:#22C55E}.sol.miss .solb i{background:#EF4444}
-.soshow{display:block;width:100%;border:0;border-bottom:1px solid rgba(255,255,255,.06);background:none;padding:9px 0;color:#E5E7EB;font-size:13.5px;text-decoration:underline dotted;text-underline-offset:4px}
+.soshow{display:block;width:100%;border:0;border-bottom:1px solid rgba(255,255,255,.06);background:none;padding:10px 0;color:#E5E7EB;font-size:13.5px;font-weight:600}
+.soshow:hover{background:rgba(255,255,255,.04)}
 .sotear{position:relative;height:0;border-top:2px dashed rgba(255,255,255,.12);margin:0 12px}
-.sotear::before,.sotear::after{content:"";position:absolute;top:-9px;width:16px;height:16px;border-radius:50%;background:var(--paper)}
+.sotear::before,.sotear::after{content:"";position:absolute;top:-9px;width:16px;height:16px;border-radius:50%;background:var(--sobg,var(--paper))}
 .sotear::before{left:-21px}.sotear::after{right:-21px}
-.sofoot{display:flex;align-items:center;gap:22px;padding:12px 14px 8px}
-.sofoot small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7E7E92}.sofoot b{font-size:18px;font-weight:900;color:#F3F3F7}
+.sofoot{display:flex;align-items:center;gap:24px;padding:12px 14px 8px}
+.sofoot small{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7E7E92}.sofoot b{font-size:18px;font-weight:800;color:#F3F3F7}
 .soslip.hit .sopay{color:#4ADE80}.soslip.miss .sofoot b{color:#8C8CA1;text-decoration:line-through;text-decoration-thickness:2px}
-.sostat{margin-left:auto;font-size:11.5px;font-weight:900;letter-spacing:.08em;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.08);color:#C9C9D6}
-.sostat.hit{background:#22C55E;color:#03140a}.sostat.miss{background:#EF4444;color:#fff}.sostat.lv{background:#F43F5E;color:#fff;animation:ppd 1.4s infinite}
-.sobar{display:flex;justify-content:space-between;gap:8px;padding:0 14px 11px;font-size:11.5px;color:#6E6E82}
-.sogifv img,.sodg img{display:block;max-width:300px;width:100%;border-radius:14px;margin:8px 0 4px}
-.sodg{position:relative;display:inline-block}.sodg button{position:absolute;top:14px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:18px;line-height:1}
-.sogbox input{width:100%;height:42px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);padding:0 16px;margin:8px 0 12px;font-size:15px}
-.sogg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:56vh;overflow-y:auto}
-.sogg button{border:0;padding:0;background:var(--card);border-radius:10px;overflow:hidden;aspect-ratio:1}.sogg img{width:100%;height:100%;object-fit:cover;display:block}
-.sogby{margin:10px 0 0;font-size:11px;color:var(--mu);text-align:right;letter-spacing:.04em}
-.sodrop{animation:soDrop .5s cubic-bezier(.2,.9,.3,1.2) both}
-@keyframes soDrop{from{opacity:0;transform:translateY(-16px) scale(.98)}to{opacity:1;transform:none}}
+.sostat{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:11px;font-weight:800;letter-spacing:.08em;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.08);color:#C9C9D6}
+.sostat.hit{background:#22C55E;color:#03140a}.sostat.miss{background:#EF4444;color:#fff}.sostat.lv{background:rgba(244,63,94,.16);color:#FB7185}
+.sostat.lv::before{content:"";width:7px;height:7px;border-radius:50%;background:#F43F5E;animation:soBlink 1.2s ease-in-out infinite}
+@keyframes soBlink{50%{opacity:.25}}
+.sobar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 14px 12px;font-size:11.5px;color:#7E7E92}
+.sopips{display:inline-flex;align-items:center;gap:8px}.sopip{display:inline-flex;gap:3px}
+.sopip i{width:12px;height:4px;border-radius:2px;background:rgba(255,255,255,.16)}.sopip i.hit{background:#22C55E}.sopip i.miss{background:#EF4444}.sopip i.void{background:#4B5563}
+html.calm .soslip::before,html.calm .sostat.lv::before,html.calm .soskc i,html.calm .soskl i{animation:none}
 /* profile page */
-.sopf{border-bottom:1px solid var(--line2)}
+.sopf{border-bottom:1px solid var(--line)}
 .sopban{position:relative;height:150px;background:radial-gradient(120% 140% at 85% 10%,color-mix(in srgb,var(--pc) 70%,transparent),transparent 60%),linear-gradient(120deg,#16161F,#0E0E14 60%,color-mix(in srgb,var(--pc) 35%,#0E0E14))}
-.soppal{position:absolute;right:24px;bottom:-34px;height:150px;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
-.sophd{display:flex;align-items:flex-end;gap:14px;padding:0 22px;margin-top:-34px;position:relative}
-.sophd .acav.lg{width:84px;height:84px;font-size:34px;box-shadow:0 0 0 4px var(--paper);flex:none}
-.sopnm{flex:1;min-width:0;padding-bottom:4px}.sopnm h2{margin:0;font-size:24px;font-weight:900}
+.soppal{position:absolute;right:28px;bottom:0;height:142px;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
+.sophd{display:flex;align-items:flex-end;gap:14px;padding:0 20px;margin-top:-34px;position:relative}
+.sophd .acav.lg{width:84px;height:84px;font-size:34px;box-shadow:0 0 0 4px var(--card);flex:none}
+.sopnm{flex:1;min-width:0;padding-bottom:4px}.sopnm h2{margin:0;font-size:22px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sophd .btn{margin-bottom:6px}
-.sopf .sofol{padding:12px 22px 0;margin:0}
-.sopf .sostats{padding:0 22px;margin:14px 0 18px}
-.sopposts .soc:first-child{border-top:0}
-@media (max-width:560px){.soppal{height:112px;right:12px;bottom:-22px}.sopban{height:120px}.sophd{padding:0 14px;flex-wrap:wrap}.sophd .acav.lg{width:70px;height:70px}.sopf .sofol,.sopf .sostats{padding-left:14px;padding-right:14px}.sostats b{font-size:17px}}
-html.calm .soslip::before{animation:none}
-
-.sotabs button,.sopill,.sorail button,.sotool,.sopost{white-space:nowrap;flex:none}.somain .btn,.somodal .btn,.socomp .btn{width:auto;max-width:none}
-@media (max-width:560px){.sotool .sotl{display:none}.sotool{padding:0 10px}.socbar{gap:6px}.sotabs{gap:6px}.sotabs button{padding:0 13px}.socbar .btn{padding:0 16px}}
+.sofol{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--mu)}.sofol b{color:var(--ink)}
+.sopf .sofol{padding:12px 20px 0;margin:0}
+.sostats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sopf .sostats{padding:0 20px;margin:14px 0 18px}
+.sostats div{background:var(--card2);border-radius:10px;padding:12px 6px;text-align:center}
+.sostats b{display:block;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}.sostats b.up{color:var(--ok)}.sostats b.dn{color:var(--bad)}.sostats span{font-size:12px;color:var(--mu)}
+.sopposts .soc{padding-left:20px;padding-right:20px}.sopposts .soc:last-child{border-bottom:0}
+/* sizes */
+@media (max-width:1100px){.sowrap{grid-template-columns:184px minmax(0,640px)}.soaside{display:none}}
 @media (max-width:900px){.sowrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:14px}
-  .sorail{position:static;flex-direction:row;overflow-x:auto;gap:6px;margin-bottom:12px;scrollbar-width:none}.sorail button{flex:none;height:36px}.sorail .sorb{margin-top:0;height:36px;padding:0 14px}}
-@media (max-width:560px){.sobody{border-radius:20px}.soc,.socomp{padding-left:14px;padding-right:14px}.sotabs{padding:12px 14px 4px;overflow-x:auto}.sobd{padding-left:0}.sohd h1{font-size:32px}.sopill{height:40px;padding:0 14px;font-size:14px}}
+  .sorail{position:static;flex-direction:row;gap:2px;margin-bottom:18px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  .soni{flex:1;justify-content:center;gap:7px;height:36px;padding:0 6px;font-size:13.5px}.sorb,.sorl{display:none}}
+@media (max-width:560px){.sohd h1{font-size:24px}.sohd p{font-size:13.5px}
+  .socomp{grid-template-columns:minmax(0,1fr);padding:12px 12px 10px}.socav{display:none}
+  .sotool .sotl{display:none}.socbar .btn{padding:0 16px}
+  .sotabs{overflow-x:auto;scrollbar-width:none}.sotabs::-webkit-scrollbar{display:none}.sotabs button{padding:0 11px}.sotabs button[aria-selected=true]::after{left:9px;right:9px}
+  .sobd{padding-left:0}.soskc .l2,.soskc .tk{margin-left:0}
+  .soldh{display:none}.sold li{grid-template-columns:22px minmax(0,1fr) 40px 56px;gap:10px}.sopbar{display:none}.soleadwrap{padding:2px 14px 4px}
+  .soppal{height:108px;right:10px;bottom:0}.sopban{height:116px}.sophd{padding:0 14px;flex-wrap:wrap}.sophd .acav.lg{width:70px;height:70px}
+  .sopf .sofol,.sopf .sostats,.sopposts .soc{padding-left:14px;padding-right:14px}.sostats b{font-size:16px}.sostats{gap:6px}}
+@media (max-width:420px){.soni svg{display:none}.soni{font-size:13px}}
 
 @media (min-width:721px) and (max-width:1000px){.top .nav{margin-left:4px}.top .nav button{padding:0 8px}.top .wrap{gap:8px}.hs{min-width:44px}}
 .fbar b{font-weight:700}
@@ -3280,7 +3333,7 @@ function soLegs(p){if(!p.legs)return'';var live=p.res==='wait'&&p.legs.some(func
     (many?'<button type="button" class="soshow" data-act="sofull" data-id="'+p.id+'">Show all '+n+' legs</button>':'')+
     '<div class="sotear" aria-hidden="true"></div>'+
     '<div class="sofoot"><div><small>Wager</small><b>'+(p.stake?soMoney(p.stake):'--')+'</b></div><div><small>'+(p.res==='hit'?'Paid':'To pay')+'</small><b class="sopay">'+(pay?soMoney(pay):'--')+'</b></div><span class="sostat '+st[0]+'">'+st[1]+'</span></div>'+
-    '<div class="sobar"><span>'+hits+'/'+n+' legs hit</span>'+(est?'<span>* estimated from recent games</span>':'')+'</div></div>'}
+    '<div class="sobar"><span class="sopips"><span class="sopip" aria-hidden="true">'+p.legs.map(function(l){return'<i class="'+(l.res||'wait')+'"></i>'}).join('')+'</span>'+hits+'/'+n+' legs hit</span>'+(est?'<span>* estimated from recent games</span>':'')+'</div></div>'}
 function soUseParlay(k){var legs,st=S.stake,src=[];
   var est=function(c){try{return analyze(c).p}catch(e){return null}};
   if(k==='cart'){legs=S.cart.map(function(c){var g=G.filter(function(g){return g.a===c.t||g.h===c.t})[0];return{n:c.n,t:c.t,opp:c.opp,s:c.s,bar:c.bar,pid:c.id,gid:g?g.id:null,p:est(c)}})}
@@ -3324,26 +3377,28 @@ function soMerge(list,fresh,addNew){var byId={};list.forEach(function(p){byId[p.
   var tmp=document.createElement('div');tmp.innerHTML=nw.map(soCard).join('');Array.prototype.slice.call(tmp.children).reverse().forEach(function(c){c.classList.add('sodrop');feed.insertBefore(c,feed.firstChild)})}
 function soCard(p){var a=p.by,op=SO.open[p.id];
   var nw=!SO.seen2[p.id];SO.seen2[p.id]=1;return'<article class="soc'+(nw?' soin':'')+'" data-id="'+p.id+'"><div class="soch"><button class="soav" type="button" data-act="soprof" data-u="'+a.id+'" aria-label="See '+esc(a.name)+'\'s profile">'+acAvatar(a)+'</button>'+
-    '<div class="socn"><button type="button" class="soname" data-act="soprof" data-u="'+a.id+'">'+esc(a.name)+'</button>'+soRec(a.rec)+'<span class="sot">'+soAgo(p.t)+'</span></div>'+
+    '<div class="socn"><div class="socn1"><button type="button" class="soname" data-act="soprof" data-u="'+a.id+'">'+esc(a.name)+'</button><span class="sot">&middot; '+soAgo(p.t)+'</span></div>'+
+    (a.rec&&(a.rec.w||a.rec.l)?'<div class="socn2">'+soRec(a.rec)+(a.rec.profit!=null&&a.rec.profit!==0?'<span class="soprofit '+(a.rec.profit>0?'up':'dn')+'">'+(a.rec.profit<0?'-$':'+$')+Math.abs(a.rec.profit).toFixed(0)+'</span>':'')+'</div>':'')+'</div>'+
     '<button class="somore" type="button" data-act="somenu" data-id="'+p.id+'" aria-label="More options">&#8943;</button></div><div class="sobd">'+
     (p.text?'<p class="sotx">'+esc(p.text)+'</p>':'')+soLegs(p)+
     (p.gif?'<div class="sogifv"><img loading="lazy" src="'+esc(p.gif)+'" alt="GIF"></div>':'')+(p.img?'<button class="soimg" type="button" data-act="soimg" data-id="'+p.id+'" aria-label="Open picture"><img loading="lazy" src="/api/social/img/'+p.id+'" alt="Screenshot posted by '+esc(a.name)+'"></button>':'')+
     '<div class="soact"><button type="button" class="'+(p.liked?'on':'')+'" data-act="solike" data-id="'+p.id+'" aria-pressed="'+p.liked+'"><svg width="19" height="19" viewBox="0 0 24 24" fill="'+(p.liked?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>'+(p.likes||'')+'</span></button>'+
     '<button type="button" data-act="socm" data-id="'+p.id+'" aria-expanded="'+!!op+'"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span>'+(p.comments||'')+'</span></button>'+
-    (p.legs&&p.res!=='hit'&&p.res!=='miss'?'<button type="button" data-act="sotail" data-id="'+p.id+'"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Tail</span></button>':'')+
-    '<button type="button" data-act="soshare" data-id="'+p.id+'" aria-label="Share"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 14v6h14v-6"/></svg></button></div>'+
+    '<button type="button" data-act="soshare" data-id="'+p.id+'" aria-label="Share"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 14v6h14v-6"/></svg></button>'+
+    (p.legs&&p.res!=='hit'&&p.res!=='miss'?'<button type="button" class="sotail" data-act="sotail" data-id="'+p.id+'" aria-label="Tail this parlay: add its legs to your slip">'+soIco('plus',16)+'<span>Tail</span></button>':'')+'</div>'+
     (op?'<div class="socms" id="socms'+p.id+'">'+soComments(p.id)+'</div>':'')+'</div></article>'}
 function soComments(id){var c=SO.cm[id];if(!c)return'<p class="somu">Loading comments...</p>';
   return c.map(function(x){return'<div class="socmt">'+acAvatar(x.by,'sm')+'<div><button type="button" class="soname" data-act="soprof" data-u="'+x.by.id+'">'+esc(x.by.name)+'</button> <span class="sot">'+soAgo(x.t)+'</span>'+(x.mine||(S.acct&&S.acct.owner)?' <button type="button" class="lnk socdel" data-act="socdel" data-id="'+id+'" data-c="'+x.id+'">Delete</button>':'')+'<p>'+esc(x.text)+'</p></div></div>'}).join('')+
     (S.acct?'<form class="socf" data-id="'+id+'"><input maxlength="300" placeholder="Add a comment" aria-label="Add a comment"><button class="btn" type="submit">Send</button></form>':'<button class="lnk" type="button" data-act="acct">Make a free account to comment</button>')}
 function soComposer(){var d=SO.draft,a=S.acct;
   if(!a)return'<div class="socomp soguest"><div><b>Join the conversation</b><span>Post your parlays, flex your wins and build your record.</span></div><button class="btn" type="button" data-act="acct">Make a free account</button></div>';
-  return'<div class="socomp" id="socomp"><div class="socb"><textarea id="sotext" maxlength="500" rows="2" placeholder="What\'s on your mind?">'+esc(d.text)+'</textarea>'+
+  var has=!!((d.text||'').trim()||d.legs||d.img||d.gif);
+  return'<div class="socomp" id="socomp"><span class="socav">'+acAvatar(a)+'</span><div class="socb"><textarea id="sotext" maxlength="500" rows="2" aria-label="Write a post" placeholder="Post tonight\'s parlay, a win, or a take">'+esc(d.text)+'</textarea>'+
     (d.legs?'<div class="sodl">'+soLegs({id:0,legs:d.legs,res:'wait',stake:d.stake,payout:d.payout,app:d.app,odds:d.odds})+'<div class="sodm"><label>Bet $<input id="sostake" inputmode="decimal" value="'+esc(d.stake)+'"></label><label>To pay $<input id="sopay" inputmode="decimal" value="'+esc(d.payout)+'" placeholder="optional"></label><button class="lnk" type="button" data-act="sorml">Remove</button></div></div>':'')+
     (d.gif?'<div class="sodg"><img src="'+esc(d.gif)+'" alt="Your GIF"><button type="button" data-act="sormg" aria-label="Remove GIF">&times;</button></div>':'')+(d.img?'<div class="sodi"><img src="'+d.img+'" alt="Your picture"><button type="button" data-act="sormi" aria-label="Remove picture">&times;</button></div>':'')+
-    '<div class="socbar"><label class="sotool" title="Add a screenshot"><input type="file" id="sofile" accept="image/*" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-9 8"/></svg><span class="sotl">Screenshot</span></label>'+(SO.gifsOn&&!d.gif?'<button class="sotool sogifb" type="button" data-act="sogif">GIF</button>':'')+
-    '<span class="sp"></span>'+(d.legs?'':'<button class="sopill" type="button" data-act="sopick">+ Add a parlay</button>')+
-    (d.text||d.legs||d.img?'<button class="btn sopost" type="button" data-act="sopost">Post</button>':'<button class="btn sopost" type="button" data-act="sopost">Post</button>')+'</div></div></div>'}
+    '<div class="socbar">'+(d.legs?'':'<button class="sotool sopill" type="button" data-act="sopick">'+soIco('tick')+'<span>Add a parlay</span></button>')+
+    '<label class="sotool" title="Add a screenshot"><input type="file" id="sofile" accept="image/*" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-9 8"/></svg><span class="sotl">Screenshot</span></label>'+(SO.gifsOn&&!d.gif?'<button class="sotool sogifb" type="button" data-act="sogif" aria-label="Add a GIF"><b>GIF</b></button>':'')+
+    '<span class="sp"></span><span class="socnt" id="socnt">'+((d.text||'').length>400?500-(d.text||'').length:'')+'</span><button class="btn sopost" type="button" data-act="sopost"'+(has?'':' disabled')+'>Post</button></div></div></div>'}
 function soPicker(){var opts=[];if(S.cart.length)opts.push({k:'cart',t:'Your current slip',s:S.cart.length+' legs'});
   TRK.forEach(function(t,i){if(!t.sample)opts.push({k:'t'+i,t:dayLabel(t.date)+' parlay',s:t.legs.length+' legs'+(t.res==='hit'?' · HIT':t.res==='miss'?' · missed':'')})});
   if(!opts.length){toast('Build or submit a parlay first, then share it here.');return}
@@ -3354,20 +3409,29 @@ function soPhoto(f){if(!f)return;if(!/^image\//.test(f.type)){toast('Pick a pict
     var mx=900,sc=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
     var q=.82,u=c.toDataURL('image/jpeg',q);while(u.length>340000&&q>.4){q-=.1;u=c.toDataURL('image/jpeg',q)}if(u.length>340000){toast('That picture is too big. Try a smaller one.');return}
     soKeep();SO.draft.img=u;soDraw()};im.src=r.result};r.readAsDataURL(f)}
-function soPost(){soKeep();var d=SO.draft,b=document.querySelector('.sopost');if(!d.text.trim()&&!d.legs&&!d.img&&!d.gif){toast('Write something, add a parlay or a screenshot.');return}if(b)b.disabled=true;
-  soApi('post',{text:d.text,legs:d.legs&&d.legs.map(function(l){return{n:l.n,t:l.t,opp:l.opp,s:l.s,bar:l.bar,pid:l.pid,gid:l.gid,o:l.o||null,est:!!l.est}}),stake:d.stake,payout:d.payout||soAutoPay(),img:d.img,gif:d.gif||'',odds:d.odds?+d.odds:null,app:d.app}).then(function(){SO.draft={text:'',legs:null,stake:'',payout:'',img:'',app:'',gif:'',odds:''};toast('Posted!');if(SO.tab==='following'||SO.tab==='wins')SO.tab='new';soLoad(true)}).catch(function(x){toast(x.message);if(b)b.disabled=false})}
-function soInner(){var tabs=[['new','For You'],['top','Hot'],['wins','Winners'],['following','Following']],a=S.acct;
-  var rail='<nav class="sorail" aria-label="Social menu"><button type="button" data-act="soview" data-v="feed" class="'+(SO.view==='feed'?'on':'')+'">Feed</button>'+
-    '<button type="button" class="'+(SO.view==='prof'&&a&&SO.pu===a.id?'on':'')+'" data-act="'+(a?'soprof':'acct')+'"'+(a?' data-u="'+a.id+'"':'')+'>Your Profile</button>'+
-    '<button type="button" data-act="soview" data-v="lead" class="'+(SO.view==='lead'?'on':'')+'">Leaderboard</button>'+
-    '<button type="button" class="sorb" data-act="sonewpost"><span>+</span> Make a post</button><button type="button" class="sorb" data-act="nav" data-v="picks">Build a parlay</button></nav>';
-  var main=SO.view==='prof'?soProfPage():SO.view==='lead'?'<div class="sohd"><h1>Leaderboard</h1></div><p class="somu">Best records over the last 7 days, with at least 3 graded parlays.</p><div class="soleadwrap">'+soLeadList()+'</div>':
-    soComposer()+'<div class="sotabs" role="tablist">'+tabs.map(function(t){return'<button type="button" role="tab" aria-selected="'+(SO.tab===t[0])+'" data-act="sotab" data-t="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div><div id="sonew"></div><div id="sofeed">'+soFeed()+'</div>';
-  return'<div class="sowrap">'+rail+'<div class="somain">'+(SO.view!=='feed'?'':'<div class="sohd"><h1>Social</h1>'+(a?'<button type="button" class="someb" data-act="soprof" data-u="'+a.id+'"><b>'+esc(String(a.name).split(' ')[0])+'</b>'+acAvatar(a)+'</button>':'')+'</div>')+'<div class="sobody">'+main+'</div></div></div>'}
-function soLeadList(){var l=SO.lead;if(!l)return'<p class="somu">Loading...</p>';if(!l.length)return'<div class="soempty"><b>No one on the board yet</b><span>Records show up after 3 graded parlays. Share yours from the tracker to get on it.</span></div>';
-  return'<ol class="sold">'+l.map(function(x,i){var t=x.w+x.l;return'<li><span class="sorank">'+(i+1)+'</span><button type="button" data-act="soprof" data-u="'+x.by.id+'">'+acAvatar(x.by)+'<b>'+esc(x.by.name)+'</b></button><span class="sopct">'+Math.round(x.w/t*100)+'%</span><span class="sorec up">'+x.w+'-'+x.l+'</span></li>'}).join('')+'</ol>'}
+function soPost(){soKeep();var d=SO.draft,b=document.querySelector('.sopost');if(!d.text.trim()&&!d.legs&&!d.img&&!d.gif){toast('Write something, add a parlay or a screenshot.');return}if(b){b.disabled=true;b.classList.add('busy');b.textContent='Posting...'}
+  soApi('post',{text:d.text,legs:d.legs&&d.legs.map(function(l){return{n:l.n,t:l.t,opp:l.opp,s:l.s,bar:l.bar,pid:l.pid,gid:l.gid,o:l.o||null,est:!!l.est}}),stake:d.stake,payout:d.payout||soAutoPay(),img:d.img,gif:d.gif||'',odds:d.odds?+d.odds:null,app:d.app}).then(function(){SO.draft={text:'',legs:null,stake:'',payout:'',img:'',app:'',gif:'',odds:''};toast('Posted!');if(SO.tab==='following'||SO.tab==='wins')SO.tab='new';soLoad(true)}).catch(function(x){toast(x.message);if(b){b.disabled=false;b.classList.remove('busy');b.textContent='Post'}})}
+function soIco(n,s){var p={feed:'<path d="M4 6h16M4 12h16M4 18h10"/>',lead:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3v1a4 4 0 0 1-3 4M7 6H4v1a4 4 0 0 0 3 4"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',plus:'<path d="M12 5v14M5 12h14"/>',tick:'<path d="M3 8V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2a3 3 0 0 0 0 6v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a3 3 0 0 0 0-6z" transform="translate(0 1)"/><path d="M15 6v2M15 11v2M15 16v2"/>',arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>'}[n];s=s||18;return'<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'}
+function soInner(){var tabs=[['new','For You'],['top','Hot'],['wins','Winners'],['following','Following']],a=S.acct,me=SO.view==='prof'&&a&&SO.pu===a.id;
+  var it=function(on,attrs,ico,label){return'<button type="button" class="soni'+(on?' on':'')+'"'+(on?' aria-current="page"':'')+' '+attrs+'>'+soIco(ico)+'<span>'+label+'</span></button>'};
+  var rail='<nav class="sorail" aria-label="Social menu">'+it(SO.view==='feed','data-act="soview" data-v="feed"','feed','Feed')+
+    it(me,'data-act="'+(a?'soprof':'acct')+'"'+(a?' data-u="'+a.id+'"':''),'me','Your Profile')+
+    it(SO.view==='lead','data-act="soview" data-v="lead"','lead','Leaderboard')+
+    '<button type="button" class="sorb" data-act="sonewpost">'+soIco('plus')+'Make a post</button><button type="button" class="sorl" data-act="nav" data-v="picks">Build a parlay '+soIco('arrow',15)+'</button></nav>';
+  var main=SO.view==='prof'?'<div class="sobody">'+soProfPage()+'</div>':SO.view==='lead'?'<div class="sohd"><h1>Leaderboard</h1><p>Best records over the last 7 days. You need at least 3 graded parlays to show up.</p></div><div class="sobody soleadwrap">'+soLeadList()+'</div>':
+    '<div class="sohd"><h1>Social</h1><p>Every parlay posted here is graded from real box scores.</p></div>'+soComposer()+'<div class="sotabs" role="tablist" aria-label="Feed">'+tabs.map(function(t){return'<button type="button" role="tab" aria-selected="'+(SO.tab===t[0])+'" data-act="sotab" data-t="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div><div id="sonew"></div><div class="sobody" id="sofeed">'+soFeed()+'</div>';
+  return'<div class="sowrap">'+rail+'<div class="somain">'+main+'</div>'+soAside()+'</div>'}
+function soAside(){var l=SO.lead;
+  return'<aside class="soaside" aria-label="Top this week"><section class="soaw"><div class="soawh"><h2>Top this week</h2>'+(l&&l.length?'<button type="button" class="lnk" data-act="soview" data-v="lead">See all</button>':'')+'</div>'+
+    (!l?'<div class="soskl"><i></i><i></i><i></i></div>':!l.length?'<p class="somu">Nobody yet. Post 3 graded parlays this week to be first on the board.</p>':soLeadRows(l.slice(0,5),true))+'</section>'+
+    '<section class="soaw"><h2>How records work</h2><p>Parlays you share from your slip or tracker get graded from real box scores, so the wins and losses are real. Screenshots can\'t be checked, so they never change a record.</p></section></aside>'}
+function soLeadRows(l,sm){return'<ol class="sold'+(sm?' sm':'')+'">'+l.map(function(x,i){var t=x.w+x.l,pc=Math.round(x.w/t*100);return'<li><span class="sorank">'+(i+1)+'</span><button type="button" data-act="soprof" data-u="'+x.by.id+'">'+acAvatar(x.by)+'<b>'+esc(x.by.name)+'</b></button>'+
+    (sm?'':'<span class="sopbar" aria-hidden="true"><i style="width:'+pc+'%"></i></span>')+'<span class="sopct">'+pc+'%</span>'+soRec(x)+'</li>'}).join('')+'</ol>'}
+function soLeadList(){var l=SO.lead;if(!l)return'<div class="soskl lg"><i></i><i></i><i></i><i></i></div>';if(!l.length)return'<div class="soempty"><b>No one on the board yet</b><span>Records show up after 3 graded parlays. Share yours from the tracker to get on it.</span></div>';
+  return'<div class="soldh" aria-hidden="true"><span>#</span><span>Bettor</span><span>Win rate</span><span>Record</span></div>'+soLeadRows(l,false)}
+function soSkel(){var c='<div class="soskc" aria-hidden="true"><div class="soskh"><i class="c"></i><i class="l1"></i></div><i class="l2"></i><i class="tk"></i></div>';return'<div role="status" aria-label="Loading posts">'+c+c+'</div>'}
 function soFeed(){if(SO.need)return'<div class="soempty"><b>Follow people to fill this up</b><span>Make a free account, then tap Follow on anyone\'s profile.</span><button class="btn" type="button" data-act="acct">Make a free account</button></div>';
-  if(!SO.posts.length)return SO.busy?'<div class="soempty"><span>Loading posts...</span></div>':SO.err?'<div class="soempty"><b>Couldn\'t load posts</b><span>'+esc(SO.err)+'</span><button class="btn" type="button" data-act="soreload">Try again</button></div>':'<div class="soempty"><b>'+(SO.tab==='wins'?'No winners yet':SO.tab==='following'?'Nothing from people you follow yet':'Be the first to post')+'</b><span>Share a parlay and the site will grade it live.</span></div>';
+  if(!SO.posts.length)return SO.busy?soSkel():SO.err?'<div class="soempty"><b>Couldn\'t load posts</b><span>'+esc(SO.err)+'</span><button class="btn" type="button" data-act="soreload">Try again</button></div>':'<div class="soempty"><b>'+(SO.tab==='wins'?'No winners yet':SO.tab==='following'?'Nothing from people you follow yet':'Be the first to post')+'</b><span>Share a parlay and the site will grade it live.</span></div>';
   return SO.posts.map(soCard).join('')+(SO.end?'<p class="soend">You\'re all caught up.</p>':'<button class="btn sec somorebtn" type="button" data-act="somorep">Load more</button>')}
 function soSide(){return''}
 function soDraw(){var e=$('v-social');if(!e)return;var y=window.scrollY;e.innerHTML=soInner();window.scrollTo(0,y)}
@@ -3376,7 +3440,7 @@ function soLoad(reset){if(SO.busy)return;SO.busy=true;if(reset){SO.posts=[];SO.e
   soApi('feed?tab='+SO.tab+(last&&SO.tab!=='top'?'&before='+last:'')).then(function(j){SO.busy=false;var gw=SO.gifsOn;SO.gifsOn=!!j.gifs;if(gw!==SO.gifsOn&&!last){soKeep();var cp=$('socomp');if(cp)cp.outerHTML=soComposer()}SO.need=!!j.needLogin;var ps=j.posts||[];
     if(SO.tab==='top'&&last){ps=[]}SO.posts=SO.posts.concat(ps);SO.end=ps.length<20||SO.tab==='top';if(SO.posts[0])SO.seen=Math.max(SO.seen,SO.posts[0].id);var f=$('sofeed');if(f)f.innerHTML=soFeed();else soDraw()})
   .catch(function(x){SO.busy=false;SO.err=x.message;var f=$('sofeed');if(f)f.innerHTML=soFeed()})}
-function soOpen(){SO.view=SO.view==='prof'?'feed':SO.view;soDraw();soLoad(true);soApi('leaders').then(function(j){SO.lead=j.leaders||[];if(SO.view==='lead'&&V==='social')soDraw()}).catch(function(){SO.lead=[]});
+function soOpen(){SO.view=SO.view==='prof'?'feed':SO.view;soDraw();soLoad(true);soApi('leaders').then(function(j){SO.lead=j.leaders||[];if(V!=='social')return;if(SO.view==='lead')soDraw();else{var s=document.querySelector('.soaside');if(s)s.outerHTML=soAside()}}).catch(function(){SO.lead=[];var s=document.querySelector('.soaside');if(s)s.outerHTML=soAside()});
   clearInterval(SO.poll);SO.poll=setInterval(soTick,25000)}
 function soFind(id){return SO.posts.filter(function(p){return p.id===+id})[0]||(SP&&SP.posts||[]).filter(function(p){return p.id===+id})[0]}
 function soRedraw(id){var p=soFind(id);if(!p)return;document.querySelectorAll('.soc[data-id="'+id+'"]').forEach(function(el){el.outerHTML=soCard(p)})}
@@ -3423,6 +3487,7 @@ function soAct(a,d,t){
   else if(a==='soshtrk'){soUseParlay('t'+d.i)}
   else return false;
   return true}
+document.addEventListener('input',function(e){if(!e.target||e.target.id!=='sotext')return;var v=e.target.value,d=SO.draft,b=document.querySelector('.socomp .sopost'),c=$('socnt');if(b&&!b.classList.contains('busy'))b.disabled=!(v.trim()||d.legs||d.img||d.gif);if(c)c.textContent=v.length>400?500-v.length:''});
 document.addEventListener('input',function(e){var id=e.target&&e.target.id;if(id!=='sostake'&&id!=='sopay')return;soKeep();var d=SO.draft,el=document.querySelector('.sodl .soslip');if(el)el.outerHTML=soLegs({id:0,legs:d.legs,res:'wait',stake:d.stake,payout:d.payout,app:d.app,odds:d.odds})});
 document.addEventListener('change',function(e){if(e.target&&e.target.id==='sofile'){soPhoto(e.target.files[0]);e.target.value=''}});
 document.addEventListener('submit',function(e){var f=e.target;if(!f.classList||!f.classList.contains('socf'))return;e.preventDefault();var i=f.querySelector('input'),id=f.dataset.id,v=i.value.trim();if(!v)return;i.disabled=true;
