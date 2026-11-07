@@ -5,7 +5,11 @@ Records only count parlays posted from the tracker, because the site grades thos
 scores; screenshots can't be checked, so they never change anyone's record."""
 import base64
 import json
+import os
+import re
 import time
+
+import requests
 
 from flask import Blueprint, jsonify, request
 
@@ -16,6 +20,11 @@ MAX_IMG = 260 * 1024        # bytes of JPEG per screenshot (kept small: the free
 MAX_TEXT = 500
 HIDE_AT = 3                 # reports before a post is hidden
 STATS = ("pts", "reb", "ast", "tpm")
+GIF_OK = re.compile(r"^https://media[0-9]?\.giphy\.com/media/[A-Za-z0-9/_.-]+\.(gif|webp)(\?[A-Za-z0-9=&_.-]*)?$")
+
+
+def _giphy_key():
+    return os.environ.get("GIPHY_API_KEY", "").strip()
 _ready = set()
 
 
@@ -36,6 +45,13 @@ def _db():
         ):
             con.execute(sql)
         con.commit()
+        for col in ("gif", "odds"):        # added after launch
+            try:
+                con.execute(f"ALTER TABLE posts ADD COLUMN {'IF NOT EXISTS ' if auth.pg_url() else ''}{col} TEXT NOT NULL DEFAULT ''")
+                con.commit()
+            except Exception:
+                if auth.pg_url():
+                    con.con.rollback()
         _ready.add(key)
     return con
 
@@ -97,7 +113,7 @@ def _grade(legs, games):
 def _regrade(con, rows):
     """Check unsettled parlays against box scores, a few at a time and at most every 3 minutes each."""
     now = int(time.time())
-    todo = [r for r in rows if r["legs"] and r["res"] in ("", "wait") and now - int(r["checked"] or 0) > 180][:8]
+    todo = [r for r in rows if r["legs"] and r["res"] in ("", "wait") and now - int(r["checked"] or 0) > 45][:10]
     if not todo:
         return
     gids = []
@@ -121,13 +137,16 @@ def _regrade(con, rows):
 def _record(con, uid):
     w = l = 0
     staked = won = 0.0
-    for r in con.execute("SELECT res, stake, payout FROM posts WHERE uid=? AND legs<>'' AND res IN ('hit','miss')", (uid,)).fetchall():
+    for r in con.execute("SELECT res, stake, payout, odds FROM posts WHERE uid=? AND legs<>'' AND res IN ('hit','miss')", (uid,)).fetchall():
         try:
             s = float(r["stake"] or 0)
         except ValueError:
             s = 0
         try:
             p = float(r["payout"] or 0)
+            if not p and r["odds"]:          # no payout typed in: work it out from the odds
+                o = float(r["odds"])
+                p = s * (1 + o / 100 if o > 0 else 1 + 100 / -o)
         except ValueError:
             p = 0
         staked += s
@@ -166,13 +185,13 @@ def _shape(con, rows, me, cache):
         if not a:
             continue
         out.append({"id": r["id"], "t": r["t"], "text": r["text"], "img": bool(r["img"]), "legs": json.loads(r["legs"]) if r["legs"] else None,
-                    "stake": r["stake"], "payout": r["payout"], "app": r["app"], "res": r["res"], "by": a,
+                    "stake": r["stake"], "payout": r["payout"], "app": r["app"], "res": r["res"], "by": a, "gif": r.get("gif") or "", "odds": r.get("odds") or "",
                     "likes": likes.get(r["id"], 0), "liked": r["id"] in mine, "comments": comments.get(r["id"], 0),
                     "mine": bool(me and me["id"] == r["uid"])})
     return out
 
 
-COLS = "id, uid, t, text, CASE WHEN img<>'' THEN 'y' ELSE '' END AS img, legs, stake, payout, app, res, checked"
+COLS = "id, uid, t, text, CASE WHEN img<>'' THEN 'y' ELSE '' END AS img, legs, stake, payout, app, res, checked, gif, odds"
 
 
 @bp.route("/feed")
@@ -203,7 +222,7 @@ def feed():
         else:
             rows = [dict(r) for r in con.execute(f"SELECT {COLS} FROM posts WHERE {' AND '.join(where)} ORDER BY id DESC LIMIT 20", args).fetchall()]
         _regrade(con, rows)
-        return jsonify({"posts": _shape(con, rows, me, {}), "me": me["id"] if me else None})
+        return jsonify({"posts": _shape(con, rows, me, {}), "me": me["id"] if me else None, "gifs": bool(_giphy_key())})
 
 
 @bp.route("/img/<int:pid>")
@@ -222,8 +241,10 @@ def _clean_legs(legs):
         if not isinstance(l, dict) or l.get("s") not in STATS:
             continue
         try:
-            out.append({"n": str(l.get("n", ""))[:40], "t": str(l.get("t", ""))[:4], "s": l["s"], "bar": float(l.get("bar", 0)),
-                        "pid": str(l.get("pid", ""))[:16], "gid": str(l.get("gid", ""))[:16], "res": "wait", "v": None})
+            o = l.get("o")
+            o = int(o) if isinstance(o, (int, float)) and 100 <= abs(o) <= 100000 else None
+            out.append({"n": str(l.get("n", ""))[:40], "t": str(l.get("t", ""))[:4], "opp": str(l.get("opp", ""))[:4], "s": l["s"], "bar": float(l.get("bar", 0)),
+                        "pid": str(l.get("pid", ""))[:16], "gid": str(l.get("gid", ""))[:16], "o": o, "est": bool(l.get("est")), "res": "wait", "v": None})
         except (TypeError, ValueError):
             continue
     return out
@@ -256,7 +277,17 @@ def post():
         if len(raw) > MAX_IMG or raw[:3] != b"\xff\xd8\xff":
             return _err("That picture couldn't be used. Please try another.")
         img = base64.b64encode(raw).decode()
-    if not (text or legs or img):
+    gif = str(b.get("gif") or "")
+    if gif and not GIF_OK.match(gif):
+        return _err("That GIF couldn't be used.")
+    odds = b.get("odds")
+    odds = str(int(odds)) if isinstance(odds, (int, float)) and 100 <= abs(odds) <= 10_000_000 else ""
+    if not odds and legs and all(l["o"] for l in legs):
+        d = 1.0
+        for l in legs:
+            d *= 1 + l["o"] / 100 if l["o"] > 0 else 1 + 100 / -l["o"]
+        odds = str(round((d - 1) * 100) if d >= 2 else round(-100 / (d - 1)))
+    if not (text or legs or img or gif):
         return _err("Write something, add a parlay or add a picture.")
     with _db() as con:
         me = _me(con)
@@ -264,9 +295,9 @@ def post():
             return _err("Make a free account to post.", 401)
         if auth._limited("post", me["id"], 12, 3600):
             return _err("That's a lot of posts. Take a breather and try again in a bit.", 429)
-        con.execute("INSERT INTO posts(uid, t, text, img, legs, stake, payout, app, res) VALUES(?,?,?,?,?,?,?,?,?)",
+        con.execute("INSERT INTO posts(uid, t, text, img, legs, stake, payout, app, res, gif, odds) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                     (me["id"], int(time.time()), text, img, json.dumps(legs) if legs else "", _money(b.get("stake")),
-                     _money(b.get("payout")), str(b.get("app", ""))[:20], "wait" if legs else ""))
+                     _money(b.get("payout")), str(b.get("app", ""))[:20], "wait" if legs else "", gif, odds))
         con.commit()
     return jsonify({"ok": True})
 
@@ -419,3 +450,29 @@ def leaders():
             if a:
                 out.append({"by": a, "w": r["w"], "l": r["l"]})
     return jsonify({"leaders": out})
+
+
+@bp.route("/gifs")
+def gifs():
+    """GIF search through GIPHY (key in Vercel env GIPHY_API_KEY). Trending when there's no search."""
+    key = _giphy_key()
+    if not key:
+        return jsonify({"configured": False, "gifs": []})
+    q = str(request.args.get("q", "")).strip()[:50]
+    path = "search" if q else "trending"
+    params = {"api_key": key, "limit": 24, "rating": "pg-13", "bundle": "messaging_non_clips"}
+    if q:
+        params["q"] = q
+    try:
+        r = requests.get(f"https://api.giphy.com/v1/gifs/{path}", params=params, timeout=10)
+        data = r.json().get("data") or []
+    except (requests.RequestException, ValueError):
+        return _err("GIFs aren't loading right now.", 502)
+    out = []
+    for g in data:
+        im = (g.get("images") or {})
+        small, full = im.get("fixed_width") or {}, im.get("downsized_medium") or im.get("original") or {}
+        u, f = small.get("webp") or small.get("url"), full.get("url")
+        if u and f and GIF_OK.match(u) and GIF_OK.match(f):
+            out.append({"id": g.get("id"), "s": u, "u": f, "w": int(small.get("width") or 200), "h": int(small.get("height") or 150)})
+    return jsonify({"configured": True, "gifs": out})
