@@ -1144,80 +1144,105 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 .fbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;padding:9px 44px 9px 16px;position:relative;background:linear-gradient(90deg,rgba(251,138,46,.16),rgba(168,85,247,.16));border-bottom:1px solid var(--line);font-size:13px;color:var(--ink);text-align:center}
 .fbar[hidden]{display:none}
 /* ---------- Social ---------- */
-.sowrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start;padding:22px 0 90px;max-width:1000px;margin:0 auto}
-.sohd h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.02em}.sohd p{margin:4px 0 16px;color:var(--mu);font-size:14.5px}
-.somain .btn,.soside .btn,.somodal .btn,.socomp .btn{height:38px;margin:0;padding:0 18px;border:0;border-radius:999px;background:var(--pal-f);color:var(--on);font-weight:800;font-size:14px}
+.sowrap{display:grid;grid-template-columns:200px minmax(0,700px);gap:36px;justify-content:center;align-items:start;padding:24px 0 90px}
+.sorail{position:sticky;top:76px;display:flex;flex-direction:column;gap:4px}
+.sorail button{text-align:left;height:40px;padding:0 14px;border:0;border-radius:12px;background:none;color:var(--ink);font-weight:600;font-size:14.5px}
+.sorail button:hover{background:var(--card)}.sorail button.on{background:var(--card);font-weight:700}
+.sorail .sorb{text-align:center;height:44px;margin-top:8px;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--line2);font-weight:700}
+.sorail .sorb span{font-size:18px;margin-right:4px}
+.sohd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.sohd h1{margin:0;font-size:38px;font-weight:900;letter-spacing:-.03em;font-stretch:condensed}
+.someb{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);font-size:15px}.someb .acav{width:38px;height:38px;font-size:16px}
+.sobody{border:1px solid var(--line2);border-radius:26px;overflow:hidden;background:var(--paper)}
+.somain .btn,.somodal .btn,.socomp .btn{height:40px;margin:0;padding:0 20px;border:0;border-radius:999px;background:var(--pal-f);color:var(--on);font-weight:800;font-size:14px}
 .btn.sec{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line2)}
-.socomp{display:flex;gap:12px;padding:14px;background:var(--card);border:1px solid var(--line2);border-radius:18px;margin-bottom:14px}
-.socomp>.acav{width:40px;height:40px;font-size:17px;flex:none}
-.socomp.soguest{align-items:center;justify-content:space-between;flex-wrap:wrap;background:linear-gradient(120deg,rgba(var(--pal-rgb),.16),rgba(168,85,247,.14))}
+.socomp{padding:18px 22px 14px;border-bottom:1px solid var(--line2)}
+.socomp.soguest{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(120deg,rgba(var(--pal-rgb),.14),rgba(168,85,247,.12))}
 .socomp.soguest b{display:block;font-size:16px}.socomp.soguest span{color:var(--mu);font-size:14px}
-.socb{flex:1;min-width:0}
-.socb textarea{width:100%;resize:vertical;min-height:52px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;padding:8px 2px;outline:none}
-.socbar{display:flex;align-items:center;gap:6px;border-top:1px solid var(--line);padding-top:10px;margin-top:4px}.socbar .sp{flex:1}
-.sotool{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:0;border-radius:999px;background:var(--pal-l);color:var(--pal-d);font-weight:700;font-size:13.5px;cursor:pointer}
-.sotool:hover{filter:brightness(1.15)}
-.sodl{margin:6px 0}.sodm{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:8px;font-size:13.5px;color:var(--mu)}
-.sodm input{width:78px;height:32px;margin-left:4px;border-radius:9px;border:1.5px solid var(--line2);background:var(--paper);color:var(--ink);padding:0 8px}
-.sodi{position:relative;display:inline-block;margin:6px 0}.sodi img{display:block;max-height:220px;max-width:100%;border-radius:12px}
+.socb textarea{width:100%;resize:none;min-height:56px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;padding:2px 0;outline:none}
+.socb textarea::placeholder{color:var(--mu)}
+.socbar{display:flex;align-items:center;gap:8px;margin-top:6px}.socbar .sp{flex:1}
+.sotool{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:999px;color:var(--ink);font-weight:700;font-size:13.5px;cursor:pointer}
+.sotool:hover{background:var(--card)}
+.sopill{height:44px;padding:0 20px;border:0;border-radius:999px;background:#ECECF1;color:#111;font-weight:700;font-size:15px}
+.sopill:hover{background:#fff}
+.sodl{margin:6px 0 8px}.sodm{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px;font-size:13.5px;color:var(--mu)}
+.sodm input{width:80px;height:34px;margin-left:4px;border-radius:10px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);padding:0 9px}
+.sodi{position:relative;display:inline-block;margin:6px 0}.sodi img{display:block;max-height:240px;max-width:100%;border-radius:14px}
 .sodi button{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:18px;line-height:1}
-.sotabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:4px 0 12px;position:sticky;top:0;background:var(--paper);z-index:3}
-.sotabs button{flex:1;height:46px;border:0;background:none;color:var(--mu);font-weight:700;font-size:14.5px;box-shadow:inset 0 -3px 0 transparent}
-.sotabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--pal)}
-.sonewb{display:block;margin:0 auto 12px;height:36px;padding:0 18px;border:0;border-radius:999px;background:var(--pal-f);color:var(--on);font-weight:800;box-shadow:0 6px 20px rgba(0,0,0,.35)}
-.soc{background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:14px 16px 6px;margin-bottom:12px}.soc.soin{animation:soIn .35s ease both}
+.sotabs{display:flex;gap:8px;padding:16px 22px 6px}
+.sotabs button{height:36px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--ink);font-weight:700;font-size:14px;box-shadow:inset 0 0 0 1.5px var(--line2)}
+.sotabs button[aria-selected=true]{background:var(--card);box-shadow:inset 0 0 0 1.5px var(--mu)}
+.sonewb{display:block;margin:10px auto 0;height:36px;padding:0 18px;border:0;border-radius:999px;background:var(--pal-f);color:var(--on);font-weight:800;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.soc{padding:18px 22px 10px;border-bottom:1px solid var(--line2)}.soc:last-child{border-bottom:0}
+.soc.soin{animation:soIn .35s ease both}
 @keyframes soIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.soch{display:flex;align-items:center;gap:10px}
-.soav{border:0;background:none;padding:0;line-height:0}.soav .acav{width:40px;height:40px;font-size:17px}
+.soch{display:flex;align-items:center;gap:12px}
+.soav{border:0;background:none;padding:0;line-height:0}.soav .acav{width:38px;height:38px;font-size:16px}
 .socn{flex:1;min-width:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .soname{border:0;background:none;padding:0;color:var(--ink);font-weight:700;font-size:15px}.soname:hover{text-decoration:underline}
 .sot{color:var(--mu);font-size:13px}
 .sorec{font-size:12px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--mu)}
 .sorec.up{background:var(--okbg);color:var(--ok)}.sorec.dn{background:var(--badbg);color:var(--bad)}
 .somore{border:0;background:none;color:var(--mu);font-size:20px;width:34px;height:34px;border-radius:50%}.somore:hover{background:var(--line)}
-.sotx{margin:8px 0 4px;font-size:15.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
-.soslip{margin:10px 0 4px;border-radius:14px;border:1px solid var(--line2);background:var(--paper);padding:10px 12px;position:relative;overflow:hidden}
-.soslip.hit{border-color:rgba(74,222,128,.55);background:linear-gradient(160deg,rgba(74,222,128,.10),var(--paper) 60%)}
-.soslip.miss{border-color:rgba(248,113,113,.4)}
-.sosh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.sosh b{font-size:14px}.sosh small{color:var(--mu);font-weight:600}
-.sob{font-size:11.5px;font-weight:800;letter-spacing:.05em;padding:3px 9px;border-radius:999px;background:var(--line);color:var(--mu)}
+.sobd{padding-left:50px}
+.sotx{margin:2px 0 6px;font-size:15.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+/* the parlay ticket: dark glass with a glowing rainbow edge */
+.soslip{position:relative;max-width:360px;margin:10px 0 6px;padding:14px 16px 12px;border-radius:18px;background:linear-gradient(150deg,#1B1C24 0%,#0B0B10 55%,#121318 100%);isolation:isolate}
+.soslip::before{content:"";position:absolute;inset:0;border-radius:18px;padding:1.5px;background:linear-gradient(135deg,#7DD3FC,#C4B5FD 30%,#F9A8D4 55%,#FDE68A 78%,#86EFAC);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:-1;opacity:.85}
+.soslip::after{content:"";position:absolute;inset:0;border-radius:18px;background:radial-gradient(120% 60% at 100% 0,rgba(255,255,255,.07),transparent 60%);pointer-events:none}
+.soslip.hit::before{background:linear-gradient(135deg,#34D399,#A7F3D0 40%,#34D399 70%,#FDE68A)}
+.soslip.miss::before{background:linear-gradient(135deg,#F87171,#FDA4AF 50%,#7F1D1D);opacity:.6}
+.sosh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sotag{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:900;letter-spacing:.08em;color:#E5E7EB}
+.sotag svg{color:#C4B5FD}
+.sob{font-size:10.5px;font-weight:900;letter-spacing:.06em;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.08);color:#B5B5C5}
 .sob.hit{background:#34D399;color:#04210f}.sob.miss{background:#F87171;color:#2a0505}.sob.lv{background:var(--sky);color:#04202e;animation:ppd 1.4s infinite}
-.sol{display:grid;grid-template-columns:22px 1fr auto;align-items:center;column-gap:8px;padding:6px 0;border-top:1px solid var(--line)}
-.sol:first-of-type{border-top:0}
-.soi{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:900;background:var(--line);color:var(--mu)}
+.somon{display:flex;align-items:flex-end;gap:22px;margin:12px 0 6px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.somon small{display:block;font-size:12.5px;color:#9A9AAE}.somon b{font-size:19px;font-weight:800;color:#fff}.somon b.dim{color:#B5B5C5}
+.soslip.hit .somon div:nth-child(2) b{color:#4ADE80}
+.soapp{margin-left:auto;font-size:13px;font-weight:700;color:#7E7E92}
+.sol{display:grid;grid-template-columns:42px 1fr auto;align-items:center;column-gap:10px;padding:8px 0}
+.sopic{position:relative;width:40px;height:40px}
+.sopic .av{width:40px!important;height:40px!important;min-width:40px;border-radius:50%;font-size:12px;background:#22232C;border:1px solid rgba(255,255,255,.1);color:#9A9AAE}
+.soi{position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:900;border:2px solid #101016;background:#3A3B48;color:#C8C8D4}
+.sol.wait .soi{display:none}
 .sol.hit .soi{background:#34D399;color:#04210f}.sol.miss .soi{background:#F87171;color:#2a0505}
-.soln{min-width:0}.soln b{font-size:14px;font-weight:600;margin-right:6px}.soln span{color:var(--mu);font-size:13px}
-.sol em{font-style:normal;font-weight:700;font-size:13px;color:var(--mu)}.sol.hit em{color:var(--ok)}.sol.miss em{color:var(--bad)}
-.solb{grid-column:2/4;height:3px;border-radius:3px;background:var(--line);margin-top:5px;overflow:hidden}.solb i{display:block;height:100%;background:var(--pal);border-radius:3px}
+.soln{min-width:0}.soln small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#7E7E92}
+.soln b{display:block;font-size:14px;font-weight:700;color:#F3F3F7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.soln span{font-size:13px;color:#A6A6BA}
+.sol em{font-style:normal;font-weight:800;font-size:15px;color:#E5E7EB}.sol em small{font-weight:600;font-size:12px;color:#7E7E92}
+.sol.hit em{color:#4ADE80}.sol.miss em{color:#F87171}
+.solb{height:3px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:6px;overflow:hidden}.solb i{display:block;height:100%;background:#C4B5FD;border-radius:3px}
 .sol.hit .solb i{background:#34D399}.sol.miss .solb i{background:#F87171}
-.sosf{display:flex;justify-content:space-between;gap:8px;border-top:1px dashed var(--line2);margin-top:6px;padding-top:8px;font-size:13.5px;color:var(--mu)}.sosf b{color:var(--ink)}
-.soslip.hit .sosf span:last-child b{color:var(--ok)}
-.soimg{display:block;width:100%;border:0;padding:0;margin:10px 0 4px;background:none;border-radius:14px;overflow:hidden}
-.soimg img{display:block;width:100%;max-height:520px;object-fit:cover;border-radius:14px;border:1px solid var(--line)}
-.soact{display:flex;gap:2px;margin:6px -8px 0}
+.sol.wait .solb{display:none}
+.soshow{border:0;background:none;padding:4px 0;color:#E5E7EB;font-size:13.5px;text-decoration:underline dotted;text-underline-offset:4px}
+.sosf{margin-top:6px;font-size:12.5px;color:#7E7E92}
+.soimg{display:block;width:100%;max-width:420px;border:0;padding:0;margin:10px 0 4px;background:none;border-radius:16px;overflow:hidden}
+.soimg img{display:block;width:100%;max-height:520px;object-fit:cover;border-radius:16px;border:1px solid var(--line2)}
+.soact{display:flex;gap:2px;margin:4px -10px 0;max-width:380px}
 .soact button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 10px;border:0;border-radius:999px;background:none;color:var(--mu);font-weight:600;font-size:13.5px}
-.soact button:hover{background:var(--line);color:var(--ink)}.soact button:last-child{margin-left:auto}
+.soact button:hover{background:var(--card);color:var(--ink)}.soact button:last-child{margin-left:auto}
 .soact button.on{color:#F43F5E}.soact button.on svg{animation:soPop .35s ease}
 @keyframes soPop{40%{transform:scale(1.35)}}
-.socms{border-top:1px solid var(--line);margin-top:4px;padding:8px 0 10px}
+.socms{border-top:1px solid var(--line);margin-top:6px;padding:8px 0 6px}
 .socmt{display:flex;gap:9px;padding:6px 0}.socmt .acav{width:28px;height:28px;font-size:12px;flex:none}.socmt p{margin:2px 0 0;font-size:14.5px;overflow-wrap:anywhere}.socmt .soname{font-size:13.5px}
 .socdel{font-size:12px;padding:0 4px}
-.socf{display:flex;gap:8px;margin-top:6px}.socf input{flex:1;min-width:0;height:38px;border-radius:999px;border:1.5px solid var(--line2);background:var(--paper);color:var(--ink);padding:0 14px}
+.socf{display:flex;gap:8px;margin-top:6px}.socf input{flex:1;min-width:0;height:40px;border-radius:999px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink);padding:0 14px}
 .somu{color:var(--mu);font-size:13.5px;margin:6px 0}
-.soempty{text-align:center;padding:42px 16px;border:1px dashed var(--line2);border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.soempty{text-align:center;padding:48px 20px;display:flex;flex-direction:column;align-items:center;gap:6px}
 .soempty b{font-size:17px}.soempty span{color:var(--mu);font-size:14px;max-width:340px}.soempty .btn{margin-top:8px}
-.soend{text-align:center;color:var(--mu);font-size:13.5px;padding:14px}
-.somorebtn{display:block;margin:6px auto}
-.soside{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px}
-.sobx{background:var(--card);border:1px solid var(--line2);border-radius:18px;padding:16px}.sobx h3{margin:0 0 8px;font-size:16px}
-.sold{list-style:none;margin:0;padding:0}.sold li{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}.sold li:first-child{border-top:0}
-.sold button{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:0;background:none;padding:0;color:var(--ink);text-align:left}.sold button b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sold .acav{width:26px;height:26px;font-size:11px;flex:none}
-.sorank{width:18px;color:var(--mu);font-weight:800;font-size:13px}.sold li:nth-child(1) .sorank{color:#F5B82E}
+.soend{text-align:center;color:var(--mu);font-size:13.5px;padding:16px}
+.somorebtn{display:block;margin:12px auto}
+.soleadwrap{border:1px solid var(--line2);border-radius:22px;padding:6px 18px;margin-top:12px}
+.sold{list-style:none;margin:0;padding:0}.sold li{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.sold li:first-child{border-top:0}
+.sold button{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;color:var(--ink);text-align:left}.sold button b{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sold .acav{width:36px;height:36px;font-size:15px;flex:none}
+.sorank{width:22px;color:var(--mu);font-weight:900;font-size:15px}.sold li:nth-child(1) .sorank{color:#F5B82E}.sold li:nth-child(2) .sorank{color:#CBD5E1}.sold li:nth-child(3) .sorank{color:#D97706}
+.sopct{color:var(--mu);font-size:13.5px;font-weight:600}
 .sopop{position:absolute;z-index:60;width:180px;background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:6px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
 .sopop button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:9px;font-size:14px;color:var(--ink)}.sopop button:hover{background:var(--line)}
 .somodal{position:fixed;inset:0;z-index:80;background:rgba(5,5,10,.72);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:5vh 12px;backdrop-filter:blur(4px)}
-.sobox{position:relative;width:100%;max-width:560px;background:var(--paper);border:1px solid var(--line2);border-radius:22px;padding:20px;animation:soIn .25s ease both}
+.sobox{position:relative;width:100%;max-width:600px;background:var(--paper);border:1px solid var(--line2);border-radius:26px;padding:22px;animation:soIn .25s ease both}
 .sobox h3{margin:0 0 4px}
 .sopko{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px;margin:8px 0;border-radius:14px;border:1.5px solid var(--line2);background:var(--card);color:var(--ink)}
 .sopko:hover{border-color:var(--pal)}.sopko span{color:var(--mu);font-size:13.5px}
@@ -1228,10 +1253,15 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 .sostats div{background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:12px 6px;text-align:center}
 .sostats b{display:block;font-size:20px;font-weight:800}.sostats b.up{color:var(--ok)}.sostats b.dn{color:var(--bad)}.sostats span{font-size:12px;color:var(--mu)}
 .sofol{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--mu);margin-bottom:14px}.sofol b{color:var(--ink)}.sofol .btn{margin-left:auto}
-.sopp .soc{background:var(--card)}
+.sopp{border:1px solid var(--line2);border-radius:20px;overflow:hidden}
 .soimgv{align-items:center;cursor:zoom-out}.soimgv img{max-width:100%;max-height:90vh;border-radius:14px}
 html.calm .soc,html.calm .sobox{animation:none}
-@media (max-width:900px){.sowrap{grid-template-columns:minmax(0,1fr);padding-top:14px}.soside{display:none}}
+.sotabs button,.sopill,.sorail button,.sotool,.sopost{white-space:nowrap;flex:none}.somain .btn,.somodal .btn,.socomp .btn{width:auto;max-width:none}
+@media (max-width:560px){.sotool .sotl{display:none}.sotool{padding:0 10px}.socbar{gap:6px}.sotabs{gap:6px}.sotabs button{padding:0 13px}.socbar .btn{padding:0 16px}}
+@media (max-width:900px){.sowrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:14px}
+  .sorail{position:static;flex-direction:row;overflow-x:auto;gap:6px;margin-bottom:12px;scrollbar-width:none}.sorail button{flex:none;height:36px}.sorail .sorb{margin-top:0;height:36px;padding:0 14px}}
+@media (max-width:560px){.sobody{border-radius:20px}.soc,.socomp{padding-left:14px;padding-right:14px}.sotabs{padding:12px 14px 4px;overflow-x:auto}.sobd{padding-left:0}.sohd h1{font-size:32px}.sopill{height:40px;padding:0 14px;font-size:14px}}
+
 @media (min-width:721px) and (max-width:1000px){.top .nav{margin-left:4px}.top .nav button{padding:0 8px}.top .wrap{gap:8px}.hs{min-width:44px}}
 .fbar b{font-weight:700}
 .fbp{background:var(--pal);color:#fff;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
@@ -3199,40 +3229,43 @@ fetch('/api/pay/config').then(function(r){return r.ok?r.json():null}).then(funct
 window.__pp={ms:function(){return MSP},msl:function(){return MSL},S:function(){return S},cheat:function(c){return cheatRows(c).map(function(x){return[x.n,x.tag||'',x.bar,x.a.hits]})},go:go,blocked:blocked,ai:aiRun,parse:parseAsk,rate:rate,analyze:analyze,load:loadDay};
 
 /* ---------- Social: posts, screenshots, graded parlays, records ---------- */
-var SO={seen2:{},tab:'new',posts:[],busy:false,end:false,open:{},cm:{},draft:{text:'',legs:null,stake:'',payout:'',img:'',app:''},lead:null,seen:0,poll:null};
+var SO={view:'feed',full:{},seen2:{},tab:'new',posts:[],busy:false,end:false,open:{},cm:{},draft:{text:'',legs:null,stake:'',payout:'',img:'',app:''},lead:null,seen:0,poll:null};
 function soApi(path,body){var o={credentials:'same-origin'};if(body){o.method='POST';o.headers={'Content-Type':'application/json'};o.body=JSON.stringify(body)}
   return fetch('/api/social/'+path,o).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||'That didn\'t work. Try again.');return j})},function(){throw new Error('Can\'t reach the server. Check your connection.')})}
 function soAgo(t){var s=Math.max(1,Math.floor(Date.now()/1000-t));if(s<60)return'now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';if(s<604800)return Math.floor(s/86400)+'d';return new Date(t*1000).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function soRec(r){if(!r||(!r.w&&!r.l))return'';return'<span class="sorec'+(r.w>r.l?' up':r.l>r.w?' dn':'')+'">'+r.w+'-'+r.l+'</span>'}
 function soMoney(v){var n=+v;if(!n)return'';return'$'+(n%1?n.toFixed(2):n)}
-function soLegs(p){if(!p.legs)return'';var hits=p.legs.filter(function(l){return l.res==='hit'}).length,live=p.res==='wait'&&p.legs.some(function(l){return l.v!=null});
+function soLegs(p){if(!p.legs)return'';var live=p.res==='wait'&&p.legs.some(function(l){return l.v!=null}),hits=p.legs.filter(function(l){return l.res==='hit'}).length;
   var badge=p.res==='hit'?'<span class="sob hit">HIT</span>':p.res==='miss'?'<span class="sob miss">MISSED</span>':p.res==='void'?'<span class="sob">VOID</span>':live?'<span class="sob lv">LIVE</span>':'<span class="sob">PENDING</span>';
-  return'<div class="soslip '+(p.res||'')+'"><div class="sosh"><b>'+p.legs.length+'-leg parlay'+(p.app?' <small>on '+esc(p.app)+'</small>':'')+'</b>'+badge+'</div>'+
-    p.legs.map(function(l){var pc=l.v==null?0:Math.max(4,Math.min(100,Math.round(l.v/l.bar*100)));
-      return'<div class="sol '+(l.res||'wait')+'"><i class="soi">'+(l.res==='hit'?'&#10003;':l.res==='miss'?'&#10007;':l.res==='void'?'&ndash;':'')+'</i><div class="soln"><b>'+esc(l.n)+'</b><span>'+l.bar+'+ '+esc(ST[l.s]||l.s)+'</span></div><em>'+(l.res==='void'?'DNP':l.v==null?'':l.v+'/'+l.bar)+'</em><div class="solb"><i style="width:'+pc+'%"></i></div></div>'}).join('')+
-    ((p.stake||p.payout)?'<div class="sosf"><span>'+(p.stake?'Bet <b>'+soMoney(p.stake)+'</b>':'')+'</span><span>'+(p.payout?(p.res==='hit'?'Won ':'To win ')+'<b>'+soMoney(p.payout)+'</b>':'')+'</span></div>':'<div class="sosf"><span>'+hits+' of '+p.legs.length+' legs hit</span></div>')+'</div>'}
+  var many=p.legs.length>4&&!SO.full[p.id],legs=many?p.legs.slice(0,3):p.legs;
+  return'<div class="soslip '+(p.res||'')+'"><div class="sosh"><span class="sotag"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l10 10-10 10L2 12z"/><path d="M12 8v8M8 12h8"/></svg>'+p.legs.length+'-LEG PARLAY</span>'+badge+'</div>'+
+    '<div class="somon"><div><small>Bet</small><b class="dim">'+(p.stake?soMoney(p.stake):'--')+'</b></div><div><small>'+(p.res==='hit'?'Won':'Payout')+'</small><b>'+(p.payout?soMoney(p.payout):'--')+'</b></div><span class="soapp">'+esc(p.app||'Parlay Pal')+'</span></div>'+
+    legs.map(function(l){var pc=l.v==null?0:Math.max(4,Math.min(100,Math.round(l.v/l.bar*100)));
+      return'<div class="sol '+(l.res||'wait')+'"><span class="sopic">'+av(l.n,l.pid,'')+'<i class="soi">'+(l.res==='hit'?'&#10003;':l.res==='miss'?'&#10007;':l.res==='void'?'&ndash;':'')+'</i></span><div class="soln"><small>'+esc(l.t||'')+'</small><b>'+esc(l.n)+'</b><span>'+l.bar+'+ '+esc(ST[l.s]||l.s)+'</span><div class="solb"><i style="width:'+pc+'%"></i></div></div><em>'+(l.res==='void'?'DNP':l.v==null?'':l.v+'<small>/'+l.bar+'</small>')+'</em></div>'}).join('')+
+    (many?'<button type="button" class="soshow" data-act="sofull" data-id="'+p.id+'">Show all '+p.legs.length+' legs</button>':'')+
+    '<div class="sosf">'+hits+' of '+p.legs.length+' legs hit'+(p.res==='wait'?' so far':'')+'</div></div>'}
 function soCard(p){var a=p.by,op=SO.open[p.id];
   var nw=!SO.seen2[p.id];SO.seen2[p.id]=1;return'<article class="soc'+(nw?' soin':'')+'" data-id="'+p.id+'"><div class="soch"><button class="soav" type="button" data-act="soprof" data-u="'+a.id+'" aria-label="See '+esc(a.name)+'\'s profile">'+acAvatar(a)+'</button>'+
     '<div class="socn"><button type="button" class="soname" data-act="soprof" data-u="'+a.id+'">'+esc(a.name)+'</button>'+soRec(a.rec)+'<span class="sot">'+soAgo(p.t)+'</span></div>'+
-    '<button class="somore" type="button" data-act="somenu" data-id="'+p.id+'" aria-label="More options">&#8943;</button></div>'+
+    '<button class="somore" type="button" data-act="somenu" data-id="'+p.id+'" aria-label="More options">&#8943;</button></div><div class="sobd">'+
     (p.text?'<p class="sotx">'+esc(p.text)+'</p>':'')+soLegs(p)+
     (p.img?'<button class="soimg" type="button" data-act="soimg" data-id="'+p.id+'" aria-label="Open picture"><img loading="lazy" src="/api/social/img/'+p.id+'" alt="Screenshot posted by '+esc(a.name)+'"></button>':'')+
     '<div class="soact"><button type="button" class="'+(p.liked?'on':'')+'" data-act="solike" data-id="'+p.id+'" aria-pressed="'+p.liked+'"><svg width="19" height="19" viewBox="0 0 24 24" fill="'+(p.liked?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>'+(p.likes||'')+'</span></button>'+
     '<button type="button" data-act="socm" data-id="'+p.id+'" aria-expanded="'+!!op+'"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span>'+(p.comments||'')+'</span></button>'+
     (p.legs&&p.res!=='hit'&&p.res!=='miss'?'<button type="button" data-act="sotail" data-id="'+p.id+'"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Tail</span></button>':'')+
     '<button type="button" data-act="soshare" data-id="'+p.id+'" aria-label="Share"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13M7 8l5-5 5 5M5 14v6h14v-6"/></svg></button></div>'+
-    (op?'<div class="socms" id="socms'+p.id+'">'+soComments(p.id)+'</div>':'')+'</article>'}
+    (op?'<div class="socms" id="socms'+p.id+'">'+soComments(p.id)+'</div>':'')+'</div></article>'}
 function soComments(id){var c=SO.cm[id];if(!c)return'<p class="somu">Loading comments...</p>';
   return c.map(function(x){return'<div class="socmt">'+acAvatar(x.by,'sm')+'<div><button type="button" class="soname" data-act="soprof" data-u="'+x.by.id+'">'+esc(x.by.name)+'</button> <span class="sot">'+soAgo(x.t)+'</span>'+(x.mine||(S.acct&&S.acct.owner)?' <button type="button" class="lnk socdel" data-act="socdel" data-id="'+id+'" data-c="'+x.id+'">Delete</button>':'')+'<p>'+esc(x.text)+'</p></div></div>'}).join('')+
     (S.acct?'<form class="socf" data-id="'+id+'"><input maxlength="300" placeholder="Add a comment" aria-label="Add a comment"><button class="btn" type="submit">Send</button></form>':'<button class="lnk" type="button" data-act="acct">Make a free account to comment</button>')}
 function soComposer(){var d=SO.draft,a=S.acct;
   if(!a)return'<div class="socomp soguest"><div><b>Join the conversation</b><span>Post your parlays, flex your wins and build your record.</span></div><button class="btn" type="button" data-act="acct">Make a free account</button></div>';
-  return'<div class="socomp">'+acAvatar(a)+'<div class="socb"><textarea id="sotext" maxlength="500" rows="2" placeholder="Post your pick, your win, or your bad beat...">'+esc(d.text)+'</textarea>'+
-    (d.legs?'<div class="sodl">'+soLegs({legs:d.legs,res:'wait',stake:d.stake,app:d.app})+'<div class="sodm"><label>Bet $<input id="sostake" inputmode="decimal" value="'+esc(d.stake)+'"></label><label>To win $<input id="sopay" inputmode="decimal" value="'+esc(d.payout)+'" placeholder="optional"></label><button class="lnk" type="button" data-act="sorml">Remove</button></div></div>':'')+
+  return'<div class="socomp" id="socomp"><div class="socb"><textarea id="sotext" maxlength="500" rows="2" placeholder="What\'s on your mind?">'+esc(d.text)+'</textarea>'+
+    (d.legs?'<div class="sodl">'+soLegs({id:0,legs:d.legs,res:'wait',stake:d.stake,payout:d.payout,app:d.app})+'<div class="sodm"><label>Bet $<input id="sostake" inputmode="decimal" value="'+esc(d.stake)+'"></label><label>To win $<input id="sopay" inputmode="decimal" value="'+esc(d.payout)+'" placeholder="optional"></label><button class="lnk" type="button" data-act="sorml">Remove</button></div></div>':'')+
     (d.img?'<div class="sodi"><img src="'+d.img+'" alt="Your picture"><button type="button" data-act="sormi" aria-label="Remove picture">&times;</button></div>':'')+
-    '<div class="socbar"><label class="sotool" title="Add a screenshot"><input type="file" id="sofile" accept="image/*" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-9 8"/></svg><span>Screenshot</span></label>'+
-    '<button class="sotool" type="button" data-act="sopick"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 9h6M9 13h6"/></svg><span>Parlay</span></button>'+
-    '<span class="sp"></span><button class="btn sopost" type="button" data-act="sopost">Post</button></div></div></div>'}
+    '<div class="socbar"><label class="sotool" title="Add a screenshot"><input type="file" id="sofile" accept="image/*" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-9 8"/></svg><span class="sotl">Screenshot</span></label>'+
+    '<span class="sp"></span>'+(d.legs?'':'<button class="sopill" type="button" data-act="sopick">+ Add a parlay</button>')+
+    (d.text||d.legs||d.img?'<button class="btn sopost" type="button" data-act="sopost">Post</button>':'<button class="btn sopost" type="button" data-act="sopost">Post</button>')+'</div></div></div>'}
 function soPicker(){var opts=[];if(S.cart.length)opts.push({k:'cart',t:'Your current slip',s:S.cart.length+' legs'});
   TRK.forEach(function(t,i){if(!t.sample)opts.push({k:'t'+i,t:dayLabel(t.date)+' parlay',s:t.legs.length+' legs'+(t.res==='hit'?' · HIT':t.res==='miss'?' · missed':'')})});
   if(!opts.length){toast('Build or submit a parlay first, then share it here.');return}
@@ -3249,23 +3282,27 @@ function soPhoto(f){if(!f)return;if(!/^image\//.test(f.type)){toast('Pick a pict
     soKeep();SO.draft.img=u;soDraw()};im.src=r.result};r.readAsDataURL(f)}
 function soPost(){soKeep();var d=SO.draft,b=document.querySelector('.sopost');if(!d.text.trim()&&!d.legs&&!d.img){toast('Write something, add a parlay or a screenshot.');return}if(b)b.disabled=true;
   soApi('post',{text:d.text,legs:d.legs,stake:d.stake,payout:d.payout,img:d.img,app:d.app}).then(function(){SO.draft={text:'',legs:null,stake:'',payout:'',img:'',app:''};toast('Posted!');if(SO.tab==='following'||SO.tab==='wins')SO.tab='new';soLoad(true)}).catch(function(x){toast(x.message);if(b)b.disabled=false})}
-function soInner(){var tabs=[['new','Latest'],['top','Hot'],['wins','Winners'],['following','Following']];
-  return'<div class="sowrap"><div class="somain"><div class="sohd"><h1>Social</h1><p>Real parlays, graded by the site. Flex the wins, laugh at the bad beats.</p></div>'+soComposer()+
-    '<div class="sotabs" role="tablist">'+tabs.map(function(t){return'<button type="button" role="tab" aria-selected="'+(SO.tab===t[0])+'" data-act="sotab" data-t="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>'+
-    '<div id="sonew"></div><div id="sofeed">'+soFeed()+'</div></div><aside class="soside">'+soSide()+'</aside></div>'}
+function soInner(){var tabs=[['new','For You'],['top','Hot'],['wins','Winners'],['following','Following']],a=S.acct;
+  var rail='<nav class="sorail" aria-label="Social menu"><button type="button" data-act="soview" data-v="feed" class="'+(SO.view==='feed'?'on':'')+'">Feed</button>'+
+    '<button type="button" data-act="'+(a?'soprof':'acct')+'"'+(a?' data-u="'+a.id+'"':'')+'>Your Profile</button>'+
+    '<button type="button" data-act="soview" data-v="lead" class="'+(SO.view==='lead'?'on':'')+'">Leaderboard</button>'+
+    '<button type="button" class="sorb" data-act="sonewpost"><span>+</span> Make a post</button><button type="button" class="sorb" data-act="nav" data-v="picks">Build a parlay</button></nav>';
+  var main=SO.view==='lead'?'<div class="sohd"><h1>Leaderboard</h1></div><p class="somu">Best records over the last 7 days, with at least 3 graded parlays.</p><div class="soleadwrap">'+soLeadList()+'</div>':
+    soComposer()+'<div class="sotabs" role="tablist">'+tabs.map(function(t){return'<button type="button" role="tab" aria-selected="'+(SO.tab===t[0])+'" data-act="sotab" data-t="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div><div id="sonew"></div><div id="sofeed">'+soFeed()+'</div>';
+  return'<div class="sowrap">'+rail+'<div class="somain">'+(SO.view==='lead'?'':'<div class="sohd"><h1>Social</h1>'+(a?'<button type="button" class="someb" data-act="soprof" data-u="'+a.id+'"><b>'+esc(String(a.name).split(' ')[0])+'</b>'+acAvatar(a)+'</button>':'')+'</div>')+'<div class="sobody">'+main+'</div></div></div>'}
+function soLeadList(){var l=SO.lead;if(!l)return'<p class="somu">Loading...</p>';if(!l.length)return'<div class="soempty"><b>No one on the board yet</b><span>Records show up after 3 graded parlays. Share yours from the tracker to get on it.</span></div>';
+  return'<ol class="sold">'+l.map(function(x,i){var t=x.w+x.l;return'<li><span class="sorank">'+(i+1)+'</span><button type="button" data-act="soprof" data-u="'+x.by.id+'">'+acAvatar(x.by)+'<b>'+esc(x.by.name)+'</b></button><span class="sopct">'+Math.round(x.w/t*100)+'%</span><span class="sorec up">'+x.w+'-'+x.l+'</span></li>'}).join('')+'</ol>'}
 function soFeed(){if(SO.need)return'<div class="soempty"><b>Follow people to fill this up</b><span>Make a free account, then tap Follow on anyone\'s profile.</span><button class="btn" type="button" data-act="acct">Make a free account</button></div>';
   if(!SO.posts.length)return SO.busy?'<div class="soempty"><span>Loading posts...</span></div>':SO.err?'<div class="soempty"><b>Couldn\'t load posts</b><span>'+esc(SO.err)+'</span><button class="btn" type="button" data-act="soreload">Try again</button></div>':'<div class="soempty"><b>'+(SO.tab==='wins'?'No winners yet':SO.tab==='following'?'Nothing from people you follow yet':'Be the first to post')+'</b><span>Share a parlay and the site will grade it live.</span></div>';
   return SO.posts.map(soCard).join('')+(SO.end?'<p class="soend">You\'re all caught up.</p>':'<button class="btn sec somorebtn" type="button" data-act="somorep">Load more</button>')}
-function soSide(){var l=SO.lead;return'<div class="sobx"><h3>Hottest this week</h3>'+(!l?'<p class="somu">Loading...</p>':!l.length?'<p class="somu">Records show up after 3 graded parlays. Post yours to get on the board.</p>':
-    '<ol class="sold">'+l.map(function(x,i){return'<li><span class="sorank">'+(i+1)+'</span><button type="button" data-act="soprof" data-u="'+x.by.id+'">'+acAvatar(x.by,'sm')+'<b>'+esc(x.by.name)+'</b></button><span class="sorec up">'+x.w+'-'+x.l+'</span></li>'}).join('')+'</ol>')+'</div>'+
-    '<div class="sobx"><h3>How records work</h3><p class="somu">Only parlays shared from your slip or tracker count. The site checks every leg against the real box score, so nobody can fake a record. Screenshots are just for fun.</p></div>'}
+function soSide(){return''}
 function soDraw(){var e=$('v-social');if(!e)return;var y=window.scrollY;e.innerHTML=soInner();window.scrollTo(0,y)}
 function soLoad(reset){if(SO.busy)return;SO.busy=true;if(reset){SO.posts=[];SO.end=false;SO.err='';SO.need=false;soDraw()}
   var last=SO.posts.length?SO.posts[SO.posts.length-1].id:0;
   soApi('feed?tab='+SO.tab+(last&&SO.tab!=='top'?'&before='+last:'')).then(function(j){SO.busy=false;SO.need=!!j.needLogin;var ps=j.posts||[];
     if(SO.tab==='top'&&last){ps=[]}SO.posts=SO.posts.concat(ps);SO.end=ps.length<20||SO.tab==='top';if(SO.posts[0])SO.seen=Math.max(SO.seen,SO.posts[0].id);var f=$('sofeed');if(f)f.innerHTML=soFeed();else soDraw()})
   .catch(function(x){SO.busy=false;SO.err=x.message;var f=$('sofeed');if(f)f.innerHTML=soFeed()})}
-function soOpen(){soDraw();soLoad(true);soApi('leaders').then(function(j){SO.lead=j.leaders||[];var s=document.querySelector('.soside');if(s)s.innerHTML=soSide()}).catch(function(){SO.lead=[]});
+function soOpen(){soDraw();soLoad(true);soApi('leaders').then(function(j){SO.lead=j.leaders||[];if(SO.view==='lead'&&V==='social')soDraw()}).catch(function(){SO.lead=[]});
   clearInterval(SO.poll);SO.poll=setInterval(function(){if(V!=='social'||document.hidden){return}soApi('feed?tab=new').then(function(j){var n=(j.posts||[]).filter(function(p){return p.id>SO.seen}).length,b=$('sonew');if(b)b.innerHTML=n?'<button class="sonewb" type="button" data-act="soreload">'+n+' new post'+(n>1?'s':'')+'</button>':''}).catch(function(){})},40000)}
 function soFind(id){return SO.posts.filter(function(p){return p.id===+id})[0]||(SP&&SP.posts||[]).filter(function(p){return p.id===+id})[0]}
 function soRedraw(id){var p=soFind(id);if(!p)return;document.querySelectorAll('.soc[data-id="'+id+'"]').forEach(function(el){el.outerHTML=soCard(p)})}
@@ -3290,6 +3327,9 @@ function soShare(id){var u=location.origin+'/#social';try{if(navigator.share){na
   try{navigator.clipboard.writeText(u);toast('Link copied.')}catch(e){toast(u)}}
 function soAct(a,d,t){
   if(a==='sotab'){SO.tab=d.t;soKeep();soDraw();soLoad(true)}
+  else if(a==='soview'){soKeep();SO.view=d.v;soDraw();window.scrollTo(0,0)}
+  else if(a==='sonewpost'){if(!S.acct){WWHY='';openWel(3,false);return true}soKeep();SO.view='feed';soDraw();var tx=$('sotext');if(tx){tx.scrollIntoView({block:'center'});tx.focus()}}
+  else if(a==='sofull'){SO.full[d.id]=1;soRedraw(d.id)}
   else if(a==='soreload'){soLoad(true)}
   else if(a==='somorep'){soLoad(false)}
   else if(a==='sopost')soPost();
