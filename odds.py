@@ -271,7 +271,9 @@ def extract_bars(event_json):
 
 def lines(games):
     key = api_key()
-    if not key:
+    # Loading every game's lines (with alternates) costs ~24 credits per game, far too much for the free 500.
+    # Kalshi already tells the page which lines exist, so this stays off unless ODDS_LINES=1 (a paid plan).
+    if not key or os.environ.get("ODDS_LINES", "").strip() != "1":
         return {"configured": False}
     events = _events_list(key)
     by_teams = {frozenset((e["home_team"], e["away_team"])): e for e in events}
