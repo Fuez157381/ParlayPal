@@ -1140,7 +1140,11 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 .apempty{padding:22px 4px;text-align:center}.apempty b{font-size:16px;font-weight:600}.apempty p{margin:6px 0 16px;color:var(--mu);font-size:14px}.apempty .btn{width:auto;height:42px}
 @media (max-width:720px){.acn,.accar{display:none}.chipbtn.tr{padding:0 4px}.apd{width:100%;border-left:0}.top .wrap{gap:4px}.logo{margin-right:auto}}
 .hsign{height:36px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--ink);font-size:13.5px;font-weight:600;white-space:nowrap}.hsign:hover{background:var(--card2)}.hsign[hidden]{display:none}
-.vbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;background:var(--pal-l);border-bottom:1px solid var(--line);font-size:13px;color:var(--ink)}.vbar[hidden]{display:none}.vbar b{font-weight:600}.vbar button{border:0;background:none;padding:2px 0;color:var(--pal-d);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.vbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 14px;padding:8px 16px;background:var(--pal-l);border-bottom:1px solid var(--line);font-size:13px;color:var(--ink)}.vbar[hidden]{display:none}
+.fbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 12px;padding:9px 44px 9px 16px;position:relative;background:linear-gradient(90deg,rgba(251,138,46,.16),rgba(168,85,247,.16));border-bottom:1px solid var(--line);font-size:13px;color:var(--ink);text-align:center}
+.fbar[hidden]{display:none}.fbar b{font-weight:700}
+.fbp{background:var(--pal);color:#fff;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
+.fbar button{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--ink);opacity:.6;font-size:20px;line-height:1;padding:4px 8px;cursor:pointer}.fbar button:hover{opacity:1}.vbar b{font-weight:600}.vbar button{border:0;background:none;padding:2px 0;color:var(--pal-d);font-weight:600;font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .wsw{margin:14px 0 0;color:var(--mu);font-size:14px}.frm input[type=password]{letter-spacing:.04em}.wdev{max-width:420px;margin:0 auto 18px;padding:13px 14px;border:1px dashed var(--line2);border-radius:10px;text-align:left}.wdev b,.wdev span{display:block}.wdev b{font-size:13.5px}.wdev span{margin:2px 0 7px;color:var(--mu);font-size:13px}.wdev a{color:var(--pal-d);font-size:14px;font-weight:600;word-break:break-all}
 .apsub{display:flex;flex-direction:column;gap:8px;padding:13px 0;border-top:1px solid var(--line)}.apsub b{font-size:14px;font-weight:600}.apsub input{width:100%}.apsub .apb{align-self:flex-start}.apsub .err,.apdel .err{margin:0;color:var(--bad);font-size:12.5px}.apsub .err:empty,.apdel .err:empty{display:none}.apdel input{display:block;width:100%;margin-bottom:8px}.apdel .err{margin-bottom:8px}
 .thole{opacity:1;border:1.5px solid var(--pal);border-radius:10px;box-shadow:0 0 0 9999px rgba(8,8,10,.74);transition:none;will-change:top,left,width,height}.tour.nohole{background:none}
@@ -1284,6 +1288,7 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   <button class="chipbtn" id="acctChip" type="button" data-act="acctbtn"></button>
 </div></header>
 <div class="vbar" id="vbar" hidden role="status"></div>
+<div class="fbar" id="fbar" hidden role="status"><span class="fbp">Limited time</span><span><b>Parlay Pal is 100% free right now.</b> Pro is coming soon, so enjoy everything free while it lasts.</span><button type="button" data-act="fbarx" aria-label="Hide this message">&times;</button></div>
 
 <main class="wrap">
   <section class="view" id="v-home" aria-label="Home">
@@ -2687,6 +2692,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='paybuy')payGo(d.item);
   else if(a==='paypro')payGo('pro');
   else if(a==='paywall')openWel(4);
+  else if(a==='fbarx'){try{localStorage.setItem('pp_fbar',String(Date.now()))}catch(e){}fbarShow()}
   else if(a==='payportal')payPortal();
   else if(a==='lkequip')lkEquip(d.k);
   else if(a==='lkjoin'){lkClose();openWel(3,true)}
@@ -3097,7 +3103,8 @@ fetch('/api/pay/config').then(function(r){return r.ok?r.json():null}).then(funct
   setTimeout(function(){toast(pd==='pro'?'You\'re in! Enjoy Parlay Pal Pro.':'Payment done! Your spins are in the locker.');confetti()},900);
   [2500,6000,12000].forEach(function(ms){setTimeout(acLoad,ms)})})();
 window.__pp={ms:function(){return MSP},msl:function(){return MSL},S:function(){return S},cheat:function(c){return cheatRows(c).map(function(x){return[x.n,x.tag||'',x.bar,x.a.hits]})},go:go,blocked:blocked,ai:aiRun,parse:parseAsk,rate:rate,analyze:analyze,load:loadDay};
-renderAll();palPlace();go((location.hash||'').slice(1)||'home',true);mvReady=true;ntBadge();renderTrk();acLoad();loadDay('');
+function fbarShow(){var b=$('fbar');if(!b)return;var t=0;try{t=+localStorage.getItem('pp_fbar')||0}catch(e){}b.hidden=BILLING_LIVE||Date.now()-t<3*864e5}
+fbarShow();renderAll();palPlace();go((location.hash||'').slice(1)||'home',true);mvReady=true;ntBadge();renderTrk();acLoad();loadDay('');
 if(!S.wel){S.wel=true;S.guest=true;save()}
 })();
 
