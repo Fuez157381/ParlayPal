@@ -457,6 +457,12 @@ def index():
     return send_file(PAGE if os.path.exists(PAGE) else OLD_PAGE)
 
 
+@app.route("/v2")
+def v2():
+    """Parlay Pal Arena: the second, redesigned site. Same data and accounts as /."""
+    return send_file(os.path.join(HERE, "parlaypal-v2.html"))
+
+
 @app.route("/old")
 def old():
     return send_file(OLD_PAGE)
