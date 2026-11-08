@@ -98,18 +98,45 @@ a{color:var(--sky);text-decoration:none}a:hover{text-decoration:underline}
 .spot{transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
 @media (hover:hover){.spot:hover{transform:scale(1.012);box-shadow:0 10px 36px rgba(0,0,0,.08)}}
 
-/* TONIGHT: dark hero, full bleed */
-.hero{position:relative;display:grid;grid-template-columns:1fr;justify-items:center;text-align:center;gap:0;margin:0 calc(50% - 50vw);padding:72px 22px 64px;background:#000;color:#f5f5f7}
-.hero .kick{color:#f5f5f7;font-size:21px;font-weight:600}
-.flap{display:flex;justify-content:center;gap:0;margin:10px 0 0;font:700 clamp(64px,10vw,128px)/1.02 var(--disp);letter-spacing:-.045em;color:#f5f5f7}
-.flap span{display:inline-block;background:linear-gradient(180deg,#fff 30%,#a1a1a6);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:pre}
-.lede{max-width:640px;margin:20px auto 0;color:#a1a1a6;font:400 21px/1.38 var(--disp);letter-spacing:-.01em}
-.stats{display:flex;justify-content:center;gap:56px;margin-top:44px}
+/* TONIGHT: a dark-blue stage. Glowing rings, sparkles and one floating object (Pal's ticket), like a product launch page */
+.hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:center;gap:40px;margin:0 calc(50% - 50vw);padding:110px max(22px,calc(50vw - 534px)) 64px;min-height:min(820px,100vh);overflow:hidden;color:#f5f5f7;
+  background:radial-gradient(55% 65% at 72% 46%,#0d3a99 0%,#06215c 28%,#030b22 58%,#000 80%)}
+.hglow{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.rg{position:absolute;left:72%;top:46%;border-radius:50%;translate:-50% -50%}
+.r0{width:470px;height:470px;background:conic-gradient(from 0deg,transparent 0 10%,rgba(125,190,255,.9) 22%,transparent 34%,transparent 60%,rgba(80,150,255,.7) 72%,transparent 84%);-webkit-mask:radial-gradient(circle,transparent 63%,#000 64.5%,#000 69%,transparent 70.5%);mask:radial-gradient(circle,transparent 63%,#000 64.5%,#000 69%,transparent 70.5%);filter:blur(1px) drop-shadow(0 0 18px rgba(80,160,255,.9))}
+.r1{width:560px;height:560px;border:1px solid rgba(140,195,255,.28);box-shadow:0 0 90px 10px rgba(41,121,255,.25),inset 0 0 90px rgba(41,121,255,.22)}
+.r2{width:820px;height:820px;border:1px solid rgba(140,195,255,.16)}
+.r3{width:1180px;height:1180px;border:1px solid rgba(140,195,255,.09)}
+.beam{position:absolute;left:72%;top:46%;width:300px;height:300px;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,rgba(90,170,255,.45),transparent 70%);filter:blur(30px)}
+.sparks{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.sparks i{position:absolute;color:#fff;filter:drop-shadow(0 0 6px rgba(160,210,255,.9))}
+.sparks svg{display:block;width:100%;height:100%}
+.hcopy{position:relative}
+.hero .kick{color:#9fc6ff;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.flap{display:block;margin:14px 0 0;font:700 clamp(54px,6.6vw,92px)/1.02 var(--disp);letter-spacing:-.045em;color:#fff}
+.flap .w{display:inline-block}
+.flap .h1b{color:#9fc0ff}
+.flap .h1b .w{background:linear-gradient(100deg,#fff 0%,#8fbaff 70%,#c9d8ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:.06em}
+.lede{max-width:470px;margin:22px 0 0;color:#a9b4c8;font:400 19px/1.45 var(--disp);letter-spacing:-.01em}
+.hcta{display:flex;align-items:center;gap:22px;margin-top:30px;flex-wrap:wrap}
+.hcta .lnk{color:#9fc6ff;font-size:17px}
+.hobj{position:relative;display:flex;justify-content:center;perspective:1100px}
+.hticket{width:min(380px,100%);padding:18px;border-radius:30px;background:linear-gradient(155deg,rgba(255,255,255,.2),rgba(255,255,255,.05) 45%,rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.22);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);box-shadow:0 50px 120px -20px rgba(0,40,140,.8),inset 0 1px 0 rgba(255,255,255,.35);transform-style:preserve-3d;will-change:transform}
+.htk-h{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 14px}
+.htk-h span{font:600 13px/1 var(--body);color:#9fc6ff;letter-spacing:.02em}.htk-h b{font:600 13px/1 var(--body);color:#c7d2e6}
+.htk-l{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;border-radius:18px;background:rgba(0,10,40,.35)}
+.htk-l .hs{width:42px;height:42px;background:rgba(255,255,255,.9)}
+.htk-l div{flex:1;min-width:0}.htk-l b{display:block;font:600 16px/1.2 var(--disp);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.htk-l span{font-size:13px;color:#a9b4c8}
+.htk-l em{font:700 20px/1 var(--disp);font-style:normal;color:#5ee38a}
+.htk-f{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 6px 4px}
+.htk-f small{display:block;color:#a9b4c8;font-size:12px}.htk-f b{font:700 30px/1.1 var(--disp);letter-spacing:-.03em;color:#fff}
+.htk-e{margin:6px 6px 10px;color:#a9b4c8;font-size:15px}
+.stats{grid-column:1/-1;display:flex;justify-content:center;gap:64px;margin-top:20px}
 .stat{padding:0;background:none;border:0;text-align:center}
-.stat b{display:block;font:700 56px/1 var(--disp);letter-spacing:-.03em;background:linear-gradient(90deg,#2997ff,#5ac8fa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat b{display:block;font:700 52px/1 var(--disp);letter-spacing:-.03em;background:linear-gradient(90deg,#2997ff,#5ac8fa);-webkit-background-clip:text;background-clip:text;color:transparent}
 .stat.s b{background-image:linear-gradient(90deg,#bf5af2,#ff375f)}.stat.l b{background-image:linear-gradient(90deg,#30d158,#66d4cf)}
-.stat span{display:block;margin-top:6px;color:#a1a1a6;font-size:14px}
-.ticker{position:relative;margin:0 calc(50% - 50vw);overflow:hidden;background:#000;padding-bottom:28px}
+.stat span{display:block;margin-top:6px;color:#8d97ab;font-size:14px}
+.ticker{position:relative;margin:0 calc(50% - 50vw);overflow:hidden;background:#000;padding:4px 0 32px}
 .ticker:before,.ticker:after{content:"";position:absolute;top:0;bottom:0;width:8vw;z-index:1;pointer-events:none}.ticker:before{left:0;background:linear-gradient(90deg,#000,transparent)}.ticker:after{right:0;background:linear-gradient(-90deg,#000,transparent)}
 .track{display:flex;gap:12px;width:max-content;will-change:transform}
 .gm{display:flex;align-items:center;gap:12px;height:64px;padding:0 20px;border:0;border-radius:16px;background:#1d1d1f;flex:none;color:#f5f5f7}
@@ -223,6 +250,7 @@ a{color:var(--sky);text-decoration:none}a:hover{text-decoration:underline}
 /* the old side dock is replaced by a floating slip bar */
 .dock{display:none!important}
 .sbar{position:fixed;left:50%;bottom:24px;z-index:45;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:8px 8px 8px 20px;border-radius:980px;background:rgba(29,29,31,.86);color:#f5f5f7;-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 16px 50px rgba(0,0,0,.25);white-space:nowrap;font-size:15px}
+.sbar{transition:opacity .35s var(--ease),transform .35s var(--ease)}.sbar.away{opacity:0;transform:translate(-50%,24px);pointer-events:none}
 .sbar b{font:600 15px/1 var(--disp)}.sbar span{color:#a1a1a6}
 .sbar .btn{height:36px;font-size:15px}
 
@@ -356,11 +384,14 @@ html.mo .rv{opacity:0;transform:translateY(24px)}
   .srch{width:34px}.srch input{padding:0;width:34px;color:transparent;cursor:pointer}.srch input:focus{position:fixed;left:12px;right:12px;top:9px;width:auto;z-index:5;padding:0 14px 0 34px;color:var(--ink)}
   .srch input::placeholder{color:transparent}.srch input:focus::placeholder{color:var(--mu2)}
   .srch .res{position:fixed;left:12px;right:12px;top:52px}
-  .hero{padding:52px 20px 44px;margin:0 -16px}
-  .hero .kick{font-size:17px}
-  .flap{font-size:clamp(52px,17vw,84px)}
-  .lede{font-size:17px}
-  .stats{gap:24px;margin-top:32px}.stat b{font-size:40px}.stat span{font-size:12px}
+  .hero{grid-template-columns:1fr;gap:34px;padding:44px 20px 40px;margin:0 -16px;min-height:0;text-align:center;background:radial-gradient(90% 55% at 50% 66%,#0d3a99 0%,#06215c 30%,#030b22 62%,#000 85%)}
+  .rg,.beam{left:50%;top:66%}.r0{width:330px;height:330px}.r1{width:400px;height:400px}.r2{width:600px;height:600px}.r3{width:860px;height:860px}
+  .hero .kick{font-size:15px}
+  .flap{font-size:clamp(46px,13.5vw,64px)}
+  .lede{font-size:16px;margin:16px auto 0}
+  .hcta{justify-content:center;margin-top:22px}
+  .hticket{text-align:left;padding:14px;border-radius:26px}
+  .stats{gap:26px;margin-top:4px}.stat b{font-size:38px}.stat span{font-size:12px}
   .ticker{margin:0 -16px}
   .sec{margin-top:64px}.h2{font-size:30px}.sech p{font-size:16px}
   .five{grid-template-columns:1fr}.scorecard{position:static}
@@ -567,9 +598,16 @@ function renderTonight(){const el=$('v-tonight');if(LOADING&&!G.length){el.inner
   const st=pickN(c.filter(x=>!x.inj&&x.bar>=MINTREND[x.s]&&hitRun(x)>=5).sort((a,b)=>hitRun(b)-hitRun(a)||b.a.p-a.a.p),6,2);
   f.forEach(reg);st.forEach(reg);
   const games=G.map(g=>`<button class="gm" type="button" data-act="game" data-g="${esc(g.id)}"><span class="tm">${logo(g.a)}${esc(g.a)}</span><span class="at">at</span><span class="tm">${logo(g.h)}${esc(g.h)}</span><span class="tt">${esc(g.d||'')}<br>${esc(g.t||'')}</span></button>`).join('');
-  el.innerHTML=`<div class="hero"><div><span class="kick shiny">NBA player props · ${esc(dayLabel(DAY))}</span><h1 class="flap" data-flap="${esc(word)}" aria-label="${esc(dayLabel(DAY))}">${[...word].map(ch=>`<span>${esc(ch)}</span>`).join('')}</h1>
-    <p class="lede">Every prop below is checked against the lines apps really post, then graded on the last 10 games, the matchup, minutes and blowout risk. Injured players are hidden.</p></div>
-    <div class="stats"><div class="stat p rv"><b class="num" data-count="${G.length}">${G.length}</b><span>games</span></div><div class="stat s rv"><b class="num" data-count="${c.length}">${c.length}</b><span>props graded</span></div><div class="stat l rv"><b class="num" data-count="${pool.length}">${pool.length}</b><span>hit 60%+ of the time</span></div></div></div>
+  const tk=f.slice(0,3),tr=tk.length?rate(tk):null,star=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c.6 6.2 5.8 11.4 12 12-6.2.6-11.4 5.8-12 12-.6-6.2-5.8-11.4-12-12C6.2 11.4 11.4 6.2 12 0z" fill="currentColor"/></svg>`;
+  const words=s=>s.split(' ').map(w=>`<span class="w">${esc(w)}</span>`).join(' ');
+  el.innerHTML=`<div class="hero"><div class="hglow" aria-hidden="true"><i class="rg r0"></i><i class="rg r1"></i><i class="rg r2"></i><i class="rg r3"></i><i class="beam"></i></div>
+    <div class="sparks" aria-hidden="true">${[[8,22,18],[30,80,12],[58,14,10],[88,30,22],[80,78,16],[52,88,12],[95,60,10]].map(a=>`<i style="left:${a[0]}%;top:${a[1]}%;width:${a[2]}px;height:${a[2]}px">${star}</i>`).join('')}</div>
+    <div class="hcopy"><span class="kick">NBA player props · ${esc(dayLabel(DAY))}</span><h1 class="flap" aria-label="${esc(word)} Every prop, graded.">${words(word)}<br><span class="h1b">${words('Every prop, graded.')}</span></h1>
+    <p class="lede">Checked against the lines apps really post. Graded on the last 10 games, the matchup, minutes and blowout risk. Injured players hidden.</p>
+    <div class="hcta"><button class="btn" type="button" data-act="go" data-v="board">See the board</button><button class="lnk" type="button" data-act="pal">Ask Pal to build one</button></div></div>
+    <div class="hobj"><div class="hticket" id="hticket">${tk.length?`<div class="htk-h"><span>Pal's pick</span><b class="num">${tk.length} legs</b></div>${tk.map(x=>`<div class="htk-l">${hs(x.n,x.id)}<div><b>${esc(x.n)}</b><span>${x.bar}+ ${ST[x.s]} · ${x.hv} ${esc(x.opp)}</span></div><em class="num">${pct(x.a.p)}</em></div>`).join('')}<div class="htk-f"><div><small>All ${tk.length} hit</small><b class="num">${tr.score}%</b></div><button class="btn sm" type="button" data-act="addfive">Add Pal's five</button></div>`
+      :`<div class="htk-h"><span>Pal's pick</span><b class="num">Soon</b></div><p class="htk-e">${LINES.st==='loading'?'Checking the real lines…':'Apps have not posted lines for these games yet.'}</p>`}</div></div>
+    <div class="stats"><div class="stat p"><b class="num" data-count="${G.length}">${G.length}</b><span>games</span></div><div class="stat s"><b class="num" data-count="${c.length}">${c.length}</b><span>props graded</span></div><div class="stat l"><b class="num" data-count="${pool.length}">${pool.length}</b><span>hit 60%+ of the time</span></div></div></div>
     ${G.length?`<div class="ticker" aria-label="${esc(dayLabel(DAY))} games"><div class="track" id="track">${games}${games}</div></div>`:''}
     ${!G.length?`<div class="empty sec"><b>No games ${esc(dayLabel(DAY).toLowerCase())}</b>Pick another day up top.</div>`:`
     <section class="sec"><div class="sech"><div><h2 class="h2">Pal's five</h2><p>The five steadiest legs ${esc(dayLabel(DAY).toLowerCase())}: one per player, at most two per team.</p></div></div>
@@ -607,7 +645,7 @@ function renderSlip(){const el=$('v-slip'),r=slipCore();
   afterRender(el);if(S.cart.length)oddsKick()}
 function renderDock(){const r=slipCore(),b=$('dockb'),f=$('dockf');$('cnt').hidden=!S.cart.length;$('cnt').textContent=S.cart.length;
   b.innerHTML=S.cart.length?S.cart.map((c,i)=>{const a=analyze(c);return`<div class="dl">${hs(c.n,c.id)}<div><b>${esc(c.n)}</b><span>${c.bar}+ ${ST[c.s]}</span></div><em class="num" style="color:${a.p>=.7?'var(--lime)':a.p>=.5?'var(--sky)':'var(--amber)'}">${pct(a.p)}</em><button class="x" type="button" data-act="rm" data-i="${i}" aria-label="Remove ${esc(c.n)}">&times;</button></div>`}).join(''):`<div class="empty" style="padding:30px 12px"><b style="font-size:18px">Empty slip</b>Tap + on any prop.</div>`;
-  const sb=$('sbar');sb.hidden=!r||VIEW==='slip';if(r)sb.innerHTML=`<b>${r.n} leg${r.n>1?'s':''}</b><span>${r.score}% to hit all · ${esc(r.label)}</span><button class="btn sm" type="button" data-act="go" data-v="slip">Review slip</button>`;
+  const sb=$('sbar');sb.hidden=!r||VIEW==='slip';sb.classList.toggle('away',VIEW==='tonight'&&window.scrollY<520);if(r)sb.innerHTML=`<b>${r.n} leg${r.n>1?'s':''}</b><span>${r.score}% to hit all · ${esc(r.label)}</span><button class="btn sm" type="button" data-act="go" data-v="slip">Review slip</button>`;
   f.innerHTML=r?`<div class="ring">${ring(r.score,120,r.tone)}<div class="v"><div><b class="num">${r.score}%</b><small>${esc(r.label)}</small></div></div></div><button class="btn" type="button" data-act="go" data-v="slip">Review & track</button>`:`<button class="btn" type="button" data-act="pal">Ask Pal to build one</button>`}
 
 /* ---------- odds ---------- */
@@ -793,15 +831,38 @@ function afterRender(root){if(RM||!HAS_G){return}
   ScrollTrigger.batch(items,{start:'top 94%',once:true,onEnter:b=>gsap.to(b,{opacity:1,y:0,duration:.6,ease:'power3.out',stagger:.05,overwrite:true})});
   root.querySelectorAll('[data-count]').forEach(el=>{const to=+el.dataset.count,suf=el.textContent.replace(/[0-9.]/g,''),o={v:0};gsap.to(o,{v:to,duration:1.1,ease:'power2.out',onUpdate:()=>{el.textContent=Math.round(o.v)+suf}})});
   root.querySelectorAll('.arc').forEach(a=>gsap.fromTo(a,{attr:{'stroke-dashoffset':a.dataset.c}},{attr:{'stroke-dashoffset':a.dataset.o},duration:1.2,ease:'power3.out'}));
-  const fl=root.querySelector('.flap');if(fl)splitFlap(fl);
+  const hero=root.querySelector('.hero');if(hero)heroFx(hero);
   const tr=root.querySelector('#track');if(tr)marquee(tr);
   ScrollTrigger.refresh();clearTimeout(SWEEP_T);SWEEP_T=setTimeout(sweep,1600)}
 /* safety net: if animations are paused (background tab, slow phone), anything on screen still hidden is shown plainly */
 let SWEEP_T=null;
 function sweep(){document.querySelectorAll('.rv').forEach(el=>{if(+getComputedStyle(el).opacity<.05&&el.getBoundingClientRect().top<innerHeight){el.style.opacity=1;el.style.transform='none'}})}
 addEventListener('scroll',()=>{clearTimeout(SWEEP_T);SWEEP_T=setTimeout(sweep,700)},{passive:true});
+const sbarAway=()=>{const b=$('sbar');if(b)b.classList.toggle('away',VIEW==='tonight'&&window.scrollY<520)};addEventListener('scroll',sbarAway,{passive:true});
 /* Split-Flap Text (React Bits idea): each letter clacks through random letters before landing */
 function splitFlap(el){setTimeout(()=>el.querySelectorAll('span').forEach((s,i)=>{s.textContent=el.dataset.flap[i]||s.textContent;s.style.transform=''}),2200);const A='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';el.querySelectorAll('span').forEach((s,i)=>{const end=s.textContent,o={k:0};if(end===' '||end==='.')return;gsap.to(o,{k:1,duration:.5+i*.08,ease:'none',onUpdate:()=>{s.textContent=o.k>=1?end:A[Math.floor(Math.random()*A.length)]},onComplete:()=>{s.textContent=end}});gsap.from(s,{rotationX:-90,duration:.35,delay:i*.05,ease:'back.out(2)',transformPerspective:400})})}
+/* Hero: blur-in words (React Bits Blur Text idea), floating 3D ticket that follows the pointer, breathing rings, twinkling sparkles, scroll-scrubbed exit */
+let HEROCTX=null;
+function heroFx(h){if(HEROCTX)HEROCTX.revert();HEROCTX=gsap.context(()=>{
+  const tl=gsap.timeline({defaults:{ease:'power3.out'}});
+  tl.from(h.querySelectorAll('.w'),{opacity:0,y:28,filter:'blur(14px)',duration:1.1,stagger:.07})
+    .from(h.querySelectorAll('.kick,.lede,.hcta'),{opacity:0,y:18,duration:.9,stagger:.1},'-=.8')
+    .from('#hticket',{opacity:0,y:90,rotationX:28,scale:.88,duration:1.6,ease:'expo.out'},.15)
+    .from(h.querySelectorAll('.rg'),{scale:.6,opacity:0,duration:1.8,stagger:.12,ease:'expo.out'},0)
+    .from(h.querySelectorAll('.stat'),{opacity:0,y:20,duration:.8,stagger:.08},'-=1');
+  gsap.to(h.querySelector('.hobj'),{y:-16,duration:3.2,yoyo:true,repeat:-1,ease:'sine.inOut'});
+  gsap.to(h.querySelectorAll('.rg'),{scale:1.05,duration:4.5,yoyo:true,repeat:-1,ease:'sine.inOut',stagger:{each:.7,from:'end'}});
+  gsap.to(h.querySelector('.r0'),{rotation:360,duration:40,repeat:-1,ease:'none'});
+  h.querySelectorAll('.sparks i').forEach((st,i)=>{gsap.fromTo(st,{scale:0,rotation:-45,opacity:0},{scale:1,rotation:45,opacity:1,duration:1.4,ease:'sine.inOut',yoyo:true,repeat:-1,repeatDelay:Math.random()*2,delay:i*.45})});
+  if(matchMedia('(pointer:fine)').matches){const t=h.querySelector('#hticket'),rx=gsap.quickTo(t,'rotationX',{duration:.8,ease:'power3'}),ry=gsap.quickTo(t,'rotationY',{duration:.8,ease:'power3'}),gx=gsap.quickTo(h.querySelector('.hglow'),'x',{duration:1.2,ease:'power3'}),gy=gsap.quickTo(h.querySelector('.hglow'),'y',{duration:1.2,ease:'power3'});
+    h.addEventListener('pointermove',e=>{const r=h.getBoundingClientRect(),px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;ry(px*16);rx(-py*12);gx(px*30);gy(py*20)});
+    h.addEventListener('pointerleave',()=>{rx(0);ry(0);gx(0);gy(0)})}
+  const sc={trigger:h,start:'top top',end:'bottom top',scrub:.6};
+  gsap.to(h.querySelector('.hobj'),{yPercent:-30,scale:.9,opacity:.3,ease:'none',scrollTrigger:sc});
+  gsap.to(h.querySelector('.hcopy'),{y:-80,opacity:0,ease:'none',scrollTrigger:sc});
+  gsap.to(h.querySelector('.hglow'),{scale:1.35,opacity:.4,ease:'none',scrollTrigger:sc});
+},h);
+  setTimeout(()=>{const t=document.getElementById('hticket');if(t&&+getComputedStyle(t).opacity<.5)gsap.set(h.querySelectorAll('.w,.kick,.lede,.hcta,#hticket,.rg,.stat'),{clearProps:'opacity,filter,transform'})},2600)}
 /* Scroll Velocity (React Bits idea): the games ticker drifts, and speeds up while you scroll */
 function marquee(tr){if(TICK)gsap.ticker.remove(TICK);let x=0,vel=0,last=window.scrollY;const half=()=>tr.scrollWidth/2;
   TICK=()=>{if(!document.body.contains(tr)){gsap.ticker.remove(TICK);TICK=null;return}const y=window.scrollY;vel=vel*.9+Math.abs(y-last)*.25;last=y;x-=(.45+vel*.12);if(-x>=half())x+=half();tr.style.transform=`translate3d(${x}px,0,0)`};
