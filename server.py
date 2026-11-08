@@ -463,6 +463,12 @@ def v2():
     return send_file(os.path.join(HERE, "parlaypal-v2.html"))
 
 
+@app.route("/v3")
+def v3():
+    """Parlay Pal Signal: the V3 prototype (demo data only)."""
+    return send_file(os.path.join(HERE, "parlaypal-v3.html"))
+
+
 @app.route("/old")
 def old():
     return send_file(OLD_PAGE)
