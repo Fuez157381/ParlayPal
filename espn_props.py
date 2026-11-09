@@ -16,7 +16,10 @@ CORE = "https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba"
 SITE = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
 TTL = 600                      # prices are reused for 10 minutes
 DK = "100"                     # ESPN's id for DraftKings
-TOTAL = {"pts": "Total Points", "reb": "Total Rebounds", "ast": "Total Assists", "tpm": "Total 3-Point Field Goals"}
+TOTAL = {"pts": "Total Points", "reb": "Total Rebounds", "ast": "Total Assists", "tpm": "Total 3-Point Field Goals",
+         "stl": "Total Steals", "blk": "Total Blocks", "pra": "Total Points, Rebounds, and Assists",
+         "pr": "Total Points and Rebounds", "pa": "Total Points and Assists", "ra": "Total Assists and Rebounds"}
+YES = {"dd": "To Record a Double Double", "td": "To Record a Triple Double"}   # one "Yes" price each
 _cache = {}
 
 
@@ -61,8 +64,14 @@ def _props(eid):
                 continue
             aid = m.group(1)
             try:
-                line = float((it.get("current") or {}).get("target", {}).get("value"))
                 am = int(str(it["odds"]["american"]["value"]).replace("+", ""))
+            except (KeyError, TypeError, ValueError):
+                continue
+            for s, nm in YES.items():
+                if name == nm:
+                    out.setdefault((aid, s), {})["total"] = (0.5, am)    # "1+" of a yes/no stat
+            try:
+                line = float((it.get("current") or {}).get("target", {}).get("value"))
             except (KeyError, TypeError, ValueError):
                 continue
             for s in TOTAL:
@@ -114,6 +123,33 @@ def main_lines(legs):
         if t:
             out[i] = {"pid": pid, "s": s, "line": t[0] + 0.5, "american": t[1]}
     return out
+
+
+def posted_lines(games, names):
+    """For /api/lines: {"norm name|stat": [N]} where N+ is DraftKings' main line, for the given games.
+    names maps ESPN athlete id -> player name."""
+    from kalshi import norm
+    players, posted = {}, {}
+    try:
+        ids = _games()
+    except Exception:
+        return players, posted
+    for g in games or []:
+        a, h = str(g.get("a", "")).upper(), str(g.get("h", "")).upper()
+        eid = ids.get(frozenset({a, h}))
+        if not eid:
+            continue
+        try:
+            props = _props(eid)
+        except Exception:
+            continue
+        if props:
+            posted[a] = posted[h] = True
+        for (aid, s), v in props.items():
+            nm = names.get(str(aid))
+            if nm and v.get("total"):
+                players.setdefault(f"{norm(nm)}|{s}", set()).add(int(round(v["total"][0] + 0.5)))
+    return players, posted
 
 
 def lines():

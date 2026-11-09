@@ -120,6 +120,7 @@ def fetch_gamelog(aid, season_year):
                 rows.append({
                     "team": team, "gid": str(ev["eventId"]), "date": _et_date(m["gameDate"]), "min": mins,
                     "pts": _num(s[ix["PTS"]]), "reb": _num(s[ix["REB"]]), "ast": _num(s[ix["AST"]]),
+                    "stl": _num(s[ix["STL"]]) if "STL" in ix else 0, "blk": _num(s[ix["BLK"]]) if "BLK" in ix else 0,
                     "tpm": _num(three), "tpa": _num(three.split("-")[1]) if "-" in three else 0,
                     "mu": f"{team} {'@' if m.get('atVs') == '@' else 'vs.'} {opp}",
                 })
@@ -145,6 +146,14 @@ def all_logs(roster, season_year, cached, ttl):
     return out
 
 
+def derived(p):
+    """Adds the combo stats and double/triple-doubles (1 = yes) to one game's stats."""
+    pts, reb, ast, stl, blk = (p.get(k) or 0 for k in ("pts", "reb", "ast", "stl", "blk"))
+    tens = sum(1 for v in (pts, reb, ast, stl, blk) if v >= 10)
+    p.update(pra=pts + reb + ast, pr=pts + reb, pa=pts + ast, ra=reb + ast, dd=1 if tens >= 2 else 0, td=1 if tens >= 3 else 0)
+    return p
+
+
 def box(event_id):
     """Live or final box score for the parlay tracker, in live.py's shape."""
     s = _get(SITE + "/summary", {"event": event_id}, timeout=20)
@@ -160,9 +169,10 @@ def box(event_id):
                 if not aid:
                     continue
                 if a.get("didNotPlay") or not vals:
-                    out["players"][aid] = {"pts": 0, "reb": 0, "ast": 0, "tpm": 0, "min": "", "played": False}
+                    out["players"][aid] = {"pts": 0, "reb": 0, "ast": 0, "tpm": 0, "stl": 0, "blk": 0, "min": "", "played": False}
                     continue
                 g = lambda k: vals[ix[k]] if k in ix and ix[k] < len(vals) else 0  # noqa: E731
-                out["players"][aid] = {"pts": _num(g("PTS")), "reb": _num(g("REB")), "ast": _num(g("AST")),
-                                       "tpm": _num(g("3PT")), "min": str(g("MIN")), "played": True}
+                out["players"][aid] = derived({"pts": _num(g("PTS")), "reb": _num(g("REB")), "ast": _num(g("AST")),
+                                               "tpm": _num(g("3PT")), "stl": _num(g("STL")), "blk": _num(g("BLK")),
+                                               "min": str(g("MIN")), "played": True})
     return out

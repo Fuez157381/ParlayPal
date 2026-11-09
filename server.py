@@ -225,6 +225,7 @@ def build(date_str=None, all_teams=False):
         players.append({"id": pid, "n": rows[0]["name"], "t": team, "ncur": len(series),
                         "pts": [r["pts"] for r in allg], "reb": [r["reb"] for r in allg],
                         "ast": [r["ast"] for r in allg], "tpm": [r["tpm"] for r in allg],
+                        "stl": [r.get("stl", 0) for r in allg], "blk": [r.get("blk", 0) for r in allg],
                         "min": [r["min"] for r in allg], "dates": [r["date"] for r in allg],
                         "mu": [r.get("mu", "") for r in allg]})
     try:
@@ -379,9 +380,41 @@ def api_lines():
             out["source"] = "Kalshi + sportsbooks" if not errs else "sportsbooks"
         except Exception as e:
             errs.append(f"SportsGameOdds: {type(e).__name__}: {e}")
+    try:   # DraftKings' main lines, free from ESPN: also the only source for combos, steals, blocks, double-doubles
+        import espn_props
+        more, posted = espn_props.posted_lines(games, player_names())
+        if more:
+            if out is None:
+                out = {"configured": True, "updated": time.strftime("%H:%M"), "players": {}, "posted": {}, "creditsLeft": None}
+            for k, bars in more.items():
+                out["players"][k] = sorted(set(out["players"].get(k, [])) | bars)
+            for t, ok in posted.items():
+                out["posted"][t] = bool(out["posted"].get(t)) or ok
+    except Exception as e:
+        errs.append(f"DraftKings via ESPN: {type(e).__name__}: {e}")
     if out is None:
         return cors(jsonify({"configured": True, "error": "; ".join(errs)})), 502
     return cors(jsonify(out))
+
+
+_NAMES = {"t": 0, "m": {}}
+
+
+def player_names():
+    """ESPN athlete id -> name, from the saved all-players list (or today's data)."""
+    if _NAMES["m"] and time.time() - _NAMES["t"] < 3600:
+        return _NAMES["m"]
+    m = {}
+    p = os.path.join(HERE, "snapshots", "players.json")
+    try:
+        with open(p, encoding="utf-8") as f:
+            m = {str(x["id"]): x["n"] for x in json.load(f).get("players", [])}
+    except (OSError, ValueError):
+        pass
+    if not m:
+        m = {str(x["id"]): x["n"] for x in (day_data("") or {}).get("players", [])}
+    _NAMES.update(t=time.time(), m=m)
+    return m
 
 
 def day_data(date):
