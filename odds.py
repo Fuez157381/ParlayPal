@@ -143,7 +143,7 @@ def compare(legs):
     """Prices from every free source we have, merged per book: SportsGameOdds (free plan, 9 sportsbooks),
     The Odds API (only while its credits last), and Kalshi (always free). A book's price for a leg comes
     from the first source that has it."""
-    legs = [l for l in legs if l.get("s") in MARKET and l.get("bar") and l.get("n") and l.get("t") and l.get("opp")][:20]
+    legs = [l for l in legs if l.get("s") and l.get("bar") and l.get("n") and l.get("t") and l.get("opp")][:20]   # every leg counts: a book missing one is shown as missing it
     if not legs:
         return {"configured": True, "books": [], "notes": ["Add legs to see prices."]}
     import kalshi
@@ -197,6 +197,9 @@ def _oddsapi_prices(key, legs):
     per_leg = []                                   # one dict per leg: bookKey -> (title, american)
     ev_cache = {}
     for l in legs:
+        if l.get("s") not in MARKET:               # stats The Odds API doesn't carry (double-doubles, NFL)
+            per_leg.append({})
+            continue
         ev = by_teams.get(frozenset((NAMES.get(l["t"], ""), NAMES.get(l["opp"], ""))))
         if not ev:
             per_leg.append({})
@@ -206,7 +209,7 @@ def _oddsapi_prices(key, legs):
             mk = set()
             for x in legs:
                 e2 = by_teams.get(frozenset((NAMES.get(x["t"], ""), NAMES.get(x["opp"], ""))))
-                if e2 and e2["id"] == ev["id"]:
+                if e2 and e2["id"] == ev["id"] and x.get("s") in MARKET:
                     mk.add(MARKET[x["s"]]); mk.add(MARKET[x["s"]] + "_alternate")
             data, rem = _event_odds(key, ev["id"], mk)
             ev_cache[ev["id"]] = data

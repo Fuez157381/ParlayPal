@@ -7,7 +7,7 @@ on:
     - cron: "0 16 * * *"
   workflow_dispatch:
   push:
-    paths: [".github/workflows/refresh-data.yml", "espn.py", "make_snapshot.py"]
+    paths: [".github/workflows/refresh-data.yml", "espn.py", "nfl.py", "make_snapshot.py"]
 permissions:
   contents: write
 concurrency:
@@ -26,7 +26,7 @@ jobs:
       - name: Save NBA data
         run: |
           for i in 1 2 3; do
-            timeout 600 python make_snapshot.py | tee out.txt && grep -q saved out.txt && exit 0
+            timeout 900 python make_snapshot.py | tee out.txt && grep -q saved out.txt && exit 0
             echo "try $i failed"; sleep 60
           done
           exit 1

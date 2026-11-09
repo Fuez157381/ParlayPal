@@ -19,7 +19,8 @@ bp = Blueprint("social", __name__)
 MAX_IMG = 260 * 1024        # bytes of JPEG per screenshot (kept small: the free database is 0.5 GB)
 MAX_TEXT = 500
 HIDE_AT = 3                 # reports before a post is hidden
-STATS = ("pts", "reb", "ast", "tpm", "stl", "blk", "pra", "pr", "pa", "ra", "dd", "td")
+STATS = ("pts", "reb", "ast", "tpm", "stl", "blk", "pra", "pr", "pa", "ra", "dd", "td",
+         "pyd", "ptd", "cmp", "ryd", "car", "rec", "recy", "rry", "atd")
 GIF_OK = re.compile(r"^https://media[0-9]?\.giphy\.com/media/[A-Za-z0-9/_.-]+\.(gif|webp)(\?[A-Za-z0-9=&_.-]*)?$")
 
 

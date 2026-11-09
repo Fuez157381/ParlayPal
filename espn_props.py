@@ -1,7 +1,8 @@
-"""DraftKings player-prop prices, published free by ESPN (no key, no monthly limit).
+"""DraftKings player-prop prices, published free by ESPN (no key, no monthly limit). NBA and NFL.
 
 ESPN lists each player's main DraftKings line per stat: "Total Points 17.5" with two prices, Over first
 (checked against DraftKings' own numbers). A leg like "18+ points" is priced from the Over at 17.5.
+Yes/no bets (double-double, anytime touchdown) have one "Yes" price, stored as a 0.5 line ("1+").
 ESPN's "Milestones" entries are not used: their numbers don't match the full-game lines.
 Lines DraftKings doesn't list here get no price, so nothing is guessed.
 """
@@ -12,14 +13,23 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-CORE = "https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba"
-SITE = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
 TTL = 600                      # prices are reused for 10 minutes
 DK = "100"                     # ESPN's id for DraftKings
-TOTAL = {"pts": "Total Points", "reb": "Total Rebounds", "ast": "Total Assists", "tpm": "Total 3-Point Field Goals",
-         "stl": "Total Steals", "blk": "Total Blocks", "pra": "Total Points, Rebounds, and Assists",
-         "pr": "Total Points and Rebounds", "pa": "Total Points and Assists", "ra": "Total Assists and Rebounds"}
-YES = {"dd": "To Record a Double Double", "td": "To Record a Triple Double"}   # one "Yes" price each
+SPORTS = {
+    "nba": {"core": "https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba",
+            "site": "https://site.api.espn.com/apis/site/v2/sports/basketball/nba",
+            "total": {"pts": "Total Points", "reb": "Total Rebounds", "ast": "Total Assists", "tpm": "Total 3-Point Field Goals",
+                      "stl": "Total Steals", "blk": "Total Blocks", "pra": "Total Points, Rebounds, and Assists",
+                      "pr": "Total Points and Rebounds", "pa": "Total Points and Assists", "ra": "Total Assists and Rebounds"},
+            "yes": {"dd": "To Record a Double Double", "td": "To Record a Triple Double"}},
+    "nfl": {"core": "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl",
+            "total": {"pyd": "Total Passing Yards (incl. overtime)", "ptd": "Total Passing Touchdowns (incl. overtime)",
+                      "cmp": "Total Pass Completions (incl. overtime)", "ryd": "Total Rushing Yards (incl. overtime)",
+                      "car": "Total Carries (incl. overtime)", "rec": "Total Receptions (incl. overtime)",
+                      "recy": "Total Receiving Yards (incl. overtime)", "rry": "Total Rushing Plus Receiving Yards (incl. overtime)"},
+            "yes": {"atd": "Anytime Touchdown Scorer"}},
+}
+TOTAL = SPORTS["nba"]["total"]          # kept for older callers
 _cache = {}
 
 
@@ -38,13 +48,24 @@ def _cached(key, fn):
     return val
 
 
-def _games():
-    """{frozenset({team, team}): event id} for today and tomorrow (Eastern)."""
-    from espn import tri as fix
+def sport_of(leg):
+    return "nfl" if str(leg.get("lg") or "").lower() == "nfl" else "nba"
+
+
+def _games(sport="nba"):
+    """{frozenset({team, team}): ESPN event id} for upcoming games, keyed the way the page names teams."""
     out = {}
+    if sport == "nfl":
+        import nfl
+        sched = _cached("nfl:sched", nfl.fetch_schedule)
+        for rows in sched.values():
+            for g in rows:
+                out.setdefault(frozenset({g["a"], g["h"]}), g["id"].split(":")[-1])
+        return out
+    from espn import tri as fix
     today = dt.datetime.now(ZoneInfo("America/New_York")).date()
     for d in (today, today + dt.timedelta(days=1)):
-        j = _cached("sb" + d.strftime("%Y%m%d"), lambda d=d: _get(SITE + "/scoreboard", {"dates": d.strftime("%Y%m%d")}))
+        j = _cached("sb" + d.strftime("%Y%m%d"), lambda d=d: _get(SPORTS["nba"]["site"] + "/scoreboard", {"dates": d.strftime("%Y%m%d")}))
         for ev in j.get("events") or []:
             teams = [fix(c.get("team", {}).get("abbreviation", "")) for c in (ev.get("competitions") or [{}])[0].get("competitors") or []]
             if len(teams) == 2:
@@ -52,95 +73,96 @@ def _games():
     return out
 
 
-def _props(eid):
+def _props(eid, sport="nba"):
     """{(athlete id, stat): {"total": (line, over american)}} for one game."""
+    cfg = SPORTS[sport]
+
     def load():
-        j = _get(f"{CORE}/events/{eid}/competitions/{eid}/odds/{DK}/propBets", {"lang": "en", "region": "us", "limit": 1000})
+        items = []
+        for page in range(1, 6):     # big games list more than 1,000 bets
+            j = _get(f"{cfg['core']}/events/{eid}/competitions/{eid}/odds/{DK}/propBets", {"lang": "en", "region": "us", "limit": 1000, "page": page})
+            items += j.get("items") or []
+            if page >= int(j.get("pageCount") or 1):
+                break
         seen, out = set(), {}
-        for it in j.get("items") or []:
+        for it in items:
             name = (it.get("type") or {}).get("name", "")
             m = re.search(r"athletes/(\d+)", (it.get("athlete") or {}).get("$ref", ""))
             if not m:
                 continue
             aid = m.group(1)
-            try:
+            try:     # ESPN sometimes lists a line before DraftKings' price is filled in
                 am = int(str(it["odds"]["american"]["value"]).replace("+", ""))
             except (KeyError, TypeError, ValueError):
-                continue
-            for s, nm in YES.items():
+                am = None
+            for s, nm in cfg["yes"].items():
                 if name == nm:
-                    out.setdefault((aid, s), {})["total"] = (0.5, am)    # "1+" of a yes/no stat
+                    out.setdefault((aid, s), {})["total"] = (0.5, am)    # "1+" of a yes/no bet
             try:
                 line = float((it.get("current") or {}).get("target", {}).get("value"))
             except (KeyError, TypeError, ValueError):
                 continue
-            for s in TOTAL:
-                if name == TOTAL[s] and (aid, s) not in seen:      # the first of each pair is the Over
+            for s, nm in cfg["total"].items():
+                if name == nm and (aid, s) not in seen:      # the first of each pair is the Over
                     seen.add((aid, s))
                     out.setdefault((aid, s), {})["total"] = (line, am)
         return out
-    return _cached("pb" + eid, load)
+    return _cached(f"pb:{sport}:{eid}", load)
+
+
+def _leg_total(l):
+    sport = sport_of(l)
+    eid = _games(sport).get(frozenset({l.get("t"), l.get("opp")}))
+    pid, s = str(l.get("pid") or ""), l.get("s")
+    if not eid or not pid or (s not in SPORTS[sport]["total"] and s not in SPORTS[sport]["yes"]):
+        return None
+    return (_props(eid, sport).get((pid, s)) or {}).get("total")
 
 
 def leg_prices(legs):
     """One dict per leg, like the other sources: {"draftkings": ("DraftKings", american)} when listed."""
     rows = [{} for _ in legs]
-    try:
-        games = _games()
-    except Exception:
-        return rows
     for i, l in enumerate(legs):
-        eid = games.get(frozenset({l.get("t"), l.get("opp")}))
-        pid, s = str(l.get("pid") or ""), l.get("s")
-        if not eid or not pid or s not in TOTAL:
-            continue
         try:
-            p = _props(eid).get((pid, s)) or {}
+            t = _leg_total(l)
         except Exception:
             continue
-        bar = float(l.get("bar") or 0)
-        if p.get("total") and p["total"][0] == bar - 0.5:
-            rows[i]["draftkings"] = ("DraftKings", p["total"][1])
+        if t and t[1] is not None and t[0] == float(l.get("bar") or 0) - 0.5:
+            rows[i]["draftkings"] = ("DraftKings", t[1])
     return rows
 
 
 def main_lines(legs):
     """DraftKings' main line for each leg's player and stat, as "N+" with the Over price, or None."""
     out = [None] * len(legs)
-    try:
-        games = _games()
-    except Exception:
-        return out
     for i, l in enumerate(legs):
-        eid = games.get(frozenset({l.get("t"), l.get("opp")}))
-        pid, s = str(l.get("pid") or ""), l.get("s")
-        if not eid or not pid or s not in TOTAL:
-            continue
         try:
-            t = (_props(eid).get((pid, s)) or {}).get("total")
+            t = _leg_total(l)
         except Exception:
             continue
         if t:
-            out[i] = {"pid": pid, "s": s, "line": t[0] + 0.5, "american": t[1]}
+            out[i] = {"pid": str(l.get("pid")), "s": l.get("s"), "line": t[0] + 0.5, "american": t[1]}
     return out
 
 
-def posted_lines(games, names):
-    """For /api/lines: {"norm name|stat": [N]} where N+ is DraftKings' main line, for the given games.
+def posted_lines(games, names, sport="nba"):
+    """For /api/lines: {"norm name|stat": {N}} where N+ is DraftKings' main line, for the given games.
     names maps ESPN athlete id -> player name."""
     from kalshi import norm
     players, posted = {}, {}
     try:
-        ids = _games()
+        ids = _games(sport)
     except Exception:
         return players, posted
     for g in games or []:
-        a, h = str(g.get("a", "")).upper(), str(g.get("h", "")).upper()
+        a, h = str(g.get("a", "")), str(g.get("h", ""))
+        if sport == "nba":
+            a, h = a.upper(), h.upper()
         eid = ids.get(frozenset({a, h}))
         if not eid:
             continue
         try:
-            props = _props(eid)
+            props = _props(eid, sport)
         except Exception:
             continue
         if props:
@@ -152,12 +174,12 @@ def posted_lines(games, names):
     return players, posted
 
 
-def lines():
-    """Which DraftKings lines exist, for debugging: number of priced (player, stat) pairs per game."""
+def lines(sport="nba"):
+    """For debugging: priced (player, stat) pairs per upcoming game."""
     out = {}
-    for eid in set(_games().values()):
+    for eid in set(_games(sport).values()):
         try:
-            out[eid] = len(_props(eid))
+            out[eid] = len(_props(eid, sport))
         except Exception:
-            out[eid] = 0      # not posted yet (usually tomorrow's games)
+            out[eid] = 0      # not posted yet
     return out

@@ -269,11 +269,33 @@ def cors(resp):
     return resp
 
 
+def build_sport(sport, date):
+    if sport == "nfl":
+        import nfl
+        return nfl.build(date or None, cached, norm_name, inj_level)
+    return build(date or None)
+
+
 @app.route("/api/data")
 def api_data():
     date = request.args.get("date", "").strip()
+    sport = "nfl" if request.args.get("sport") == "nfl" else "nba"
     if date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
         return cors(jsonify({"error": "date must look like 2026-11-02"})), 400
+    if sport != "nba":
+        if HOSTED:
+            snap = load_snapshot(date, sport)
+            if snap:
+                return cors(jsonify(snap))
+            if os.environ.get("VERCEL"):
+                return cors(jsonify({"error": "This day's NFL data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
+        try:
+            return cors(jsonify(build_sport(sport, date)))
+        except Exception as e:
+            snap = load_snapshot(date, sport)
+            if snap:
+                return cors(jsonify(snap))
+            return cors(jsonify({"error": f"{type(e).__name__}: {e}"})), 502
     if HOSTED:  # hosted: use today's saved copy right away instead of waiting on a blocked NBA
         snap = load_snapshot(date)
         today = dt.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
@@ -314,9 +336,10 @@ def api_players():
         return cors(jsonify({"error": f"{type(e).__name__}: {e}"})), 502
 
 
-def load_snapshot(date):
+def load_snapshot(date, sport="nba"):
     d = os.path.join(HERE, "snapshots")
-    for name in ([f"{date}.json"] if date else ["latest.json"]):
+    pre = "" if sport == "nba" else sport + "-"
+    for name in ([f"{pre}{date}.json"] if date else [f"{pre}latest.json"]):
         p = os.path.join(d, name)
         if os.path.exists(p):
             try:
@@ -363,12 +386,14 @@ def api_lines():
     import sgo      # free plan: reuses the saved SportsGameOdds data, costs nothing extra
     body = request.get_json(silent=True) or {}
     games = body.get("games") or []
+    sport = "nfl" if body.get("sport") == "nfl" else "nba"
     out, errs = None, []
-    try:
-        out = kalshi.lines(games)
-    except Exception as e:
-        errs.append(f"Kalshi: {type(e).__name__}: {e}")
-    if sgo.api_key():
+    if sport == "nba":
+        try:
+            out = kalshi.lines(games)
+        except Exception as e:
+            errs.append(f"Kalshi: {type(e).__name__}: {e}")
+    if sport == "nba" and sgo.api_key():
         try:
             more = sgo.lines(games)
             if out is None:
@@ -382,7 +407,7 @@ def api_lines():
             errs.append(f"SportsGameOdds: {type(e).__name__}: {e}")
     try:   # DraftKings' main lines, free from ESPN: also the only source for combos, steals, blocks, double-doubles
         import espn_props
-        more, posted = espn_props.posted_lines(games, player_names())
+        more, posted = espn_props.posted_lines(games, player_names(sport), sport)
         if more:
             if out is None:
                 out = {"configured": True, "updated": time.strftime("%H:%M"), "players": {}, "posted": {}, "creditsLeft": None}
@@ -397,14 +422,25 @@ def api_lines():
     return cors(jsonify(out))
 
 
-_NAMES = {"t": 0, "m": {}}
+_NAMES = {}
 
 
-def player_names():
+def player_names(sport="nba"):
     """ESPN athlete id -> name, from the saved all-players list (or today's data)."""
-    if _NAMES["m"] and time.time() - _NAMES["t"] < 3600:
-        return _NAMES["m"]
+    hit = _NAMES.get(sport)
+    if hit and hit["m"] and time.time() - hit["t"] < 3600:
+        return hit["m"]
     m = {}
+    if sport != "nba":
+        snap = load_snapshot("", sport)
+        if not snap and not HOSTED:
+            try:
+                snap = build_sport(sport, "")
+            except Exception:
+                snap = None
+        m = {str(x["id"]): x["n"] for x in (snap or {}).get("players", [])}
+        _NAMES[sport] = {"t": time.time(), "m": m}
+        return m
     p = os.path.join(HERE, "snapshots", "players.json")
     try:
         with open(p, encoding="utf-8") as f:
@@ -413,7 +449,7 @@ def player_names():
         pass
     if not m:
         m = {str(x["id"]): x["n"] for x in (day_data("") or {}).get("players", [])}
-    _NAMES.update(t=time.time(), m=m)
+    _NAMES[sport] = {"t": time.time(), "m": m}
     return m
 
 

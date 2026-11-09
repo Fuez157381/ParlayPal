@@ -9,8 +9,12 @@ def box(gid):
     c = _cache.get(gid)
     if c and now - c[0] < (300 if c[1].get("status") == 3 else 20):
         return c[1]
-    import espn
-    out = espn.box(gid)
+    if str(gid).startswith("nfl:"):
+        import nfl
+        out = nfl.box(gid)
+    else:
+        import espn
+        out = espn.box(gid)
     _cache[gid] = (now, out)
     return out
 
