@@ -7,7 +7,7 @@ on:
     - cron: "0 16 * * *"
   workflow_dispatch:
   push:
-    paths: [".github/workflows/refresh-data.yml", "espn.py", "nfl.py", "make_snapshot.py"]
+    paths: [".github/workflows/refresh-data.yml", "espn.py", "nfl.py", "nhl.py", "make_snapshot.py"]
 permissions:
   contents: write
 concurrency:

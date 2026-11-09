@@ -270,16 +270,16 @@ def cors(resp):
 
 
 def build_sport(sport, date):
-    if sport == "nfl":
-        import nfl
-        return nfl.build(date or None, cached, norm_name, inj_level)
+    if sport in ("nfl", "nhl"):
+        mod = __import__(sport)
+        return mod.build(date or None, cached, norm_name, inj_level)
     return build(date or None)
 
 
 @app.route("/api/data")
 def api_data():
     date = request.args.get("date", "").strip()
-    sport = "nfl" if request.args.get("sport") == "nfl" else "nba"
+    sport = request.args.get("sport") if request.args.get("sport") in ("nfl", "nhl") else "nba"
     if date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
         return cors(jsonify({"error": "date must look like 2026-11-02"})), 400
     if sport != "nba":
@@ -288,7 +288,7 @@ def api_data():
             if snap:
                 return cors(jsonify(snap))
             if os.environ.get("VERCEL"):
-                return cors(jsonify({"error": "This day's NFL data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
+                return cors(jsonify({"error": "This day's " + sport.upper() + " data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
         try:
             return cors(jsonify(build_sport(sport, date)))
         except Exception as e:
@@ -386,7 +386,7 @@ def api_lines():
     import sgo      # free plan: reuses the saved SportsGameOdds data, costs nothing extra
     body = request.get_json(silent=True) or {}
     games = body.get("games") or []
-    sport = "nfl" if body.get("sport") == "nfl" else "nba"
+    sport = body.get("sport") if body.get("sport") in ("nfl", "nhl") else "nba"
     out, errs = None, []
     if sport == "nba":
         try:

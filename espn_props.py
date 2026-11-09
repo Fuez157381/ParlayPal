@@ -28,6 +28,9 @@ SPORTS = {
                       "car": "Total Carries (incl. overtime)", "rec": "Total Receptions (incl. overtime)",
                       "recy": "Total Receiving Yards (incl. overtime)", "rry": "Total Rushing Plus Receiving Yards (incl. overtime)"},
             "yes": {"atd": "Anytime Touchdown Scorer"}},
+    "nhl": {"core": "https://sports.core.api.espn.com/v2/sports/hockey/leagues/nhl",
+            "total": {"hpt": "Total Points", "hast": "Total Assists", "sog": "Total Shots on Goal", "svs": "Total Saves"},
+            "yes": {"hgl": "Anytime Goalscorer"}},
 }
 TOTAL = SPORTS["nba"]["total"]          # kept for older callers
 _cache = {}
@@ -49,15 +52,15 @@ def _cached(key, fn):
 
 
 def sport_of(leg):
-    return "nfl" if str(leg.get("lg") or "").lower() == "nfl" else "nba"
+    lg = str(leg.get("lg") or "").lower()
+    return lg if lg in ("nfl", "nhl") else "nba"
 
 
 def _games(sport="nba"):
     """{frozenset({team, team}): ESPN event id} for upcoming games, keyed the way the page names teams."""
     out = {}
-    if sport == "nfl":
-        import nfl
-        sched = _cached("nfl:sched", nfl.fetch_schedule)
+    if sport in ("nfl", "nhl"):
+        sched = _cached(sport + ":sched", __import__(sport).fetch_schedule)
         for rows in sched.values():
             for g in rows:
                 out.setdefault(frozenset({g["a"], g["h"]}), g["id"].split(":")[-1])
