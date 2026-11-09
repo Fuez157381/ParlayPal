@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BASE = os.environ.get("ODDS_BASE", "https://api.the-odds-api.com")
 # Only the apps Parlay Pal shows. Asking by name costs 1 credit per market per game (instead of 1 per region x3).
 BOOKS = [b.strip() for b in os.environ.get("ODDS_BOOKS", "fanduel,hardrockbet,prizepicks,underdog,sleeper").split(",") if b.strip()]
-SHOWN = set(BOOKS) | {"kalshi"}
+SHOWN = set(BOOKS) | {"kalshi", "draftkings"}   # DraftKings comes free from ESPN
 REGIONS = "us,us2,us_dfs"                 # sportsbooks, more books (Hard Rock, ESPN BET, Fanatics, Fliff), pick'em apps (Underdog, PrizePicks, Sleeper, Pick6, Betr); each region multiplies the credit cost
 TTL = 2 * 3600                             # seconds an event's odds are reused (makes the free 500 credits last)
 
@@ -164,6 +164,13 @@ def compare(legs):
             merge(sgo.leg_prices(legs), "SportsGameOdds")
         except Exception as e:
             notes.append(f"SportsGameOdds didn't answer ({type(e).__name__}: {str(e)[:140]}).")
+    dk = []
+    try:
+        import espn_props
+        merge(espn_props.leg_prices(legs), "DraftKings via ESPN")
+        dk = espn_props.main_lines(legs)
+    except Exception as e:
+        notes.append(f"ESPN's DraftKings prices didn't answer ({type(e).__name__}).")
     if api_key():
         try:
             rows, _, remaining = _oddsapi_prices(api_key(), legs)
@@ -180,7 +187,7 @@ def compare(legs):
     if used:
         notes.append("Prices from " + ", ".join(used) + "." + (" Sportsbook prices can be a few minutes old, so check the app before you bet." if "SportsGameOdds" in used else ""))
     notes.append("Parlay price is each leg's listed price multiplied together. A book's own slip can price a parlay differently, and some books limit same-game parlays.")
-    return {"configured": True, "updated": time.strftime("%H:%M"), "books": books, "notes": notes, "creditsLeft": remaining}
+    return {"configured": True, "updated": time.strftime("%H:%M"), "books": books, "notes": notes, "creditsLeft": remaining, "dk": dk}
 
 
 def _oddsapi_prices(key, legs):
