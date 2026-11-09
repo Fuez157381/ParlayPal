@@ -1926,7 +1926,7 @@ function booksHtml(){var h='<h3 class="cb">Compare books'+(OD.st==='loading'?'<s
         (full?'<em class="am">'+fmtAm(b.american)+'<small>'+esc(winOn(b.american,S.stake))+'</small></em>':'<em class="miss">'+b.legsOffered+' of '+b.legsTotal+' legs<small>not offered: '+esc((b.missing||[]).slice(0,2).join(', '))+((b.missing||[]).length>2?'…':'')+'</small></em>')+'</button>'}).join('');
     var best=(d.books||[])[0],second=(d.books||[]).filter(function(b){return b.american!=null})[1];
     var gap=best&&best.american!=null&&second&&second.decimal?(function(){var k=parseFloat(S.stake)||100;var diff=(best.decimal-second.decimal)*k;return diff>=0.01?'Best price pays $'+diff.toFixed(2)+' more than the next book on a $'+k+' stake.':''})():'';
-    return h+(rows?'<div class="books">'+rows+'</div>':'<div class="books">'+staticBooks()+'</div>')}
+    return h+'<div class="books">'+rows+staticBooks(seen)+'</div>'}
   return h+'<div class="books">'+staticBooks()+'</div>'}
 function renderSlip(){var el=$('slip'),r=rate(S.cart),n=S.cart.length,open=el.classList.contains('open');
   var h='<div class="sh"><h2>Your parlay</h2><span class="cnt">'+(n?n+(n===1?' leg':' legs'):'')+'</span>'+(n?'<button class="shclr" type="button" data-act="clear"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Clear parlay</button>':'')+'</div>';
