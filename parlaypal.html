@@ -1898,7 +1898,7 @@ function legHtml(c,i){var a=analyze(c),L=ladOf(c);
   return'<div class="leg"><div class="lt"><div class="who">'+av(c.n,c.id,'sm')+'<div><button class="nm" data-act="player" data-id="'+c.id+'">'+esc(c.n)+'</button><small>'+sub(c)+'</small></div></div>'+
    '<div class="stp"><button data-act="up" data-i="'+i+'" aria-label="Raise the line"'+(c.bar>=L.hi?' disabled':'')+'>&#9650;</button><button data-act="down" data-i="'+i+'" aria-label="Lower the line"'+(c.bar<=L.lo?' disabled':'')+'>&#9660;</button></div></div>'+
    '<div class="legline"><b>'+c.bar+'+</b><span>'+sico(c.s,18)+' '+ST[c.s]+'</span>'+tag(a)+'</div>'+bars(c.v,c.dates,c.ncur,c.bar)+
-   '<div class="legft"><span>Cleared in '+a.hits+' of '+a.n+' games</span>'+dkChip(c,i)+'<button class="lnk" data-act="rm" data-i="'+i+'">Remove</button></div></div>'}
+   '<div class="legft"><span>Cleared in '+a.hits+' of '+a.n+' games</span>'+'<button class="lnk" data-act="rm" data-i="'+i+'">Remove</button></div></div>'}
 function dkLine(c){var l=OD.st==='ok'&&OD.data&&OD.data.dk||[];for(var j=0;j<l.length;j++)if(l[j]&&String(l[j].pid)===String(c.id)&&l[j].s===c.s)return l[j];return null}
 function dkChip(c,i){var d=dkLine(c);if(!d)return'';if(d.line===c.bar)return'<span class="dkb on" title="DraftKings price for this line">DK '+fmtAm(d.american)+'</span>';
   return'<button class="dkb" type="button" data-act="dkset" data-i="'+i+'" data-v="'+d.line+'" title="Switch to the line DraftKings offers">DK line '+d.line+'+ · '+fmtAm(d.american)+'</button>'}
