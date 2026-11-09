@@ -115,11 +115,11 @@ def events():
     if rec and now - rec.get("failT", 0) < BACKOFF:     # failed recently: use the last good prices, or give up quietly
         if rec.get("v") is not None:
             return rec["v"]
-        raise RuntimeError("SportsGameOdds is cooling down after a rate limit. Trying again in a few minutes.")
+        raise RuntimeError("SportsGameOdds is cooling down after an error (" + str(rec.get("err") or "unknown")[:120] + "). Trying again in a few minutes.")
     try:
         evs = _fetch(key)
-    except RuntimeError:
-        bad = dict(rec or {}, failT=now)
+    except RuntimeError as e:
+        bad = dict(rec or {}, failT=now, err=str(e)[:200])
         bad.setdefault("t", 0)
         _shared_put(bad)
         if rec and rec.get("v") is not None:
@@ -219,5 +219,8 @@ def lines(games):
 
 def status():
     k = api_key()
+    rec = _shared_get() or {}
     return {"configured": bool(k), "keyEnds": k[-4:] if k else "",
-            "cachedGames": len(_mem["v"] or []), "cachedAt": time.strftime("%H:%M", time.localtime(_mem["t"])) if _mem["t"] else ""}
+            "cachedGames": len(_mem["v"] or []), "cachedAt": time.strftime("%H:%M", time.localtime(_mem["t"])) if _mem["t"] else "",
+            "lastError": rec.get("err", ""), "lastErrorAgo": int(time.time() - rec["failT"]) if rec.get("failT") else None,
+            "sharedCacheAge": int(time.time() - rec["t"]) if rec.get("t") else None}

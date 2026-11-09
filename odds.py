@@ -46,7 +46,14 @@ def api_key():
 
 def status():
     k = api_key()
-    return {"configured": bool(k), "keyEnds": k[-4:] if k else ""}
+    out = {"configured": bool(k), "keyEnds": k[-4:] if k else ""}
+    if k:
+        try:   # listing sports is free and reports this month's credits
+            r = _get("/sports", {"apiKey": k})
+            out.update(httpStatus=r.status_code, creditsLeft=r.headers.get("x-requests-remaining"), creditsUsed=r.headers.get("x-requests-used"))
+        except Exception as e:
+            out["checkError"] = type(e).__name__
+    return out
 
 
 def norm(s):
