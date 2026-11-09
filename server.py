@@ -18,7 +18,7 @@ import unicodedata
 import datetime as dt
 from zoneinfo import ZoneInfo
 
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, Response, jsonify, request, send_file
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOSTED = bool(os.environ.get("PORT") or os.environ.get("VERCEL"))
@@ -457,21 +457,57 @@ def index():
     return send_file(PAGE if os.path.exists(PAGE) else OLD_PAGE)
 
 
+def _noindex(resp):
+    """Keep test versions out of Google so they don't compete with the main site."""
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return resp
+
+
 @app.route("/v2")
 def v2():
     """Parlay Pal Arena: the second, redesigned site. Same data and accounts as /."""
-    return send_file(os.path.join(HERE, "parlaypal-v2.html"))
+    return _noindex(send_file(os.path.join(HERE, "parlaypal-v2.html")))
 
 
 @app.route("/v3")
 def v3():
     """Parlay Pal Signal: the V3 prototype (demo data only)."""
-    return send_file(os.path.join(HERE, "parlaypal-v3.html"))
+    return _noindex(send_file(os.path.join(HERE, "parlaypal-v3.html")))
 
 
 @app.route("/old")
 def old():
-    return send_file(OLD_PAGE)
+    return _noindex(send_file(OLD_PAGE))
+
+
+SITE_URL = "https://www.parlaypal.us"
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    body = "User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: " + SITE_URL + "/sitemap.xml\n"
+    return Response(body, mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    day = dt.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+    body = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            '  <url><loc>' + SITE_URL + '/</loc><lastmod>' + day + '</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>\n'
+            '</urlset>\n')
+    return Response(body, mimetype="application/xml")
+
+
+@app.route("/favicon.ico")
+@app.route("/favicon.png")
+@app.route("/apple-touch-icon.png")
+@app.route("/og.png")
+def site_images():
+    name = request.path.lstrip("/")
+    resp = send_file(os.path.join(HERE, name))
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
 
 
 if __name__ == "__main__":
