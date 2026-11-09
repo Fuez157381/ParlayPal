@@ -20,7 +20,7 @@ MAX_IMG = 260 * 1024        # bytes of JPEG per screenshot (kept small: the free
 MAX_TEXT = 500
 HIDE_AT = 3                 # reports before a post is hidden
 STATS = ("pts", "reb", "ast", "tpm", "stl", "blk", "pra", "pr", "pa", "ra", "dd", "td",
-         "pyd", "ptd", "cmp", "ryd", "car", "rec", "recy", "rry", "atd", "hpt", "hast", "sog", "hgl", "svs")
+         "pyd", "ptd", "cmp", "ryd", "car", "rec", "recy", "rry", "atd", "hpt", "hast", "sog", "hgl", "svs", "sgl", "sast", "sht", "sot")
 GIF_OK = re.compile(r"^https://media[0-9]?\.giphy\.com/media/[A-Za-z0-9/_.-]+\.(gif|webp)(\?[A-Za-z0-9=&_.-]*)?$")
 
 
@@ -244,7 +244,7 @@ def _clean_legs(legs):
         try:
             o = l.get("o")
             o = int(o) if isinstance(o, (int, float)) and 100 <= abs(o) <= 100000 else None
-            out.append({"n": str(l.get("n", ""))[:40], "t": str(l.get("t", ""))[:4], "opp": str(l.get("opp", ""))[:4], "s": l["s"], "bar": float(l.get("bar", 0)),
+            out.append({"n": str(l.get("n", ""))[:40], "t": str(l.get("t", ""))[:8], "opp": str(l.get("opp", ""))[:8], "s": l["s"], "bar": float(l.get("bar", 0)),
                         "pid": str(l.get("pid", ""))[:16], "gid": str(l.get("gid", ""))[:16], "o": o, "est": bool(l.get("est")), "res": "wait", "v": None})
         except (TypeError, ValueError):
             continue

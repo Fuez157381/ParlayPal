@@ -270,8 +270,8 @@ def cors(resp):
 
 
 def build_sport(sport, date):
-    if sport in ("nfl", "nhl"):
-        mod = __import__(sport)
+    if sport in ("nfl", "nhl", "soc"):
+        mod = __import__({"soc": "soccer"}.get(sport, sport))
         return mod.build(date or None, cached, norm_name, inj_level)
     return build(date or None)
 
@@ -279,7 +279,7 @@ def build_sport(sport, date):
 @app.route("/api/data")
 def api_data():
     date = request.args.get("date", "").strip()
-    sport = request.args.get("sport") if request.args.get("sport") in ("nfl", "nhl") else "nba"
+    sport = request.args.get("sport") if request.args.get("sport") in ("nfl", "nhl", "soc") else "nba"
     if date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
         return cors(jsonify({"error": "date must look like 2026-11-02"})), 400
     if sport != "nba":
@@ -288,7 +288,7 @@ def api_data():
             if snap:
                 return cors(jsonify(snap))
             if os.environ.get("VERCEL"):
-                return cors(jsonify({"error": "This day's " + sport.upper() + " data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
+                return cors(jsonify({"error": "This day's " + {"soc": "soccer"}.get(sport, sport.upper()) + " data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
         try:
             return cors(jsonify(build_sport(sport, date)))
         except Exception as e:
@@ -386,7 +386,7 @@ def api_lines():
     import sgo      # free plan: reuses the saved SportsGameOdds data, costs nothing extra
     body = request.get_json(silent=True) or {}
     games = body.get("games") or []
-    sport = body.get("sport") if body.get("sport") in ("nfl", "nhl") else "nba"
+    sport = body.get("sport") if body.get("sport") in ("nfl", "nhl", "soc") else "nba"
     out, errs = None, []
     if sport in ("nba", "nfl", "nhl"):
         try:
@@ -417,6 +417,8 @@ def api_lines():
                 out["posted"][t] = bool(out["posted"].get(t)) or ok
     except Exception as e:
         errs.append(f"DraftKings via ESPN: {type(e).__name__}: {e}")
+    if out is None and sport != "nba" and not errs:     # nothing posted yet is an answer, not an error
+        out = {"configured": True, "updated": time.strftime("%H:%M"), "players": {}, "posted": {}, "creditsLeft": None}
     if out is None:
         return cors(jsonify({"configured": True, "error": "; ".join(errs)})), 502
     return cors(jsonify(out))
@@ -463,7 +465,7 @@ def pal_data(context):
     if k in _PAL and time.time() - _PAL[k][0] < 300:
         return _PAL[k][1]
     out = {"players": [], "games": [], "opp": {}, "why": {}, "net": {}}
-    for sp in ("nba", "nfl", "nhl"):
+    for sp in ("nba", "nfl", "nhl", "soc"):
         d = date if sp == sport else ""
         try:
             j = day_data(d) if sp == "nba" else (load_snapshot(d, sp) or (None if HOSTED else build_sport(sp, d)))

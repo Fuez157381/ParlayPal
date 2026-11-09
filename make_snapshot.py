@@ -30,12 +30,12 @@ try:
 except Exception as e:
     print("skipped players.json", type(e).__name__, e)
 # NFL and NHL: their next game days
-for sp in ("nfl", "nhl"):
+for sp in ("nfl", "nhl", "soc"):
     try:
         nf = server.build_sport(sp, "")
         with open(os.path.join(out, f"{sp}-latest.json"), "w", encoding="utf-8") as f:
             json.dump(nf, f)
-        for d in nf.get("dates", [])[:8 if sp == "nfl" else 5]:
+        for d in nf.get("dates", [])[:{"nfl": 8, "nhl": 5, "soc": 6}[sp]]:
             try:
                 j = nf if d == nf["stats"]["date"] else server.build_sport(sp, d)
                 with open(os.path.join(out, f"{sp}-{d}.json"), "w", encoding="utf-8") as f:
@@ -48,7 +48,7 @@ for sp in ("nfl", "nhl"):
 # old days are never asked for again
 keep = set(dates) | {"latest"}
 for name in os.listdir(out):
-    stem = name[:-5][4:] if name[:4] in ("nfl-", "nhl-") else name[:-5]
+    stem = name[:-5][4:] if name[:4] in ("nfl-", "nhl-", "soc-") else name[:-5]
     if name.endswith(".json") and stem not in keep and stem != "latest" and stem < today and stem[:2] == "20":
         os.remove(os.path.join(out, name))
         print("removed old", name)
