@@ -230,6 +230,13 @@ def build(date_str, cached, norm_name, inj_level):
             opp[team]["svs"] = round(a / league_sf, 2)
             why[team]["svs"] = f"The {tn} take {a:.1f} shots on goal per game over {len(v)} games (league average {league_sf:.1f}), so their opponent's goalie faces {'more' if a > league_sf else 'fewer'} shots."
     net = {t: {"m": round(sum(v.values()) / len(v), 1), "g": len(v)} for t, v in gm.items() if v}
+    # back-to-backs: a team that also played the day before (starting goalies usually rest)
+    y, m_, d_ = (int(x) for x in date_str.split("-"))
+    yday = (dt.date(y, m_, d_) - dt.timedelta(days=1)).strftime("%Y-%m-%d")
+    played_yday = {r["team"] for rows_ in cur for r in rows_ if r["date"] == yday}
+    played_yday |= {t for g in sched.get(yday, []) for t in (g["a"], g["h"])}
+    for g in games:
+        g["b2b"] = [t for t in (g["a"], g["h"]) if t in played_yday]
 
     try:
         inj, inj_src = cached("nhl:injuries", TTL_INJ, lambda: fetch_injuries(norm_name, inj_level))

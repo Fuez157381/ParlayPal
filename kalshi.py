@@ -9,7 +9,16 @@ import time
 import unicodedata
 
 BASE = "https://api.elections.kalshi.com/trade-api/v2"
-SERIES = {"pts": "KXNBAPTS", "reb": "KXNBAREB", "ast": "KXNBAAST", "tpm": "KXNBA3PT"}
+SERIES = {"pts": "KXNBAPTS", "reb": "KXNBAREB", "ast": "KXNBAAST", "tpm": "KXNBA3PT",
+          # NFL (team keys lowercase on the page) and NHL (capitalized): same "Player: N+" markets
+          "pyd": "KXNFLPASSYDS", "ptd": "KXNFLPASSTDS", "cmp": "KXNFLPASSCOMP", "ryd": "KXNFLRSHYDS",
+          "rec": "KXNFLREC", "recy": "KXNFLRECYDS", "atd": "KXNFLTD",
+          "hpt": "KXNHLPTS", "hast": "KXNHLAST", "hgl": "KXNHLGOAL"}
+SPORT_STATS = {"nba": ("pts", "reb", "ast", "tpm"), "nfl": ("pyd", "ptd", "cmp", "ryd", "rec", "recy", "atd"),
+               "nhl": ("hpt", "hast", "hgl")}
+# Kalshi's team codes where they differ from ESPN's
+ALIAS = {"nfl": {"WSH": ("WAS",), "JAX": ("JAC",), "LAR": ("LA", "LAR")},
+         "nhl": {"UTAH": ("UTA", "UTAH"), "LA": ("LAK", "LA"), "TB": ("TBL", "TB"), "NJ": ("NJD", "NJ"), "SJ": ("SJS", "SJ")}}
 TTL = 3 * 60
 _cache = {}
 
@@ -116,19 +125,25 @@ def probe():
     return info
 
 
-def lines(games):
+def _codes(t, sport):
+    t = str(t or "").upper()
+    return ALIAS.get(sport, {}).get(t, (t,))
+
+
+def lines(games, sport="nba"):
     """Which lines does Kalshi list for today's games? Free: Kalshi's market data needs no key and no credits.
     Returns the same shape the site expects from /api/lines."""
-    allm = {k: markets(ser) for k, ser in SERIES.items()}
+    allm = {k: markets(SERIES[k]) for k in SPORT_STATS.get(sport, SPORT_STATS["nba"])}
     players, posted = {}, {}
     for g in (games or [])[:16]:
-        a, h = str(g.get("a", "")).upper(), str(g.get("h", "")).upper()
+        a, h = str(g.get("a", "")), str(g.get("h", ""))
+        ac, hc = _codes(a, sport), _codes(h, sport)
         found = False
         for st, ms in allm.items():
             for m in ms:
                 ev = str(m.get("event_ticker", "")).upper()
                 tail = ev.split("-", 1)[1] if "-" in ev else ev
-                if not (a and h and a in tail and h in tail):
+                if not (a and h and any(x in tail for x in ac) and any(x in tail for x in hc)):
                     continue
                 th = _threshold(m)
                 label = str(m.get("yes_sub_title") or m.get("title") or "")

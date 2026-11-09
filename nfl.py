@@ -74,7 +74,9 @@ def fetch_schedule():
         stt = ((e.get("status") or {}).get("type") or {})
         out.setdefault(when.strftime("%Y-%m-%d"), []).append({
             "id": "nfl:" + str(e["id"]), "a": teams.get("away", ""), "h": teams.get("home", ""), "utc": e["date"],
-            "status": stt.get("shortDetail") or "", "final": stt.get("state") == "post", "live": stt.get("state") == "in"})
+            "status": stt.get("shortDetail") or "", "final": stt.get("state") == "post", "live": stt.get("state") == "in",
+            "dome": bool((comp.get("venue") or {}).get("indoor")),
+            "wx": {"txt": (e.get("weather") or {}).get("displayValue"), "temp": (e.get("weather") or {}).get("temperature")} if e.get("weather") else None})
     return out
 
 
@@ -162,7 +164,8 @@ def build(date_str, cached, norm_name, inj_level):
         label = "Final" if g["final"] else (g["status"] if g["live"] else f"{when.hour % 12 or 12}:{when:%M} {'AM' if when.hour < 12 else 'PM'}")
         y, m, d = date_str.split("-")
         day = dt.date(int(y), int(m), int(d))
-        games.append({"i": i, "id": g["id"], "a": g["a"], "h": g["h"], "d": f"{day:%a %b} {day.day}", "t": label, "lg": "nfl"})
+        games.append({"i": i, "id": g["id"], "a": g["a"], "h": g["h"], "d": f"{day:%a %b} {day.day}", "t": label, "lg": "nfl",
+                      "dome": g.get("dome", False), "wx": g.get("wx")})
     playing = {t for g in games for t in (g["a"], g["h"])}
 
     teams, _ = cached("nfl:teams", 7 * 24 * 3600, fetch_teams)

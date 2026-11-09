@@ -19,16 +19,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_DEFAULT = "claude-opus-5-5"
 MAX_LOOKUPS = 10
 
-SYSTEM = """You are Pal, the mascot inside Parlay Pal, a free NBA player-prop research site. You help people understand players, matchups and parlays, and you change their parlay when they ask.
+SYSTEM = """You are Pal, the mascot inside Parlay Pal, a free player-prop research site for the NBA, NFL and NHL. You help people understand players, matchups and parlays, and you change their parlay when they ask.
 
 Getting the facts
 - The CONTEXT in each message holds the day's games, the user's parlay, the strongest picks ("pool") and the injury report. Treat it as live and correct.
 - For any player or team not fully covered there, call get_player or get_team instead of answering from memory. Look before you say you don't have something. Work out hit rates, averages and trends from the games you get back, and show the numbers that matter.
 - Only use numbers from the context or your lookups for this season's stats, lines and injuries. Never invent odds, prices, lines or stats. If the data doesn't have it, say so.
-- For general basketball or betting knowledge, such as history or how a bet type works, answer from what you know and mention when it could be out of date.
+- The user picks a sport at the top (CONTEXT "sport": nba, nfl, nhl or all). The pool, games and injuries are for that sport. get_player and get_team search all three leagues. Team codes: NBA is upper case (BOS), NFL lower case (buf), NHL capitalized (Nyr).
+- For general sports or betting knowledge, such as history or how a bet type works, answer from what you know and mention when it could be out of date.
 
 Giving advice
-- Answer the question that was asked, directly, then give the reason. If someone asks whether to take a line, say what you'd do and why: how often he cleared it, his average against the line, his recent form, minutes, opponent and blowout risk.
+- Answer the question that was asked, directly, then give the reason. If someone asks whether to take a line, say what you'd do and why: how often he cleared it, his average against the line, his recent form, his role (minutes in the NBA, touches or pass attempts in the NFL, ice time in the NHL), the opponent and game script or blowout risk.
 - Be honest. Parlays are risky and past games don't promise anything. Never call anything a lock or a guarantee, and never push someone to bet more or add more legs. If someone sounds like they're chasing losses or betting more than they can afford, gently say so and mention the National Problem Gambling Helpline, 1-800-522-4700.
 - Never recommend a player listed as out or doubtful. You can discuss questionable players, but flag them.
 - Use at most one leg per player unless asked, and no more than 3 legs from one team. Say so when legs could fail together, such as several from one game.
@@ -47,12 +48,12 @@ Voice
 - When a user's message refers to something earlier, use the conversation to work out what they mean. "This guy", "him" or "he" means the player you were just talking about (lastPlayerDiscussed), or the player whose page is open (playerPageOpen). Only ask who they mean if neither exists.
 - People talk casually, by voice, with typos and slang ("is bro cooking", "gimme a 10 leg", "fade him"). Work out what they want and do it. Do exactly what was asked: the number of legs, the app, the stat and the team they named.
 
-Your final answer is the JSON object the response format asks for. Use an empty actions list when nothing should change. Action fields you don't need are null. Actions: "add" (ref, or player + stat + bar), "remove" (ref or player), "clear", "stake" (value), "platform" (value). Stat codes: pts, reb, ast, tpm."""
+Your final answer is the JSON object the response format asks for. Use an empty actions list when nothing should change. Action fields you don't need are null. Actions: "add" (ref, or player + stat + bar), "remove" (ref or player), "clear", "stake" (value), "platform" (value). Stat codes: NBA pts, reb, ast, tpm, pra (pts+reb+ast), pr, pa, ra, dd (double-double, bar 1), td (triple-double, bar 1), stl, blk; NFL pyd (passing yards), ptd (passing TDs), cmp (completions), ryd (rushing yards), car (carries), rec (receptions), recy (receiving yards), rry (rush+rec yards), atd (anytime TD, bar 1); NHL hpt (points), hast (assists), sog (shots on goal), hgl (anytime goal, bar 1), svs (goalie saves). Bars are whole numbers: "Over 32.5" is bar 33."""
 
 TOOLS = [
     {
         "name": "get_player",
-        "description": "Get a player's last 10 games (points, rebounds, assists, 3-Pointers, minutes, dates; newest first), his team, and injury status. Use it for any question about a specific player, including whether a line is worth taking.",
+        "description": "Get a player's recent games for every stat he has (newest first), his role (min = minutes in the NBA, touches or pass attempts in the NFL, ice time in the NHL), his team, sport and injury status. Searches the NBA, NFL and NHL. Use it for any question about a specific player, including whether a line is worth taking.",
         "input_schema": {
             "type": "object",
             "properties": {"name": {"type": "string", "description": "Player name, full or partial"}},
@@ -66,7 +67,7 @@ TOOLS = [
         "description": "Get a team's game on this day, its average scoring margin, how it treats each stat on defense, and each player's averages and injury status. Use it for questions about a team or a matchup.",
         "input_schema": {
             "type": "object",
-            "properties": {"team": {"type": "string", "description": "Three-letter team code, like BOS or LAL"}},
+            "properties": {"team": {"type": "string", "description": "Team code: NBA like BOS, NFL like buf, NHL like Nyr (case is ignored; every league with that code is returned)"}},
             "required": ["team"],
             "additionalProperties": False,
         },
@@ -86,7 +87,7 @@ TOOLS = [
                             "player": {"type": "string"},
                             "team": {"type": "string", "description": "Three-letter code"},
                             "vs": {"type": "string", "description": "Opponent three-letter code"},
-                            "stat": {"type": "string", "enum": ["pts", "reb", "ast", "tpm"]},
+                            "stat": {"type": "string", "enum": ["pts", "reb", "ast", "tpm", "pra", "pr", "pa", "ra", "dd", "td", "stl", "blk", "pyd", "ptd", "cmp", "ryd", "car", "rec", "recy", "rry", "atd", "hpt", "hast", "sog", "hgl", "svs"]},
                             "bar": {"type": "number", "description": "The bar, e.g. 20 for 20+"},
                         },
                         "required": ["player", "team", "vs", "stat", "bar"],
@@ -115,7 +116,7 @@ REPLY_FORMAT = {
                         "op": {"type": "string", "enum": ["add", "remove", "clear", "stake", "platform"]},
                         "ref": {"type": ["string", "null"]},
                         "player": {"type": ["string", "null"]},
-                        "stat": {"type": ["string", "null"], "enum": ["pts", "reb", "ast", "tpm", None]},
+                        "stat": {"type": ["string", "null"], "enum": ["pts", "reb", "ast", "tpm", "pra", "pr", "pa", "ra", "dd", "td", "stl", "blk", "pyd", "ptd", "cmp", "ryd", "car", "rec", "recy", "rry", "atd", "hpt", "hast", "sog", "hgl", "svs", None]},
                         "bar": {"type": ["number", "null"]},
                         "value": {"type": ["string", "null"]},
                     },
@@ -195,7 +196,8 @@ def _avg(v):
 
 
 def _player_row(p):
-    keep = ("n", "t", "pts", "reb", "ast", "tpm", "min", "dates", "inj")
+    keep = ("n", "t", "lg", "pos", "min", "dates", "inj", "pts", "reb", "ast", "tpm", "stl", "blk",
+            "pyd", "ptd", "cmp", "ryd", "car", "rec", "recy", "rry", "atd", "hpt", "hast", "sog", "hgl", "svs")
     return {k: (p[k][:10] if isinstance(p.get(k), list) else p.get(k)) for k in keep if k in p}
 
 
@@ -216,7 +218,17 @@ def get_player(data, name):
 
 
 def get_team(data, team):
-    code = str(team).strip().upper()
+    want = str(team).strip().lower()
+    codes = sorted({t for g in data.get("games", []) for t in (g.get("a"), g.get("h")) if str(t).lower() == want} |
+                   {p.get("t") for p in data.get("players", []) if str(p.get("t")).lower() == want})
+    if not codes:
+        return {"found": False, "note": f"{team} has no game coming up in the NBA, NFL or NHL data."}
+    if len(codes) > 1:
+        return {"found": True, "leagues": [get_team_one(data, c) for c in codes][:3]}
+    return get_team_one(data, codes[0])
+
+
+def get_team_one(data, code):
     games = [g for g in data.get("games", []) if code in (g.get("a"), g.get("h"))]
     rows = [p for p in data.get("players", []) if p.get("t") == code]
     if not games and not rows:
@@ -230,14 +242,17 @@ def get_team(data, team):
         "statsAllowedVsAverage": (data.get("opp") or {}).get(code),
         "players": [
             {"n": p.get("n"), "inj": p.get("inj"), "min": _avg((p.get("min") or [])[:10]),
-             **{c: _avg((p.get(c) or [])[:10]) for c in ("pts", "reb", "ast", "tpm")}}
+             **{c: _avg((p.get(c) or [])[:10]) for c in ("pts", "reb", "ast", "tpm", "pyd", "ryd", "rec", "recy", "atd", "hpt", "hast", "sog", "hgl", "svs") if p.get(c)}}
             for p in rows
         ],
     }
 
 
 def check_apps(legs, compare):
-    legs = [{"n": l.get("player"), "t": l.get("team"), "opp": l.get("vs"), "s": l.get("stat"), "bar": l.get("bar")} for l in (legs or [])[:20]]
+    def lg(t):
+        t = str(t or "")
+        return "nfl" if t == t.lower() else "nba" if t == t.upper() else "nhl"
+    legs = [{"n": l.get("player"), "t": l.get("team"), "opp": l.get("vs"), "s": l.get("stat"), "bar": l.get("bar"), "lg": lg(l.get("team"))} for l in (legs or [])[:20]]
     res = compare(legs)
     books = res.get("books") or []
     rows = []

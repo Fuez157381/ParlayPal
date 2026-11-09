@@ -388,9 +388,9 @@ def api_lines():
     games = body.get("games") or []
     sport = body.get("sport") if body.get("sport") in ("nfl", "nhl") else "nba"
     out, errs = None, []
-    if sport == "nba":
+    if sport in ("nba", "nfl", "nhl"):
         try:
-            out = kalshi.lines(games)
+            out = kalshi.lines(games, sport)
         except Exception as e:
             errs.append(f"Kalshi: {type(e).__name__}: {e}")
     if sport == "nba" and sgo.api_key():
@@ -453,6 +453,32 @@ def player_names(sport="nba"):
     return m
 
 
+_PAL = {}
+
+
+def pal_data(context):
+    """What Pal can look players up in: the chosen day for the chosen sport, and the next game day of the others."""
+    sport, date = str(context.get("sport") or "nba"), str(context.get("date") or "")
+    k = sport + date
+    if k in _PAL and time.time() - _PAL[k][0] < 300:
+        return _PAL[k][1]
+    out = {"players": [], "games": [], "opp": {}, "why": {}, "net": {}}
+    for sp in ("nba", "nfl", "nhl"):
+        d = date if sp == sport else ""
+        try:
+            j = day_data(d) if sp == "nba" else (load_snapshot(d, sp) or (None if HOSTED else build_sport(sp, d)))
+        except Exception:
+            j = None
+        for x in (j or {}).get("players", []):
+            x.setdefault("lg", sp)
+        for f in ("players", "games"):
+            out[f] += (j or {}).get(f, [])
+        for f in ("opp", "why", "net"):
+            out[f].update((j or {}).get(f, {}))
+    _PAL[k] = (time.time(), out)
+    return out
+
+
 def day_data(date):
     """The same day's data the page shows, for Pal to look players up in."""
     date = str(date or "")
@@ -475,7 +501,7 @@ def api_ask():
     body = request.get_json(silent=True) or {}
     context = body.get("context") or {}
     try:
-        return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), context, lambda: day_data(context.get("date")), odds.compare)))
+        return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), context, lambda: pal_data(context), odds.compare)))
     except Exception as e:
         return cors(jsonify({"configured": ask.configured(), "error": f"{type(e).__name__}: {e}"})), 502
 

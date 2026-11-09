@@ -1824,7 +1824,7 @@ function snap(p,s,useOv){var v=(p[s]||[]).slice(0,10);if(v.length<3)return null;
   var g=G.filter(function(g){return g.a===p.t||g.h===p.t})[0];if(!g)return null;
   var opp=g.a===p.t?g.h:g.a,def=defLine(v),L=lad(s,v);if(def<MINREAL[s])return null;if(LINES.st==='ok'&&!LINES.posted[p.t])return null;var al=lineAvail(p,s),unv=false,bar;if(NEWS[s]&&(!al||!al.length))return null;
   if(al===null){unv=true;if(s==='pts')def=Math.floor(def/5)*5;def=Math.max(def,L.lo);bar=def;if(useOv&&LN[p.id+'|'+s]!=null)bar=Math.max(L.lo,Math.min(L.hi,LN[p.id+'|'+s]))}
-  else{if(!al.length)return null;var d0=def;def=null;if(NEWS[s])def=al[0];else for(var q=al.length-1;q>=0;q--)if(al[q]<=d0){def=al[q];break}if(def==null||def<MINREAL[s])return null;L={lo:al[0],hi:al[al.length-1]};bar=def;if(useOv&&LN[p.id+'|'+s]!=null)bar=nearest(al,LN[p.id+'|'+s])}
+  else{if(!al.length)return null;var d0=def;def=null;for(var q=al.length-1;q>=0;q--)if(al[q]<=d0){def=al[q];break}if(def==null&&NEWS[s])def=al[0];if(def==null||def<MINREAL[s])return null;L={lo:al[0],hi:al[al.length-1]};bar=def;if(useOv&&LN[p.id+'|'+s]!=null)bar=nearest(al,LN[p.id+'|'+s])}
   var a=NET[p.t],b=NET[opp];
   var gap=(a&&b&&a.g>=3&&b.g>=3)?Math.abs(a.m-b.m):null;
   var mf=(b&&b.g>=3&&OPP[opp]&&OPP[opp][s]!=null)?OPP[opp][s]:null;
@@ -1846,12 +1846,16 @@ function analyze(x){
       else if(ground&&fav)good.push('Game script helps: the '+tn+' are likely to lead'+mg+', and leading teams run more to burn the clock.');
       else if(ground&&!fav){mult*=big?.93:.97;rs+=1;flags.push('Game script risk: the '+tn+' are likely to trail the '+on+mg+', and trailing teams stop running.')}}
     else good.push('The teams have similar average margins, so the game should stay close and the game plan normal.')}
-  else if(x.lg==='nhl'&&x.gap!=null){var hf=x.na!=null&&x.nb!=null&&x.na>x.nb,tn2=tname(x.t),on2=tname(x.opp),mg2=' ('+fmtM(x.na)+' vs '+fmtM(x.nb)+' average goal margin)';
+  var gm=x.gid?G.filter(function(g){return g.id===x.gid})[0]:null;
+  if(nfl&&gm&&/^(pyd|ptd|cmp|rec|recy)$/.test(x.s)){if(gm.dome)good.push('Indoor game, so weather will not hurt the passing game.');else if(gm.wx&&(gm.wx.temp!=null&&gm.wx.temp<=32||/snow|rain|wind/i.test(gm.wx.txt||''))){mult*=.95;rs+=1;flags.push('Weather: '+(gm.wx.txt||'cold')+(gm.wx.temp!=null?', '+gm.wx.temp+'°F':'')+'. Bad weather usually cuts passing.')}}
+  if(x.lg==='nhl'&&gm&&gm.b2b){if(gm.b2b.indexOf(x.t)>-1){if(x.s==='svs'){mult*=.85;rs+=2;flags.unshift('Second night of a back-to-back. Teams usually start the backup goalie, so check who starts.')}else{mult*=.97;rs+=1;flags.push('The '+tname(x.t)+' played last night, so legs may be tired.')}}
+    else if(gm.b2b.indexOf(x.opp)>-1&&x.s!=='svs')good.push('The '+tname(x.opp)+' played last night, so they may be tired.')}
+  if(x.lg==='nhl'&&x.gap!=null){var hf=x.na!=null&&x.nb!=null&&x.na>x.nb,tn2=tname(x.t),on2=tname(x.opp),mg2=' ('+fmtM(x.na)+' vs '+fmtM(x.nb)+' average goal margin)';
     if(x.gap>=1.2){if(x.s==='svs'&&hf){mult*=.96;rs+=1;flags.push('The '+tn2+' usually control games'+mg2+', so their goalie may face fewer shots.')}
       else if(x.s==='svs')good.push('The '+on2+' usually control games'+mg2+', so this goalie should be busy.');
       else if(x.s==='sog'&&!hf)good.push('Trailing teams pile up shots, and the '+tn2+' often trail'+mg2+'.')}
     else good.push('The teams have similar goal margins, so this should be a normal game.')}
-  else if(x.gap!=null){
+  else if(!nfl&&x.gap!=null){
     if(x.gap>=12){mult*=.92;rs+=2;flags.push('High blowout risk. '+tname(x.t)+' ('+fmtM(x.na)+') and '+tname(x.opp)+' ('+fmtM(x.nb)+') are far apart in average margin, and starters sit in blowouts.')}
     else if(x.gap>=7){mult*=.97;rs+=1;flags.push('Some blowout risk. '+tname(x.t)+' ('+fmtM(x.na)+') and '+tname(x.opp)+' ('+fmtM(x.nb)+') are fairly far apart in average margin.')}
     else good.push('Both teams have similar average margins, so a blowout is less likely.')}
@@ -1859,7 +1863,7 @@ function analyze(x){
     if(x.mf<=0.93){mult*=.96;rs+=1;flags.push('Tough matchup. The '+tname(x.opp)+' have allowed fewer '+ST[x.s]+' than most teams.')}
     else if(x.mf>=1.07)good.push('Soft matchup. The '+tname(x.opp)+' have allowed more '+ST[x.s]+' than most teams.')}
   var m5=(x.mins||[]).slice(0,5).filter(function(a){return typeof a==='number'});
-  if(nfl&&m5.length>=3){var au=m5.reduce(function(a,b){return a+b},0)/m5.length,qb=/^(pyd|ptd|cmp)$/.test(x.s),low=qb?20:6;
+  if(nfl&&m5.length>=3){var au=m5.reduce(function(a,b){return a+b},0)/m5.length,qb=/^(pyd|ptd|cmp)$/.test(x.s),low=qb?20:4;
     if(au<low){mult*=.94;rs+=1;flags.push('Small role, about '+Math.round(au)+(qb?' pass attempts':' touches')+' per game.')}
     else if(Math.min.apply(null,m5)<au*.5){rs+=1;flags.push('Usage has swung, with a game at '+Math.min.apply(null,m5)+(qb?' attempts':' touches')+'.')}
     else good.push('Steady role, about '+Math.round(au)+(qb?' pass attempts':' touches')+' per game.')}
@@ -1897,6 +1901,7 @@ function av(name,id,cls){var w=String(name).split(' ').filter(Boolean),ini=((w[0
   return'<span class="av '+(cls||'')+'">'+esc(ini.toUpperCase())+(id?'<img alt="" loading="lazy" src="https://a.espncdn.com/combiner/i?img=/i/headshots/'+(AVLG[id]||'nba')+'/players/full/'+id+'.png&amp;w=260&amp;h=190" onerror="avNext(this,'+id+')">':'')+'</span>'}
 var AVLG={};function avLearn(list){(list||[]).forEach(function(p){if(p&&p.lg&&p.id)AVLG[p.id]=p.lg})}
 function avNext(img,id){var n=+(img.dataset.f||0)+1,lg=['nba','nfl','nhl'].filter(function(x){return x!==(AVLG[id]||'nba')})[n-1];if(!lg){img.remove();return}img.dataset.f=n;img.src='https://a.espncdn.com/combiner/i?img=/i/headshots/'+lg+'/players/full/'+id+'.png&w=260&h=190'}
+window.avNext=avNext;
 function bars(vals,dates,ncur,line){
   var n=vals.length,vs=vals.slice().reverse(),ds=(dates||[]).slice().reverse(),prev=n-ncur;
   var mx=Math.max.apply(null,vs.concat([line||0,1]))*1.12;
@@ -2327,7 +2332,7 @@ function palCtx(){
   var raw=(CHAT.length?CHAT[CHAT.length-1].t:'').toLowerCase(),fp=findPlayerIn(' '+raw.replace(/[’']/g,'')+' ');
   var r=rate(S.cart);
   return{day:dayLabel(DAY)+' '+DAY,date:DAY,games:G.map(function(g){return g.a+' at '+g.h}),stake:S.stake,platform:S.pl,slip:cart,slipScore:r?{score:r.score,label:r.label,low:r.low}:null,
-    pool:pool.slice(0,60),boldPool:bold.slice(0,30),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,lastPlayerDiscussed:PALM.p?PALM.p.n:null,placedToday:(function(){var o=[];(TRK||[]).forEach(function(t){if(t.date===DAY)(t.legs||[]).forEach(function(l){o.push(l.n)})});return o})(),playerPageOpen:(palOpen()||{}).n||null,apps:PLAT.map(function(p){return p[0]}),note:'stat codes: pts points, reb rebounds, ast assists, tpm 3-Pointers. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
+    pool:pool.slice(0,60),boldPool:bold.slice(0,30),injuries:inj.slice(0,40),mentionedPlayer:fp?playerLine(fp):null,lastPlayerDiscussed:PALM.p?PALM.p.n:null,placedToday:(function(){var o=[];(TRK||[]).forEach(function(t){if(t.date===DAY)(t.legs||[]).forEach(function(l){o.push(l.n)})});return o})(),playerPageOpen:(palOpen()||{}).n||null,apps:PLAT.map(function(p){return p[0]}),sport:SPORT,note:'stat codes: '+CATS.map(function(c){return c+' '+ST[c]}).join(', ')+'. p = estimated chance to clear the bar from past games, not a betting price. No odds are included.'}}
 function palApply(res){
   var changes=[],fails=[];
   (res.actions||[]).forEach(function(a){if(!a||!a.op)return;
