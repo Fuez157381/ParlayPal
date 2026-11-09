@@ -49,7 +49,7 @@ def status():
     out = {"configured": bool(k), "keyEnds": k[-4:] if k else ""}
     if k:
         try:   # listing sports is free and reports this month's credits
-            r = _get("/sports", {"apiKey": k})
+            r = _get("/v4/sports", {"apiKey": k})
             out.update(httpStatus=r.status_code, creditsLeft=r.headers.get("x-requests-remaining"), creditsUsed=r.headers.get("x-requests-used"))
         except Exception as e:
             out["checkError"] = type(e).__name__
