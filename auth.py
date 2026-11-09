@@ -219,7 +219,7 @@ def _mail_link(con, user, kind):
 # ---------- locker room: every Pal you can roll, and how often ----------
 # chance is out of 100. The basketball is everyone's starter, so it isn't on the wheel.
 MASCOTS = {
-    "ball": 0, "baseball": 30, "chip": 30, "dice": 20, "eight": 11.5, "goat": 6, "coin": 2, "dad": 0.5,
+    "ball": 0, "baseball": 48.75, "dice": 25, "chip": 12, "coin": 6, "goat": 4, "eight": 2.5, "dad": 1, "super": 0.5, "spider": 0.25,
 }
 START_SPINS = 3          # a new account starts with these
 DAILY_SPINS = 3          # topped back up to 3 free spins every day
