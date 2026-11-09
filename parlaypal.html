@@ -619,7 +619,7 @@ body *{scrollbar-width:none!important}body *::-webkit-scrollbar{display:none!imp
 .sk{display:block;border-radius:10px;background:linear-gradient(90deg,#1D1C1A 25%,#2a2a38 50%,#1D1C1A 75%);background-size:200% 100%;animation:pmsh 1.1s linear infinite}
 @keyframes pmsh{to{background-position:-200% 0}}
 .skrow{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}.skbars{display:flex;align-items:flex-end;gap:7px;height:190px;margin:16px 0}.skbars .sk{flex:1;border-radius:6px 6px 2px 2px}
-.pmctl{display:flex;gap:10px;align-items:center;margin:12px 0 4px;flex-wrap:wrap}.pmctl .pmtabs{margin:0;flex:1;min-width:0}
+.pmctl{display:flex;gap:10px;align-items:center;margin:12px 0 4px;flex-wrap:wrap}.pmctl .pmtabs{margin:0;flex:1;min-width:0;scroll-behavior:smooth;scrollbar-width:none}.pmtabs::-webkit-scrollbar{display:none}.pmctl .hwrap{flex:1;min-width:0}.pmctl .har{width:34px;height:34px;font-size:22px}.pmctl .har.l{left:-6px}.pmctl .har.r{right:-6px}
 .pmstep{display:inline-flex;align-items:center;gap:2px;border:1.5px solid var(--line2);border-radius:12px;min-height:46px;padding:0 4px;background:var(--card)}
 .pmstep b{min-width:56px;text-align:center;font-size:18px}.pmstep button{width:38px;height:38px;border-radius:10px;border:0;background:none;color:var(--ink);font-size:24px;line-height:1}.pmstep button:hover{background:var(--line2)}
 .pmchips{display:flex;gap:8px;overflow-x:auto;margin:10px 0 6px;padding-bottom:2px}
@@ -1688,7 +1688,7 @@ function pmatch(p,q){var qn=norm(q).trim();if(!qn)return true;var nm=' '+norm(p.
 var ST={pts:'points',reb:'rebounds',ast:'assists',tpm:'3-Pointers',pra:'pts+reb+ast',pr:'pts+reb',pa:'pts+ast',ra:'reb+ast',dd:'double-double',td:'triple-double',stl:'steals',blk:'blocks'}
 Object.assign(ST,{pyd:'passing yards',ptd:'passing TDs',cmp:'completions',ryd:'rushing yards',car:'carries',rec:'receptions',recy:'receiving yards',rry:'rush + rec yards',atd:'anytime TD'})
 var BIN={dd:1,td:1,atd:1},NEWS={pra:1,pr:1,pa:1,ra:1,dd:1,td:1,stl:1,blk:1,pyd:1,ptd:1,cmp:1,ryd:1,car:1,rec:1,recy:1,rry:1,atd:1},ICO={pra:'cmb',pr:'cmb',pa:'cmb',ra:'cmb',pyd:'pass',ptd:'pass',cmp:'pass',ryd:'rush',car:'rush',rec:'recv',recy:'recv',rry:'cmb',atd:'tdz'}
-var SPORTS={nba:{n:'NBA',cats:['pts','reb','ast','tpm','pra','pr','pa','ra','dd','td','stl','blk']},nfl:{n:'NFL',cats:['atd','pyd','ptd','cmp','ryd','car','rec','recy','rry']}}
+var SPORTS={nba:{n:'NBA',cats:['pts','reb','ast','tpm','pra','pr','pa','ra','dd','td','stl','blk']},nfl:{n:'NFL',cats:['atd','pyd','ptd','cmp','ryd','car','rec','recy','rry']}};SPORTS.all={n:'All sports',cats:SPORTS.nba.cats.concat(SPORTS.nfl.cats)}
 var SPORT=(function(){try{var x=localStorage.getItem('pp_sport');return SPORTS[x]?x:'nba'}catch(e){return'nba'}})()
 function spOf(x){return(x&&x.lg)||(x&&x.t&&x.t===x.t.toLowerCase()?'nfl':'nba')}
 var CNAME={pyd:'Pass yards',ptd:'Pass TDs',cmp:'Completions',ryd:'Rush yards',car:'Carries',rec:'Receptions',recy:'Rec yards',rry:'Rush+Rec yards',atd:'Anytime TD',tpm:'3-Pointers',pra:'Pts+Reb+Ast',pr:'Pts+Reb',pa:'Pts+Ast',ra:'Reb+Ast',dd:'Double-double',td:'Triple-double'}
@@ -1757,8 +1757,8 @@ ERR=null;EX={st:0,list:[]};DATES=j.dates||[];STATS=j.stats;DAY=STATS.date;TODAY=
 var DAYP={};function mvPre(date){if(!date||DAYC[SPORT+date]||DAYP[date])return;DAYP[date]=1;fetch(dataUrl(date)).then(function(r){return r.json()}).then(function(j){DAYP[date]=0;if(!j.error&&j.stats)DAYC[SPORT+j.stats.date]={j:j,t:Date.now()}}).catch(function(){DAYP[date]=0})}
 document.addEventListener('pointerover',function(e){var b=e.target.closest&&e.target.closest('#days [data-act=day]');if(b)mvPre(b.dataset.d)});
 document.addEventListener('touchstart',function(e){var b=e.target.closest&&e.target.closest('#days [data-act=day]');if(b)mvPre(b.dataset.d)},{passive:true});
-var SPMENU=[['nba','NBA','Basketball'],['nfl','NFL','Football'],['all','All sports','Best picks from every sport',1],['nhl','NHL','Hockey',1],['soc','Soccer','',1],['ten','Tennis','',1],['ufc','UFC','',1]];
-function spIcon(k){return k==='nfl'?sico('pass',18):k==='nba'?sico('pts',18):'<svg class="si" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></svg>'}
+var SPMENU=[['nba','NBA','Basketball'],['nfl','NFL','Football'],['all','All sports','NBA and NFL picks together'],['nhl','NHL','Hockey',1],['soc','Soccer','',1],['ten','Tennis','',1],['ufc','UFC','',1]];
+function spIcon(k){return k==='nfl'?sico('pass',18):k==='nba'?sico('pts',18):k==='all'?'<svg class="si" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></g></svg>':'<svg class="si" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></svg>'}
 function renderSport(){var b=$('spbtn');if(!b)return;b.innerHTML=spIcon(SPORT)+'<span>'+SPORTS[SPORT].n+'</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
   $('spmenu').innerHTML=SPMENU.map(function(m){return'<button type="button" role="menuitemradio" aria-checked="'+(m[0]===SPORT)+'"'+(m[3]?' disabled':' data-act="sport" data-s="'+m[0]+'"')+'>'+spIcon(m[0])+'<b>'+m[1]+'</b><span>'+(m[3]?'Coming soon':m[2])+'</span></button>'}).join('')}
 function setSport(k){if(!SPORTS[k]||k===SPORT){spClose();return}SPORT=k;try{localStorage.setItem('pp_sport',k)}catch(e){}CATS=SPORTS[k].cats.slice();F.cat='all';F.q='';var qi=$('q');if(qi)qi.value='';
@@ -1767,18 +1767,28 @@ function spClose(){var m=$('spmenu');if(m)m.hidden=true;var b=$('spbtn');if(b)b.
 document.addEventListener('click',function(e){if(!e.target.closest('.spsel'))spClose()});
 function dataUrl(date){return'/api/data?sport='+SPORT+(date?'&date='+encodeURIComponent(date):'')}
 function mvDay(date){DAYWANT=date;renderDays();clearTimeout(DAYT);DAYT=setTimeout(function(){loadDay(date)},DAYC[SPORT+date]?0:140)}
-function loadDay(date){var tok=++DAYTOK,hit=date&&DAYC[SPORT+date];if(hit&&Date.now()-hit.t<300000){dayApply(hit.j);return Promise.resolve()}
+function loadAll(tok){LOADING=true;ERR=null;EX={st:0,list:[]};renderAll();
+  var get=function(sp){return fetch('/api/data?sport='+sp).then(function(r){return r.json()}).then(function(j){return j.error?null:j}).catch(function(){return null})};
+  return Promise.all([get('nba'),get('nfl')]).then(function(r){if(tok!==DAYTOK)return;var a=r[0],b=r[1];if(!a&&!b){LOADING=false;ERR='Could not load the games.';D=[];G=[];renderAll();return}
+    var j={players:[],games:[],opp:{},why:{},net:{},dates:[],stats:{}};[a,b].forEach(function(x){if(!x)return;j.players=j.players.concat(x.players||[]);j.games=j.games.concat(x.games||[]);Object.assign(j.opp,x.opp||{});Object.assign(j.why,x.why||{});Object.assign(j.net,x.net||{})});
+    var st=(a||b).stats||{};j.stats={date:st.date,today:st.today||(b&&b.stats.today),games:j.games.length,players:j.players.length,all:1,nba:a&&a.stats.date,nfl:b&&b.stats.date,updated:st.updated};AUTODAY=1;dayApply(j)})}
+function loadDay(date){if(SPORT==='all')return loadAll(++DAYTOK);var tok=++DAYTOK,hit=date&&DAYC[SPORT+date];if(hit&&Date.now()-hit.t<300000){dayApply(hit.j);return Promise.resolve()}
   LOADING=true;ERR=null;EX={st:0,list:[]};if(DAYWANT)renderProps();else renderAll();
   return fetch(dataUrl(date)).then(function(r){return r.json()}).then(function(j){if(tok!==DAYTOK)return;
     if(j.error)throw new Error(j.error);DAYC[SPORT+j.stats.date]={j:j,t:Date.now()};dayApply(j)
   }).catch(function(e){if(tok!==DAYTOK)return;LOADING=false;DAYWANT=null;ERR=String(e&&e.message||e);D=[];G=[];renderAll()})}
 
 /* ---------- real lines (only what apps list) ---------- */
-function linesLoad(){if(!G.length){LINES.st='idle';return}var sig=G.map(function(g){return g.a+g.h}).join(',');LINES.st='loading';LINES.sig=sig;
+function linesLoad(){if(!G.length){LINES.st='idle';return}if(SPORT==='all')return linesAll();var sig=G.map(function(g){return g.a+g.h}).join(',');LINES.st='loading';LINES.sig=sig;
   fetch('/api/lines',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sport:SPORT,games:G.map(function(g){return{a:g.a,h:g.h}})})}).then(function(r){return r.json().then(function(j){return{j:j,ok:r.ok}})}).then(function(x){if(LINES.sig!==sig)return;
     if(x.j&&x.j.configured===false){LINES.st='off'}else if(!x.ok||x.j.error){LINES.st='err';LINES.err=x.j.error||'the odds service did not answer'}
     else{LINES.st='ok';LINES.players=x.j.players||{};LINES.posted=x.j.posted||{};LINES.updated=x.j.updated||'';LINES.source=x.j.source||'';LINES.credits=x.j.creditsLeft||'';linesIndex()}
     renderAll()}).catch(function(){if(LINES.sig!==sig)return;LINES.st='err';LINES.err='needs your Parlay Pal server running';renderAll()})}
+function linesAll(){var sig='all:'+G.map(function(g){return g.a+g.h}).join(',');LINES.st='loading';LINES.sig=sig;
+  var by={nba:G.filter(function(g){return spOf({t:g.a})==='nba'}),nfl:G.filter(function(g){return spOf({t:g.a})==='nfl'})};
+  var one=function(sp){if(!by[sp].length)return Promise.resolve(null);return fetch('/api/lines',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sport:sp,games:by[sp].map(function(g){return{a:g.a,h:g.h}})})}).then(function(r){return r.ok?r.json():null}).catch(function(){return null})};
+  Promise.all([one('nba'),one('nfl')]).then(function(r){if(LINES.sig!==sig)return;var pl={},po={},ok=false;r.forEach(function(x){if(!x||x.error)return;ok=true;Object.assign(pl,x.players||{});Object.assign(po,x.posted||{})});
+    if(!ok){LINES.st='err';LINES.err='the odds service did not answer'}else{LINES.st='ok';LINES.players=pl;LINES.posted=po;LINES.updated=(r[0]||r[1]||{}).updated||'';LINES.source='apps';LINES.credits='';linesIndex()}renderAll()})}
 function linesNote(){if(LINES.st==='ok'){var np=G.filter(function(g){return !LINES.posted[g.a]}).length;return' Lines are limited to what '+(LINES.source||'apps')+' really lists'+(LINES.updated?' (checked '+LINES.updated+')':'')+'.'+(np?' '+np+(np===1?' game has':' games have')+' no posted lines yet, so '+(np===1?'its':'their')+' picks are hidden until apps post them.':'')+(LINES.credits?' Odds credits left: '+LINES.credits+'.':'')}
   if(LINES.st==='loading')return' Checking which lines apps really offer…';
   if(LINES.st==='off')return' Real-line check is off (no odds key), so these lines are not verified against apps.';
@@ -1913,7 +1923,7 @@ function mvSet(el,h){if(!el.firstChild){el.innerHTML=h;return}var t=document.cre
   var was=el.querySelectorAll('.prop'),now=t.content.querySelectorAll('.prop');Array.prototype.forEach.call(was,function(c,i){var d=c.querySelector('details[open]');if(!d)return;var k1=c.querySelector('.add'),k2=now[i]&&now[i].querySelector('.add');if(!k1||!k2||k1.dataset.key!==k2.dataset.key)d.removeAttribute('open')});
   mvMorph(el,t.content);cuScan()}
 function mvRow(el,h){var k=h.replace(/ aria-pressed="(true|false)"/g,'');if(el._mk===k){var t=document.createElement('template');t.innerHTML=h;var c=t.content.querySelectorAll('button'),b=el.querySelectorAll(':scope>button');if(b.length===c.length){for(var i=0;i<b.length;i++)b[i].setAttribute('aria-pressed',c[i].getAttribute('aria-pressed'));return}}el._mk=k;mvSet(el,h)}
-function renderDays(){var ds=dayList();mvRow($('days'),ds.map(function(d){return'<button class="pill" data-act="day" data-d="'+d+'" aria-pressed="'+(d===(DAYWANT||DAY))+'">'+esc(dayLabel(d))+'</button>'}).join(''))}
+function renderDays(){if(SPORT==='all'){var st=STATS||{};mvRow($('days'),'<span class="pill" aria-pressed="true">'+(st.nba?'NBA: '+esc(dayLabel(st.nba)):'NBA: no games')+'</span><span class="pill" aria-pressed="true">'+(st.nfl?'NFL: '+esc(dayLabel(st.nfl)):'NFL: no games')+'</span>');return}var ds=dayList();mvRow($('days'),ds.map(function(d){return'<button class="pill" data-act="day" data-d="'+d+'" aria-pressed="'+(d===(DAYWANT||DAY))+'">'+esc(dayLabel(d))+'</button>'}).join(''))}
 function renderData(){var e=$('dataline');
   if(LOADING){e.textContent='Loading games and player stats...';return}
   if(ERR||!STATS){e.textContent='';return}
@@ -2085,6 +2095,7 @@ function renderPlayer(){var p=allPlayers().filter(function(p){return String(p.id
       h+='<p class="legend pmcap">Cleared '+line+'+ in '+hn+' of these '+vw.length+' games. Green bars cleared the line, red bars missed it.'+(PMS.f==='all'?' Newest is on the right. Use the arrows for older games.':'')+(ncw<vw.length?' Lighter bars are from '+esc(prevN)+'.':'')+'</p>'}}
   h+=pmBet(p,s,line);
   var box=$('pm');box.className='pm'+(anim?' anim':'');if(swap)mvSet(box,h);else box.innerHTML=h;$('pmv').classList.add('open');
+  rowArrows();var pt=box.querySelector('.pmtabs [aria-pressed=true]');if(pt){var tr=pt.parentNode;tr.scrollLeft=Math.max(0,pt.offsetLeft-tr.clientWidth/2+pt.offsetWidth/2)}
   if(anim){Array.prototype.forEach.call(box.querySelectorAll('.col'),function(c,i){c.style.setProperty('--d',(120+i*38)+'ms')});pmCount(box)}}
 function pmCount(box){if(mvOff())return;
   Array.prototype.forEach.call(box.querySelectorAll('.cu'),function(e){var t=+e.getAttribute('data-v');if(!isFinite(t)||e.getAttribute('data-v')==='')return;var t0=null;e.textContent='0';
@@ -2650,7 +2661,7 @@ function skKick(){if(!SKP.length){SK.st='idle';SK.sig='';return}
   fetch('/api/odds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({legs:legs})}).then(function(r){return r.json().then(function(j){return{j:j,ok:r.ok}})}).then(function(x){if(SK.sig!==sig)return;
     if(x.j&&x.j.configured===false)SK.st='off';else if(!x.ok||x.j.error){SK.st='err';SK.err=x.j.error||'the odds service did not answer'}else{SK.st='ok';SK.data=x.j}skUpd()}).catch(function(){if(SK.sig!==sig)return;SK.st='err';SK.err='odds need your Parlay Pal server running';skUpd()})}
 function harUpd(w){var r=w.firstChild,l=w.querySelector('.har.l'),rr=w.querySelector('.har.r');if(!l||!rr)return;l.hidden=r.scrollLeft<4;rr.hidden=r.scrollLeft+r.clientWidth>=r.scrollWidth-4}
-function rowArrows(){document.querySelectorAll('.hrow,#days,#games').forEach(function(r){if(r.parentNode.classList.contains('hwrap'))return;var w=document.createElement('div');w.className='hwrap';r.parentNode.insertBefore(w,r);w.appendChild(r);
+function rowArrows(){document.querySelectorAll('.hrow,#days,#games,.pmtabs').forEach(function(r){if(r.parentNode.classList.contains('hwrap'))return;var w=document.createElement('div');w.className='hwrap';r.parentNode.insertBefore(w,r);w.appendChild(r);
   w.insertAdjacentHTML('beforeend','<button class="har l" data-act="hsc" data-d="-1" aria-label="Scroll left" hidden>&#8249;</button><button class="har r" data-act="hsc" data-d="1" aria-label="Scroll right">&#8250;</button>');
   r.addEventListener('scroll',function(){harUpd(w)},{passive:true});harUpd(w);setTimeout(function(){harUpd(w)},400)});document.querySelectorAll('.hwrap').forEach(harUpd)}
 window.addEventListener('resize',function(){document.querySelectorAll('.hwrap').forEach(harUpd)});
