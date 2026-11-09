@@ -1157,6 +1157,7 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 @media (max-width:480px){.spbtn{height:32px;padding:0 8px;font-size:13px}.spmenu{left:auto;right:-60px}}
 /* search everyone + bet from the player popup (2026-11-08) */
 .hres .hmsg{margin:0;padding:12px 14px;color:var(--mu);font-size:14.5px}
+.ovw{font-size:.5em;font-weight:600;color:var(--mu);margin-right:5px;letter-spacing:0}
 .dkb{margin-left:auto;margin-right:10px;height:28px;padding:0 10px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--ink);font-size:12.5px;font-weight:600;white-space:nowrap}
 .dkb:hover{border-color:var(--ok)}span.dkb{display:inline-flex;align-items:center;border-color:color-mix(in srgb,var(--ok) 50%,transparent);color:var(--ok)}
 @media (max-width:480px){.hres button{font-size:15px;line-height:1.25}.hres small{flex:none;max-width:44%;font-size:12.5px;text-align:right;line-height:1.3}}
@@ -1692,7 +1693,9 @@ var SPORTS={nba:{n:'NBA',cats:['pts','reb','ast','tpm','pra','pr','pa','ra','dd'
 var SPORT=(function(){try{var x=localStorage.getItem('pp_sport');return SPORTS[x]?x:'nba'}catch(e){return'nba'}})()
 function spOf(x){return(x&&x.lg)||(x&&x.t&&x.t===x.t.toLowerCase()?'nfl':'nba')}
 var CNAME={pyd:'Pass yards',ptd:'Pass TDs',cmp:'Completions',ryd:'Rush yards',car:'Carries',rec:'Receptions',recy:'Rec yards',rry:'Rush+Rec yards',atd:'Anytime TD',tpm:'3-Pointers',pra:'Pts+Reb+Ast',pr:'Pts+Reb',pa:'Pts+Ast',ra:'Reb+Ast',dd:'Double-double',td:'Triple-double'}
-function bl(x){var t=ST[x.s]||x.s;return BIN[x.s]?t:x.bar+'+ '+t}
+function bl(x){var t=ST[x.s]||x.s;return BIN[x.s]?t:ov(x.bar)+' '+t}
+function ov(b){return'Over '+(b-.5)}
+function ovh(b){return'<small class="ovw">Over</small>'+(b-.5)}
 function derive(p){if(!p||p._d||!p.pts)return p;var g=function(k,i){return(p[k]||[])[i]||0};['pra','pr','pa','ra','dd','td'].forEach(function(k){p[k]=[]});
   for(var i=0;i<p.pts.length;i++){var a=g('pts',i),r=g('reb',i),s=g('ast',i),t=[a,r,s,g('stl',i),g('blk',i)].filter(function(v){return v>=10}).length;p.pra.push(a+r+s);p.pr.push(a+r);p.pa.push(a+s);p.ra.push(r+s);p.dd.push(t>=2?1:0);p.td.push(t>=3?1:0)}
   p._d=1;return p};
@@ -1891,7 +1894,7 @@ function propRow(x){var a=x.a,on=S.cart.some(function(c){return c.key===x.key});
   var facts='<div class="facts"><div><b>'+a.avg.toFixed(1)+'</b><span>Average</span></div><div><b>'+a.med+'</b><span>Median</span></div><div><b>'+a.mn+'</b><span>Lowest</span></div><div><b>'+a.mx+'</b><span>Highest</span></div><div><b>'+a.m5.toFixed(1)+'</b><span>Last 5 average</span></div></div>';
   var det=facts+a.good.map(function(t){return'<p class="moretxt">'+esc(t)+'</p>'}).join('')+a.flags.map(function(t){return'<p class="moretxt">'+esc(t)+'</p>'}).join('')+(x.why?'<p class="moretxt mu">'+esc(x.why)+'</p>':'')+(x.ncur<x.v.length?'<p class="legend">Lighter bars are from last season.</p>':'');
   return'<article class="prop"><div class="who">'+av(x.n,x.id)+'<div><button class="nm" data-act="player" data-id="'+x.id+'">'+esc(x.n)+'</button><small>'+sub(x)+'</small></div></div>'+
-   '<div class="lineBig"><div class="stp2"><button data-act="rup" data-key="'+esc(x.key)+'" aria-label="Raise the line"'+(x.bar>=x.hi?' disabled':'')+'>&#9650;</button><button data-act="rdn" data-key="'+esc(x.key)+'" aria-label="Lower the line"'+(x.bar<=x.lo?' disabled':'')+'>&#9660;</button></div><div class="lv"><b>'+(BIN[x.s]?catName(x.s):x.bar+'+')+'</b><span>'+sico(x.s,18)+' '+(BIN[x.s]?'yes or no':ST[x.s])+'</span>'+(x.ov?'<button class="lnk rst" data-act="rreset" data-key="'+esc(x.key)+'">Reset to '+x.def+'+</button>':'')+'</div></div>'+bars(x.v,x.dates,x.ncur,x.bar)+
+   '<div class="lineBig"><div class="stp2"><button data-act="rup" data-key="'+esc(x.key)+'" aria-label="Raise the line"'+(x.bar>=x.hi?' disabled':'')+'>&#9650;</button><button data-act="rdn" data-key="'+esc(x.key)+'" aria-label="Lower the line"'+(x.bar<=x.lo?' disabled':'')+'>&#9660;</button></div><div class="lv"><b>'+(BIN[x.s]?catName(x.s):ovh(x.bar))+'</b><span>'+sico(x.s,18)+' '+(BIN[x.s]?'yes or no':ST[x.s])+'</span>'+(x.ov?'<button class="lnk rst" data-act="rreset" data-key="'+esc(x.key)+'">Reset to '+x.def+'+</button>':'')+'</div></div>'+bars(x.v,x.dates,x.ncur,x.bar)+
    '<button class="add'+(on?' on':'')+'" data-act="add" data-key="'+esc(x.key)+'" aria-pressed="'+on+'">'+(on?'Added':'Add')+'</button>'+
    '<div class="meta"><span class="rec">Cleared in '+a.hits+' of '+a.n+' games</span>'+tag(a)+'</div>'+
    (x.unv&&LINES.st==='ok'?'<p class="warnline">Apps have not posted lines for this game yet, so this line is not verified.</p>':'')+(function(){var f=a.flags.filter(function(t){return a.n-a.hits>=3||t.indexOf('Missed this line')!==0})[0];return f?'<p class="warnline">'+esc(f)+'</p>':''})()+
@@ -1954,7 +1957,7 @@ function renderChat(){var c=$('chat');c.innerHTML=CHAT.slice(-8).map(function(m)
 function legHtml(c,i){var a=analyze(c),L=ladOf(c);
   return'<div class="leg"><div class="lt"><div class="who">'+av(c.n,c.id,'sm')+'<div><button class="nm" data-act="player" data-id="'+c.id+'">'+esc(c.n)+'</button><small>'+sub(c)+'</small></div></div>'+
    '<div class="stp"><button data-act="up" data-i="'+i+'" aria-label="Raise the line"'+(c.bar>=L.hi?' disabled':'')+'>&#9650;</button><button data-act="down" data-i="'+i+'" aria-label="Lower the line"'+(c.bar<=L.lo?' disabled':'')+'>&#9660;</button></div></div>'+
-   '<div class="legline"><b>'+(BIN[c.s]?catName(c.s):c.bar+'+')+'</b><span>'+sico(c.s,18)+' '+(BIN[c.s]?'yes or no':ST[c.s])+'</span>'+tag(a)+'</div>'+bars(c.v,c.dates,c.ncur,c.bar)+
+   '<div class="legline"><b>'+(BIN[c.s]?catName(c.s):ovh(c.bar))+'</b><span>'+sico(c.s,18)+' '+(BIN[c.s]?'yes or no':ST[c.s])+'</span>'+tag(a)+'</div>'+bars(c.v,c.dates,c.ncur,c.bar)+
    '<div class="legft"><span>Cleared in '+a.hits+' of '+a.n+' games</span>'+'<button class="lnk" data-act="rm" data-i="'+i+'">Remove</button></div></div>'}
 function dkLine(c){var l=OD.st==='ok'&&OD.data&&OD.data.dk||[];for(var j=0;j<l.length;j++)if(l[j]&&String(l[j].pid)===String(c.id)&&l[j].s===c.s)return l[j];return null}
 function dkChip(c,i){var d=dkLine(c);if(!d)return'';if(d.line===c.bar)return'<span class="dkb on" title="DraftKings price for this line">DK '+fmtAm(d.american)+'</span>';
@@ -2054,11 +2057,11 @@ function pmBet(p,s,line){var nm=short(p.n),st=ST[s],key=p.id+'|'+s;
   if(!x||line==null){var has=CATS.filter(function(c){return c!==s&&snap(p,c)});
     return wrap('No '+esc(st)+' line for him',has.length?'The apps have him for '+has.map(function(c){return esc(ST[c])}).join(', ')+'.':'The apps haven\'t posted any props for '+esc(nm)+' yet.',has.length?'<div class="pmhas">'+has.map(function(c){return'<button class="btn" type="button" data-act="pmtab" data-s="'+c+'">'+esc(catName(c))+'</button>'}).join('')+'</div>':'')}
   var al=x.al,ok=!al||al.indexOf(line)>-1,c=S.cart.filter(function(c){return c.key===key})[0];
-  if(!ok){var nb=nearest(al,line);return wrap('No app offers '+esc(BIN[s]?st:line+'+ '+st),'The closest line on the apps is '+nb+'+.','<button class="btn" type="button" data-act="pmset" data-v="'+nb+'">Use '+nb+'+</button>')}
+  if(!ok){var nb=nearest(al,line);return wrap('No app offers '+esc(BIN[s]?st:ov(line)+' '+st),'The closest line on the apps is '+ov(nb)+'.','<button class="btn" type="button" data-act="pmset" data-v="'+nb+'">Use '+ov(nb)+'</button>')}
   var note=x.unv?'Line not confirmed on the apps yet.':'Offered on the apps.';
-  if(c&&c.bar===line)return wrap(esc(nm)+' '+esc(BIN[s]?st:line+'+ '+st)+' is in your parlay',note,'<button class="btn ghost" type="button" data-act="pmrm">Remove</button>');
-  if(c)return wrap('In your parlay at '+c.bar+'+',note,'<button class="btn" type="button" data-act="pmadd">Change to '+line+'+</button>');
-  return wrap(esc(nm)+' '+esc(BIN[s]?st:line+'+ '+st),note,'<button class="btn" type="button" data-act="pmadd">Add to parlay</button>')}
+  if(c&&c.bar===line)return wrap(esc(nm)+' '+esc(BIN[s]?st:ov(line)+' '+st)+' is in your parlay',note,'<button class="btn ghost" type="button" data-act="pmrm">Remove</button>');
+  if(c)return wrap('In your parlay at '+ov(c.bar),note,'<button class="btn" type="button" data-act="pmadd">Change to '+line+'+</button>');
+  return wrap(esc(nm)+' '+esc(BIN[s]?st:ov(line)+' '+st),note,'<button class="btn" type="button" data-act="pmadd">Add to parlay</button>')}
 function pmGames(p,s){var v=p[s]||[],mu=p.mu||[],out=[];for(var i=0;i<Math.min(20,v.length);i++){var m=mu[i]||'',home=m.indexOf(' vs')>-1,opp=m?m.split(/\s+/).pop():'';out.push({v:v[i],d:(p.dates||[])[i],i:i,cur:i<(p.ncur||0),home:m?home:null,opp:opp})}return out}
 function pmLine(p,s){if(PMS.ln&&PMS.ln[s]!=null)return PMS.ln[s];var x=snap(p,s);if(x)return x.bar;var v=(p[s]||[]).slice(0,10);if(v.length<3)return null;var L=lad(s,v);return Math.max(L.lo,Math.min(L.hi,defLine(v)))}
 function pmStep(p,s,dir){var b=pmLine(p,s),al=lineAvail(p,s),v=(p[s]||[]).slice(0,10),L=lad(s,v),nb;
@@ -2073,7 +2076,7 @@ function renderPlayer(){var p=allPlayers().filter(function(p){return String(p.id
   if(tabs.indexOf(PMS.s)<0&&tabs.length)PMS.s=tabs[0];
   var s=PMS.s,all=pmGames(p,s),line=pmLine(p,s);
   var oppT=null;G.forEach(function(g){if(g.a===p.t)oppT=g.h;else if(g.h===p.t)oppT=g.a});
-  h+='<div class="pmctl"><div class="pmstep"><button data-act="pmln" data-d="-1" aria-label="Lower the line">&#8249;</button><b>'+(line!=null?(BIN[s]?'Yes':line+'+'):'--')+'</b><button data-act="pmln" data-d="1" aria-label="Raise the line">&#8250;</button></div>'+
+  h+='<div class="pmctl"><div class="pmstep"><button data-act="pmln" data-d="-1" aria-label="Lower the line">&#8249;</button><b>'+(line!=null?(BIN[s]?'Yes':ovh(line)):'--')+'</b><button data-act="pmln" data-d="1" aria-label="Raise the line">&#8250;</button></div>'+
     '<div class="pmtabs" role="tablist">'+tabs.map(function(c){return'<button role="tab" data-act="pmtab" data-s="'+c+'" aria-pressed="'+(c===PMS.s)+'">'+sico(c,18)+' '+catName(c)+'</button>'}).join('')+'</div></div>';
   if(!all.length||line==null){h+='<p class="mu">No recent games for this stat.</p>'}else{
     var hasMu=all.some(function(g){return g.home!==null});
@@ -3010,7 +3013,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='spmenu'){var sm=$('spmenu');sm.hidden=!sm.hidden;b.setAttribute('aria-expanded',String(!sm.hidden))}
   else if(a==='sport')setSport(d.s);
   else if(a==='pmadd'){var pp=D.filter(function(q){return String(q.id)===String(PMS.id)})[0];if(!pp)return;var px=snap(pp,PMS.s),pl=pmLine(pp,PMS.s);if(!px||pl==null)return;px.bar=pl;px.ov=pl!==px.def;var pi=S.cart.findIndex(function(c){return c.key===px.key});
-    if(pi>-1){S.cart[pi].bar=pl;S.cart[pi].ov=px.ov;toast(short(px.n)+' changed to '+pl+'+')}else{if(blocked(true))return;if(!addLeg(px))return;toast(short(px.n)+' '+bl({s:px.s,bar:pl})+' added. '+S.cart.length+(S.cart.length===1?' leg':' legs')+' in your parlay.')}
+    if(pi>-1){S.cart[pi].bar=pl;S.cart[pi].ov=px.ov;toast(short(px.n)+' changed to '+ov(pl))}else{if(blocked(true))return;if(!addLeg(px))return;toast(short(px.n)+' '+bl({s:px.s,bar:pl})+' added. '+S.cart.length+(S.cart.length===1?' leg':' legs')+' in your parlay.')}
     save();renderSlip();renderProps();renderPlayer()}
   else if(a==='pmrm'){var ri=S.cart.findIndex(function(c){return c.key===PMS.id+'|'+PMS.s});if(ri>-1){removeAt(ri);renderPlayer()}}
   else if(a==='pmset'){PMS.ln=PMS.ln||{};PMS.ln[PMS.s]=+d.v;renderPlayer()}
