@@ -1154,9 +1154,12 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 .spmenu button:not([disabled]):hover,.spmenu button[aria-checked=true]{background:var(--pal-l)}
 .spmenu button[disabled]{opacity:.5;cursor:default}
 @media (min-width:481px) and (max-width:900px){.top .hs{display:none}}
+@media (max-width:480px){.top .logo{font-size:0;gap:0}.top .wrap{gap:8px}}
+@media (max-width:400px){.top .hsign{display:none}}
 @media (max-width:480px){.spbtn{height:32px;padding:0 8px;font-size:13px}.spmenu{left:auto;right:-60px}}
 /* search everyone + bet from the player popup (2026-11-08) */
 .hres .hmsg{margin:0;padding:12px 14px;color:var(--mu);font-size:14.5px}
+.catmore{border-style:dashed;color:var(--pal-d)}
 .ovw{font-size:.5em;font-weight:600;color:var(--mu);margin-right:5px;letter-spacing:0}
 .dkb{margin-left:auto;margin-right:10px;height:28px;padding:0 10px;border:1px solid var(--line2);border-radius:999px;background:transparent;color:var(--ink);font-size:12.5px;font-weight:600;white-space:nowrap}
 .dkb:hover{border-color:var(--ok)}span.dkb{display:inline-flex;align-items:center;border-color:color-mix(in srgb,var(--ok) 50%,transparent);color:var(--ok)}
@@ -1936,8 +1939,10 @@ function injNote(){var i=STATS&&STATS.injuries;if(!i)return'';
   if(i.source==='unavailable'||!i.listed)return'The injury report could not load, so only recent games were checked. Double-check injuries before you bet.';
   return'Injuries checked against the ESPN report'+(i.source==='stale-cache'?' (saved copy)':'')+' and recent games.'}
 function renderGames(){mvRow($('games'),G.length?'<button class="gm" data-act="game" data-i="0" aria-pressed="'+(F.game===0)+'"><b>All games</b><span>'+G.length+' tonight</span></button>'+G.map(function(g){return'<button class="gm" data-act="game" data-i="'+g.i+'" aria-pressed="'+(F.game===g.i)+'">'+matchup(g)+'<span class="tm">'+esc(g.t)+'</span></button>'}).join(''):'')}
-function renderCats(){var L=[['all','All stats']].concat(CATS.map(function(c){return[c,sico(c,17)+' '+catName(c)]}));
-  mvRow($('cats'),L.map(function(l){return'<button class="chip" data-act="cat" data-c="'+l[0]+'" aria-pressed="'+(F.cat===l[0])+'">'+l[1]+'</button>'}).join(''))}
+var ESS={nba:['pts','reb','ast','tpm'],nfl:['atd','pyd','ryd','recy'],all:['pts','reb','ast','tpm','atd','pyd','ryd']},CATALL=false;
+function renderCats(){var es=(ESS[SPORT]||CATS).filter(function(c){return CATS.indexOf(c)>-1}),more=CATS.filter(function(c){return es.indexOf(c)<0}),open=CATALL||more.indexOf(F.cat)>-1;
+  var L=[['all','All stats']].concat(es.concat(open?more:[]).map(function(c){return[c,sico(c,17)+' '+catName(c)]}));
+  mvRow($('cats'),L.map(function(l){return'<button class="chip" data-act="cat" data-c="'+l[0]+'" aria-pressed="'+(F.cat===l[0])+'">'+l[1]+'</button>'}).join('')+(more.length?'<button class="chip catmore" data-act="catmore" aria-expanded="'+open+'">'+(open?'Show less':'See all '+(CATS.length)+' stats')+'</button>':''))}
 function outNote(){var q=F.q.trim();if(!q)return'';var o=D.filter(function(p){return p.inj&&p.inj.s==='out'&&pmatch(p,q)}).slice(0,4);
   return o.map(function(p){return'<div class="weak outn"><p class="h"><b>'+esc(p.n)+' is out for this day.</b></p><p>'+esc(p.inj.t||'Listed as out.')+' Players who are out are never offered as picks. <button class="lnk" data-act="player" data-id="'+esc(p.id)+'">See recent games</button></p></div>'}).join('')}
 function renderProps(){var el=$('props');if(LOADING&&el.querySelector('.prop')){el.classList.add('mvdim');return}el.classList.remove('mvdim');M={};
@@ -2095,7 +2100,7 @@ function renderPlayer(){var p=allPlayers().filter(function(p){return String(p.id
       h+='<div class="seas pmseas">'+(pvw>0?'<span class="pv" style="flex:'+pvw+'">'+esc(prevN)+'</span>':'')+(ncw>0?'<span style="flex:'+ncw+'">'+esc(curN)+'</span>':'')+'</div>';
       h+='<div class="pmchart"><button class="pmar" data-act="pmgo" data-d="1" aria-label="Show older games"'+(o>=maxOff?' disabled':'')+'>&#8249;</button><div class="pmplot">'+bars(vw,dw,ncw,line)+(pvw>0&&ncw>0?'<i class="sdiv" style="left:'+(pvw/vw.length*100).toFixed(2)+'%"></i>':'')+'</div><button class="pmar" data-act="pmgo" data-d="-1" aria-label="Show newer games"'+(o<=0?' disabled':'')+'>&#8250;</button></div>';
       var hn=vw.filter(function(x){return x>=line}).length;
-      h+='<p class="legend pmcap">Cleared '+line+'+ in '+hn+' of these '+vw.length+' games. Green bars cleared the line, red bars missed it.'+(PMS.f==='all'?' Newest is on the right. Use the arrows for older games.':'')+(ncw<vw.length?' Lighter bars are from '+esc(prevN)+'.':'')+'</p>'}}
+      h+='<p class="legend pmcap">Went over '+(line-.5)+' in '+hn+' of these '+vw.length+' games. Green bars cleared the line, red bars missed it.'+(PMS.f==='all'?' Newest is on the right. Use the arrows for older games.':'')+(ncw<vw.length?' Lighter bars are from '+esc(prevN)+'.':'')+'</p>'}}
   h+=pmBet(p,s,line);
   var box=$('pm');box.className='pm'+(anim?' anim':'');if(swap)mvSet(box,h);else box.innerHTML=h;$('pmv').classList.add('open');
   rowArrows();var pt=box.querySelector('.pmtabs [aria-pressed=true]');if(pt){var tr=pt.parentNode;tr.scrollLeft=Math.max(0,pt.offsetLeft-tr.clientWidth/2+pt.offsetWidth/2)}
@@ -3010,6 +3015,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='copylegs')copyLegs(false)
   else if(a==='open'){var pl=PLAT.filter(function(p){return p[0]===S.pl})[0];if(pl)window.open(pl[1],'_blank','noopener')}
   else if(a==='player')openPlayer(d.id);
+  else if(a==='catmore'){CATALL=!CATALL;if(!CATALL&&(ESS[SPORT]||[]).indexOf(F.cat)<0&&F.cat!=='all'){F.cat='all';renderProps()}renderCats()}
   else if(a==='spmenu'){var sm=$('spmenu');sm.hidden=!sm.hidden;b.setAttribute('aria-expanded',String(!sm.hidden))}
   else if(a==='sport')setSport(d.s);
   else if(a==='pmadd'){var pp=D.filter(function(q){return String(q.id)===String(PMS.id)})[0];if(!pp)return;var px=snap(pp,PMS.s),pl=pmLine(pp,PMS.s);if(!px||pl==null)return;px.bar=pl;px.ov=pl!==px.def;var pi=S.cart.findIndex(function(c){return c.key===px.key});
