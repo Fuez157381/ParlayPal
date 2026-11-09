@@ -21,6 +21,14 @@ for d in dates:
         print("saved", d)
     except Exception as e:
         print("skipped", d, type(e).__name__, e)
+# every player in the league (search shows anyone, even when his team is off)
+try:
+    allp = server.build(None, all_teams=True)
+    with open(os.path.join(out, "players.json"), "w", encoding="utf-8") as f:
+        json.dump({"players": allp["players"], "updated": allp["stats"]["updated"]}, f, separators=(",", ":"))
+    print("saved players.json", len(allp["players"]), "players")
+except Exception as e:
+    print("skipped players.json", type(e).__name__, e)
 # old days are never asked for again
 keep = set(dates) | {"latest"}
 for name in os.listdir(out):

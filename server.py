@@ -188,7 +188,8 @@ def opponent_factors(cur):
     return opp, why, net
 
 
-def build(date_str=None):
+def build(date_str=None, all_teams=False):
+    """all_teams=True keeps every NBA player, not only the teams playing that day (used for search)."""
     et = ZoneInfo("America/New_York")
     games, dates, date_str, sb_src = games_for(date_str)
     teams = {t for g in games for t in (g["a"], g["h"])}
@@ -214,7 +215,7 @@ def build(date_str=None):
     players, cur_logs, prev_logs = [], 0, 0
     for pid, rows in cp.items():
         team = (roster.get(str(pid)) or {}).get("t") or rows[0]["team"]   # current roster team (handles trades)
-        if team not in teams:
+        if not all_teams and team not in teams:
             continue
         series = rows[:MAX_GAMES]
         extra = pp.get(pid, [])[: MAX_GAMES - len(series)]
@@ -288,6 +289,27 @@ def api_data():
         snap = load_snapshot(date)
         if snap:
             return cors(jsonify(snap))
+        return cors(jsonify({"error": f"{type(e).__name__}: {e}"})), 502
+
+
+_ALLP = {"t": 0, "j": None}
+
+
+@app.route("/api/players")
+def api_players():
+    """Every NBA player's recent games, so search can show anyone, even on days his team is off."""
+    p = os.path.join(HERE, "snapshots", "players.json")
+    if HOSTED and os.path.exists(p):
+        return cors(send_file(p, mimetype="application/json", max_age=3600))
+    if _ALLP["j"] and time.time() - _ALLP["t"] < TTL_LOGS:
+        return cors(jsonify(_ALLP["j"]))
+    try:
+        b = build(None, all_teams=True)
+        _ALLP.update(t=time.time(), j={"players": b["players"], "updated": b["stats"]["updated"]})
+        return cors(jsonify(_ALLP["j"]))
+    except Exception as e:
+        if os.path.exists(p):
+            return cors(send_file(p, mimetype="application/json"))
         return cors(jsonify({"error": f"{type(e).__name__}: {e}"})), 502
 
 

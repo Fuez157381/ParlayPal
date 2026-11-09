@@ -1142,6 +1142,14 @@ html:not(.calm) .scale:not(.in) .sb{transform:scaleX(0)}
 .psub{display:block;width:100%;height:46px;margin-top:14px}.psubn{margin:7px 0 12px;color:var(--mu2);font-size:12.5px;text-align:center}
 @media (max-width:1040px){.plw{grid-template-columns:minmax(0,1fr)}.trks{position:static;max-height:none}}
 
+/* search everyone + bet from the player popup (2026-11-08) */
+.hres .hmsg{margin:0;padding:12px 14px;color:var(--mu);font-size:14.5px}
+@media (max-width:480px){.hres button{font-size:15px;line-height:1.25}.hres small{flex:none;max-width:44%;font-size:12.5px;text-align:right;line-height:1.3}}
+.pmbet{display:flex;align-items:center;gap:14px;margin-top:16px;padding:14px 16px;border:1px solid var(--line2);border-radius:12px;background:var(--card2)}
+.pmbet>div{flex:1;min-width:0}.pmbet b{display:block;font-size:16px;font-weight:700}.pmbet span{display:block;margin-top:3px;color:var(--mu);font-size:14px;line-height:1.4}
+.pmbet .btn{flex:none;height:46px;padding:0 18px;margin:0;white-space:nowrap}
+.pmhas{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:480px){.pmbet{flex-direction:column;align-items:stretch}.pmbet .btn{width:100%}.pmhas .btn{width:auto;flex:1}}
 /* parlay slip: weakest leg and below (2026-11-08) */
 .sh .shclr{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border:1px solid var(--line2);border-radius:10px;background:transparent;color:var(--ink);font-weight:600;font-size:14.5px}
 .sh .shclr:hover{border-color:var(--bad);color:var(--bad)}
@@ -1971,6 +1979,22 @@ function renderPlayerSkel(p){var sk='<div class="sk" style="height:%;width:%"></
    '<div class="skbars">'+[40,70,55,85,45,75,90,60,80,50].map(function(h){return'<i class="sk" style="height:'+h+'%"></i>'}).join('')+'</div>'+
    '<div class="skrow"><i class="sk" style="width:100%;height:40px"></i></div><div class="skrow"><i class="sk" style="width:100%;height:40px"></i></div>';
   $('pmv').classList.add('open')}
+function pmBet(p,s,line){var nm=short(p.n),st=ST[s],key=p.id+'|'+s;
+  var wrap=function(t,body,btn){return'<div class="pmbet"><div><b>'+t+'</b><span>'+body+'</span></div>'+(btn||'')+'</div>'};
+  if(p.inj&&p.inj.s==='out')return wrap('Can\'t bet on this one','He\'s listed as out, so his props are off the board.');
+  var inD=D.some(function(q){return String(q.id)===String(p.id)});
+  if(!inD){var pd=playDay(p.id);
+    if(pd)return wrap('Plays '+esc(dayLabel(pd)),'Switch to that day to bet on him once the apps post his lines.','<button class="btn" type="button" data-act="pmday" data-d="'+esc(pd)+'">Go to '+esc(dayLabel(pd))+'</button>');
+    return wrap('No game '+(DAY===TODAY?'today':esc(dayLabel(DAY))),'You can check his stats, but there\'s nothing to bet on until his team plays.')}
+  var x=snap(p,s);
+  if(!x||line==null){var has=CATS.filter(function(c){return c!==s&&snap(p,c)});
+    return wrap('No '+esc(st)+' line for him',has.length?'The apps have him for '+has.map(function(c){return esc(ST[c])}).join(', ')+'.':'The apps haven\'t posted any props for '+esc(nm)+' yet.',has.length?'<div class="pmhas">'+has.map(function(c){return'<button class="btn" type="button" data-act="pmtab" data-s="'+c+'">'+esc(catName(c))+'</button>'}).join('')+'</div>':'')}
+  var al=x.al,ok=!al||al.indexOf(line)>-1,c=S.cart.filter(function(c){return c.key===key})[0];
+  if(!ok){var nb=nearest(al,line);return wrap('No app offers '+line+'+ '+esc(st),'The closest line on the apps is '+nb+'+.','<button class="btn" type="button" data-act="pmset" data-v="'+nb+'">Use '+nb+'+</button>')}
+  var note=x.unv?'Line not confirmed on the apps yet.':'Offered on the apps.';
+  if(c&&c.bar===line)return wrap(esc(nm)+' '+line+'+ '+esc(st)+' is in your parlay',note,'<button class="btn ghost" type="button" data-act="pmrm">Remove</button>');
+  if(c)return wrap('In your parlay at '+c.bar+'+',note,'<button class="btn" type="button" data-act="pmadd">Change to '+line+'+</button>');
+  return wrap(esc(nm)+' '+line+'+ '+esc(st),note,'<button class="btn" type="button" data-act="pmadd">Add to parlay</button>')}
 function pmGames(p,s){var v=p[s]||[],mu=p.mu||[],out=[];for(var i=0;i<Math.min(20,v.length);i++){var m=mu[i]||'',home=m.indexOf(' vs')>-1,opp=m?m.split(/\s+/).pop():'';out.push({v:v[i],d:(p.dates||[])[i],i:i,cur:i<(p.ncur||0),home:m?home:null,opp:opp})}return out}
 function pmLine(p,s){if(PMS.ln&&PMS.ln[s]!=null)return PMS.ln[s];var x=snap(p,s);if(x)return x.bar;var v=(p[s]||[]).slice(0,10);if(v.length<3)return null;var L=lad(s,v);return Math.max(L.lo,Math.min(L.hi,defLine(v)))}
 function pmStep(p,s,dir){var b=pmLine(p,s),al=lineAvail(p,s),v=(p[s]||[]).slice(0,10),L=lad(s,v),nb;
@@ -2005,6 +2029,7 @@ function renderPlayer(){var p=allPlayers().filter(function(p){return String(p.id
       h+='<div class="pmchart"><button class="pmar" data-act="pmgo" data-d="1" aria-label="Show older games"'+(o>=maxOff?' disabled':'')+'>&#8249;</button><div class="pmplot">'+bars(vw,dw,ncw,line)+(pvw>0&&ncw>0?'<i class="sdiv" style="left:'+(pvw/vw.length*100).toFixed(2)+'%"></i>':'')+'</div><button class="pmar" data-act="pmgo" data-d="-1" aria-label="Show newer games"'+(o<=0?' disabled':'')+'>&#8250;</button></div>';
       var hn=vw.filter(function(x){return x>=line}).length;
       h+='<p class="legend pmcap">Cleared '+line+'+ in '+hn+' of these '+vw.length+' games. Green bars cleared the line, red bars missed it.'+(PMS.f==='all'?' Newest is on the right. Use the arrows for older games.':'')+(ncw<vw.length?' Lighter bars are from '+esc(prevN)+'.':'')+'</p>'}}
+  h+=pmBet(p,s,line);
   var box=$('pm');box.className='pm'+(anim?' anim':'');if(swap)mvSet(box,h);else box.innerHTML=h;$('pmv').classList.add('open');
   if(anim){Array.prototype.forEach.call(box.querySelectorAll('.col'),function(c,i){c.style.setProperty('--d',(120+i*38)+'ms')});pmCount(box)}}
 function pmCount(box){if(mvOff())return;
@@ -2525,7 +2550,10 @@ function go(v,keep){if(VIEWS.indexOf(v)<0)v='home';var from=V;V=v;var fb=$('fcar
 /* ---------- home ---------- */
 var HM={},EX={st:0,list:[]};
 function exDay(js,fn){var sv=[D,G,OPP,WHY,NET];D=js.players||[];G=js.games||[];OPP=js.opp||{};WHY=js.why||{};NET=js.net||{};try{return fn()}finally{D=sv[0];G=sv[1];OPP=sv[2];WHY=sv[3];NET=sv[4]}}
-function allPlayers(){var a=D.slice();EX.list.forEach(function(js){a=a.concat(js.players||[])});return a}
+function allPlayers(){var a=D.slice();EX.list.forEach(function(js){a=a.concat(js.players||[])});if(ALLP.list.length){var seen={};a.forEach(function(p){seen[p.id]=1});ALLP.list.forEach(function(p){if(!seen[p.id])a.push(p)})}return a}
+var ALLP={st:0,list:[]};
+function loadAllP(){if(ALLP.st)return;ALLP.st=1;fetch('/api/players').then(function(r){return r.json()}).then(function(j){ALLP.list=j.players||[];ALLP.st=2;document.querySelectorAll('.psearch').forEach(function(i){if(i.value.trim().length>=2)i.dispatchEvent(new Event('input',{bubbles:true}))})}).catch(function(){ALLP.st=0})}
+function playDay(id){if(D.some(function(p){return String(p.id)===String(id)}))return DAY;for(var i=0;i<EX.list.length;i++){var js=EX.list[i];if((js.players||[]).some(function(p){return String(p.id)===String(id)}))return js.stats.date}return null}
 function loadExtras(){if(EX.st)return;EX.st=1;var ex=EX,ds=DATES.filter(function(d){return d>DAY}).slice(0,4);
   if(!ds.length){ex.st=2;return}
   Promise.all(ds.map(function(d){return fetch('/api/data?date='+encodeURIComponent(d)).then(function(r){return r.json()}).catch(function(){return null})})).then(function(r){
@@ -2913,6 +2941,12 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='copylegs')copyLegs(false)
   else if(a==='open'){var pl=PLAT.filter(function(p){return p[0]===S.pl})[0];if(pl)window.open(pl[1],'_blank','noopener')}
   else if(a==='player')openPlayer(d.id);
+  else if(a==='pmadd'){var pp=D.filter(function(q){return String(q.id)===String(PMS.id)})[0];if(!pp)return;var px=snap(pp,PMS.s),pl=pmLine(pp,PMS.s);if(!px||pl==null)return;px.bar=pl;px.ov=pl!==px.def;var pi=S.cart.findIndex(function(c){return c.key===px.key});
+    if(pi>-1){S.cart[pi].bar=pl;S.cart[pi].ov=px.ov;toast(short(px.n)+' changed to '+pl+'+')}else{if(blocked(true))return;if(!addLeg(px))return;toast(short(px.n)+' '+pl+'+ '+ST[px.s]+' added. '+S.cart.length+(S.cart.length===1?' leg':' legs')+' in your parlay.')}
+    save();renderSlip();renderProps();renderPlayer()}
+  else if(a==='pmrm'){var ri=S.cart.findIndex(function(c){return c.key===PMS.id+'|'+PMS.s});if(ri>-1){removeAt(ri);renderPlayer()}}
+  else if(a==='pmset'){PMS.ln=PMS.ln||{};PMS.ln[PMS.s]=+d.v;renderPlayer()}
+  else if(a==='pmday'){$('pmv').classList.remove('open');if(location.hash!=='#picks')location.hash='#picks';mvDay(d.d)}
   else if(a==='pmtab'){PMS.s=d.s;PMS.off=0;PMS.swap=true;renderPlayer()}
   else if(a==='pmln'){var pl=allPlayers().filter(function(p){return String(p.id)===String(PMS.id)})[0];if(pl){pmStep(pl,PMS.s,+d.d);PMS.swap=true;renderPlayer()}}
   else if(a==='pmchip'){var kk=d.k;PMS.off=0;if(kk==='l5'){PMS.f='all';PMW=5}else if(kk==='l10'){PMS.f='all';PMW=10}else if(kk==='l20'){PMS.f='all';PMW=20}else PMS.f=kk;PMS.swap=true;renderPlayer()}
@@ -2990,7 +3024,8 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
 document.addEventListener('click',function(e){var b=e.target.closest('.hres [data-act=player]');if(b){document.querySelectorAll('.psearch').forEach(function(i){i.value=''});document.querySelectorAll('.hres').forEach(function(r){r.innerHTML=''})}});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){$('pmv').classList.remove('open');closePal()}});
 $('aiForm').addEventListener('submit',function(e){e.preventDefault();var v=$('aiIn').value;$('aiIn').value='';aiAsk(v)});
-document.addEventListener('input',function(e){if(e.target.classList.contains('psearch')){var q=e.target.value.trim().toLowerCase(),r=e.target.nextElementSibling,o='',n=0,seen={};if(q.length>=2){D.forEach(function(p){if(n>=6||seen[p.id])return;if(pmatch(p,q)){seen[p.id]=1;n++;o+='<button data-act="player" data-id="'+esc(p.id)+'">'+av(p.n,p.id,'sm')+esc(p.n)+'<small>'+esc(p.t||'')+(p.inj&&p.inj.s==='out'?' · Out':p.inj&&p.inj.s==='q'?' · Questionable':'')+'</small></button>'}})}r.innerHTML=o}});
+document.addEventListener('input',function(e){if(e.target.classList.contains('psearch')){var q=e.target.value.trim().toLowerCase(),r=e.target.nextElementSibling,o='',n=0,seen={};if(q.length>=2){loadAllP();if(!EX.st&&DATES.length)loadExtras();allPlayers().forEach(function(p){if(n>=8||seen[p.id])return;if(pmatch(p,q)){seen[p.id]=1;n++;var pd=playDay(p.id),tag=p.inj&&p.inj.s==='out'?'Out':p.inj&&p.inj.s==='q'?'Questionable':pd===DAY?'Plays '+(DAY===TODAY?'today':dayLabel(DAY)):pd?'Plays '+dayLabel(pd):'No game today';o+='<button data-act="player" data-id="'+esc(p.id)+'">'+av(p.n,p.id,'sm')+esc(p.n)+'<small>'+esc(p.t||'')+' · '+esc(tag)+'</small></button>'}});if(!n)o=ALLP.st===1?'<p class="hmsg">Searching every player…</p>':'<p class="hmsg">No player or team matches that.</p>';else if(ALLP.st===1)o+='<p class="hmsg">Loading more players…</p>'}r.innerHTML=o}});
+document.addEventListener('focusin',function(e){if(e.target.classList&&e.target.classList.contains('psearch'))loadAllP()});
 $('q').addEventListener('input',function(e){F.q=e.target.value;F.lim=24;F.pg=0;renderProps()});
 document.addEventListener('input',function(e){if(e.target.classList.contains('sk')){S.stake=e.target.value;save()}});
 document.addEventListener('change',function(e){if(e.target.classList.contains('pf')){S.pl=e.target.value;save();renderSlip()}});
