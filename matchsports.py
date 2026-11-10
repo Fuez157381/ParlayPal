@@ -201,6 +201,11 @@ def ufc_profile(aid):
             "wld": st.get("wins-losses-draws"), "ko": st.get("tkos-tkoLosses"), "sub": st.get("submissions-submissionLosses")}
 
 
+def ufc_name(aid):
+    a = _get(f"{WEB}/mma/athletes/{aid}").get("athlete") or {}
+    return a.get("displayName") or a.get("fullName") or ""
+
+
 def ufc_history(aid):
     j = _get(f"{CORE}/mma/athletes/{aid}/eventlog", {"limit": 40})
     items = [i for i in ((j.get("events") or {}).get("items") or []) if i.get("played")]
@@ -405,8 +410,16 @@ def build(sport, date_str, cached):
             return sd["key"], r
         with ThreadPoolExecutor(6) as ex:
             hist = dict(ex.map(load, [sd for m in todays for sd in m["sides"]]))
-    prof, stats = {}, {}
+    prof, stats, oname = {}, {}, {}
     if sport == "ufc":
+        oids = sorted({str(r["opp"]) for rs in hist.values() for r in rs if r.get("opp")})
+        def ln(oid):
+            try:
+                return oid, cached(f"ufc:name:{oid}", 30 * 86400, lambda: ufc_name(oid))[0]
+            except Exception:
+                return oid, ""
+        with ThreadPoolExecutor(8) as ex:
+            oname = {k: v for k, v in ex.map(ln, oids) if v}
         def ls(sd):
             try:
                 return sd["key"], cached(f"ufc:stats:{sd['aid']}", TTL_HIST, lambda: ufc_stats(sd["aid"]))[0]
@@ -432,13 +445,30 @@ def build(sport, date_str, cached):
                       "t": _label(m["when"]), "lg": sport, "league": m["league"],
                       "kp": {a["key"]: a.get("cents"), h["key"]: h.get("cents")}})
         for me, op in ((a, h), (h, a)):
-            teams[me["key"]] = {"n": me["name"]}
+            teams[me["key"]] = {"n": me["name"], "aid": me.get("aid")}
+            if sport == "ufc" and (prof.get(me["key"]) or {}).get("wld"):
+                teams[me["key"]]["r"] = prof[me["key"]]["wld"]
+            def opk(r):
+                if sport == "ten":
+                    k = "tn" + slug(r.get("oppName") or r["opp"])
+                    if r.get("oppName"):
+                        teams.setdefault(k, {"n": r["oppName"]})
+                    return k
+                if sport == "ufc":
+                    k = "uf" + str(r["opp"])
+                    if oname.get(str(r["opp"])):
+                        teams.setdefault(k, {"n": oname[str(r["opp"])], "aid": str(r["opp"])})
+                    return k
+                k = "es" + str(r["opp"])
+                if r.get("oppName"):
+                    teams.setdefault(k, {"n": r["oppName"]})
+                return k
             rows = hist.get(me["key"], [])
             if len(rows) < 2:
                 continue
             p = {"id": me.get("aid") or me["key"], "n": me["name"], "t": me["key"], "lg": sport, "ncur": len(rows),
                  "dates": [r["date"] for r in rows], "min": [],
-                 "mu": [f"{me['key']} vs. {('tn' + slug(r.get('oppName') or r['opp'])) if sport == 'ten' else ('uf' + str(r['opp'])) if sport == 'ufc' else ('es' + str(r['opp']))}" for r in rows],
+                 "mu": [f"{me['key']} vs. {opk(r)}" for r in rows],
                  win: [r["win"] for r in rows], "kp": me.get("cents"), "oppn": op["name"], "info": []}
             wins = sum(r["win"] for r in rows)
             if sport == "ten":
@@ -456,7 +486,7 @@ def build(sport, date_str, cached):
                 withst = [r for r in rows if r.get("ssl") is not None]
                 if len(withst) >= 3:            # UFC fights with full numbers: use those for every stat
                     rows = withst
-                    p.update(dates=[r["date"] for r in rows], ncur=len(rows), mu=p["mu"][:len(rows)])
+                    p.update(dates=[r["date"] for r in rows], ncur=len(rows), mu=[f"{me['key']} vs. {opk(r)}" for r in rows])
                     p[win] = [r["win"] for r in rows]
                     p["ussl"] = [r["ssl"] for r in rows]
                     p["utsl"] = [r.get("tsl") or 0 for r in rows]
