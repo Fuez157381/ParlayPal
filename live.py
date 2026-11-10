@@ -17,6 +17,11 @@ def box(gid):
     else:
         import espn
         out = espn.box(gid)
+    try:                                          # moneyline legs: who won the game
+        import moneyline
+        out.setdefault("players", {}).update(moneyline.box_teams(gid))
+    except Exception:
+        pass
     _cache[gid] = (now, out)
     return out
 

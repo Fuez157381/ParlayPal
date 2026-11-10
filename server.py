@@ -270,7 +270,7 @@ def cors(resp):
     return resp
 
 
-SPORTS_ALL = ("nfl", "nhl", "soc", "ten", "ufc", "esp")
+SPORTS_ALL = ("nfl", "nhl", "soc", "ten", "ufc", "esp", "cfb")
 
 
 def with_moneylines(data, sport):
@@ -287,6 +287,9 @@ def build_sport(sport, date):
     if sport in ("ten", "ufc", "esp"):
         import matchsports
         return matchsports.build(sport, date or None, cached)
+    if sport == "cfb":
+        import moneyline
+        return moneyline.build_cfb(date or None, cached)
     if sport in ("nfl", "nhl", "soc"):
         mod = __import__({"soc": "soccer"}.get(sport, sport))
         return with_moneylines(mod.build(date or None, cached, norm_name, inj_level), sport)
@@ -305,7 +308,7 @@ def api_data():
             if snap:
                 return cors(jsonify(snap))
             if os.environ.get("VERCEL"):
-                return cors(jsonify({"error": "This day's " + {"soc": "soccer", "ten": "tennis", "esp": "esports"}.get(sport, sport.upper()) + " data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
+                return cors(jsonify({"error": "This day's " + {"soc": "soccer", "ten": "tennis", "esp": "esports", "cfb": "college football"}.get(sport, sport.upper()) + " data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
         try:
             return cors(jsonify(build_sport(sport, date)))
         except Exception as e:
@@ -490,7 +493,7 @@ def pal_data(context):
     if k in _PAL and time.time() - _PAL[k][0] < 300:
         return _PAL[k][1]
     out = {"players": [], "games": [], "opp": {}, "why": {}, "net": {}}
-    for sp in ("nba", "nfl", "nhl", "soc", "ten", "ufc", "esp"):
+    for sp in ("nba", "nfl", "nhl", "soc", "ten", "ufc", "esp", "cfb"):
         d = date if sp == sport else ""
         try:
             j = day_data(d) if sp == "nba" else (load_snapshot(d, sp) or (None if HOSTED else build_sport(sp, d)))

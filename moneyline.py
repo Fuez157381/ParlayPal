@@ -15,8 +15,8 @@ import requests
 ET = ZoneInfo("America/New_York")
 SITE = "https://site.api.espn.com/apis/site/v2/sports"
 KAL = "https://api.elections.kalshi.com/trade-api/v2"
-PATH = {"nba": "basketball/nba", "nfl": "football/nfl", "nhl": "hockey/nhl"}
-KSER = {"nba": ("KXNBAGAME",), "nfl": ("KXNFLGAME",), "nhl": ("KXNHLGAME",),
+PATH = {"nba": "basketball/nba", "nfl": "football/nfl", "nhl": "hockey/nhl", "cfb": "football/college-football"}
+KSER = {"cfb": ("KXNCAAFGAME",), "nba": ("KXNBAGAME",), "nfl": ("KXNFLGAME",), "nhl": ("KXNHLGAME",),
         "soc": ("KXEPLGAME", "KXLALIGAGAME", "KXSERIEAGAME", "KXBUNDESLIGAGAME", "KXLIGUE1GAME", "KXUCLGAME", "KXMLSGAME")}
 SOC_LG = {"Premier League": "eng.1", "La Liga": "esp.1", "Serie A": "ita.1", "Bundesliga": "ger.1", "Ligue 1": "fra.1",
           "Champions League": "uefa.champions", "MLS": "usa.1"}
@@ -42,6 +42,8 @@ def key_of(sport, abbr, tid=None):
     if sport == "nhl":
         a = str(abbr or "")
         return a[:1].upper() + a[1:].lower()
+    if sport == "cfb":
+        return "cf" + str(tid)
     return "s" + str(tid)
 
 
@@ -125,6 +127,80 @@ def _price(kg, a, b, ab_a, ab_b):
     return (None, None)
 
 
+def build_cfb(date_str, cached):
+    """College football: this week's featured games (ranked teams first) as moneylines."""
+    today = dt.datetime.now(ET).strftime("%Y-%m-%d")
+    def fetch():
+        j = _get(f"{SITE}/{PATH['cfb']}/scoreboard")
+        out = []
+        for e in j.get("events") or []:
+            c = (e.get("competitions") or [{}])[0]
+            st = ((c.get("status") or {}).get("type") or {})
+            if st.get("state") == "post":
+                continue
+            sides = {}
+            for x in c.get("competitors") or []:
+                t = x.get("team") or {}
+                rk = (x.get("curatedRank") or {}).get("current")
+                sides[x.get("homeAway")] = {"key": "cf" + str(t.get("id")), "n": t.get("shortDisplayName") or t.get("displayName"),
+                                            "ab": t.get("abbreviation"), "rank": rk if rk and rk <= 25 else None}
+            if "home" in sides and "away" in sides:
+                out.append({"id": "cfb:" + str(e["id"]), "utc": e["date"], "a": sides["away"], "h": sides["home"],
+                            "status": st.get("shortDetail") or "", "live": st.get("state") == "in"})
+        return out
+    evs, src = cached("cfb:week", 30 * 60, fetch)
+    bydate = {}
+    for g in evs:
+        d = dt.datetime.fromisoformat(g["utc"].replace("Z", "+00:00")).astimezone(ET)
+        bydate.setdefault(d.strftime("%Y-%m-%d"), []).append((d, g))
+    dates = sorted(bydate)
+    if not date_str or date_str not in bydate:
+        date_str = (dates or [today])[0]
+    games, teams = [], {}
+    for i, (d, g) in enumerate(sorted(bydate.get(date_str, []), key=lambda x: (x[0], -(bool(x[1]["a"]["rank"]) + bool(x[1]["h"]["rank"])))), 1):
+        games.append({"i": i, "id": g["id"], "a": g["a"]["key"], "h": g["h"]["key"], "d": f"{d:%a %b} {d.day}",
+                      "t": g["status"] if g["live"] else f"{d.hour % 12 or 12}:{d:%M} {'AM' if d.hour < 12 else 'PM'}", "lg": "cfb"})
+        for sd in (g["a"], g["h"]):
+            teams[sd["key"]] = {"n": ("#" + str(sd["rank"]) + " " if sd["rank"] else "") + sd["n"], "ab": sd["ab"]}
+    data = {"sport": "cfb", "games": games, "players": [], "opp": {}, "why": {}, "net": {}, "dates": dates, "teams": teams,
+            "stats": {"sport": "cfb", "date": date_str, "today": today, "games": len(games), "teams": len(teams), "players": 0,
+                      "logs_current_season": 0, "logs_previous_season": 0, "injuries": {"source": "none", "listed": 0, "hidden": 0},
+                      "sources": {"scoreboard": src}, "updated": dt.datetime.now(ET).isoformat(timespec="seconds")}}
+    add(data, "cfb", cached)
+    data["stats"]["players"] = len(data["players"])
+    return data
+
+
+def box_teams(gid):
+    """Final result per team for moneyline legs: {"ml<team key>": {"ml": 1 or 0}}."""
+    g = str(gid)
+    sport, eid, lg = "nba", g, None
+    if g.startswith("soc:"):
+        sport, lg, eid = "soc", g.split(":")[1], g.split(":")[2]
+    elif ":" in g:
+        sport, eid = g.split(":", 1)
+    if sport not in PATH and sport != "soc":
+        return {}
+    url = f"{SITE}/soccer/{lg}/summary" if sport == "soc" else f"{SITE}/{PATH[sport]}/summary"
+    s = _get(url, {"event": eid})
+    comp = ((s.get("header") or {}).get("competitions") or [{}])[0]
+    if ((comp.get("status") or {}).get("type") or {}).get("state") != "post":
+        return {}
+    out = {}
+    cs = comp.get("competitors") or []
+    def sc(x):
+        try:
+            return float(x.get("score"))
+        except (TypeError, ValueError):
+            return 0.0
+    for x in cs:
+        t = x.get("team") or {}
+        others = [sc(o) for o in cs if o is not x]
+        won = bool(x.get("winner")) if x.get("winner") is not None else (others and sc(x) > max(others))
+        out["ml" + key_of(sport, t.get("abbreviation"), t.get("id"))] = {"ml": 1 if won else 0, "played": True, "min": ""}
+    return out
+
+
 def add(data, sport, cached):
     """Adds moneyline entries to a sport's day data (in place) and returns it."""
     games = data.get("games") or []
@@ -134,8 +210,8 @@ def add(data, sport, cached):
         kg, _ = cached(f"ml:kalshi:{sport}", 20 * 60, lambda: kalshi_games(sport))
     except Exception:
         kg = {}
-    if sport == "soc":
-        ids = {k: (k[1:], (data.get("teams") or {}).get(k, {}).get("n"), (data.get("teams") or {}).get(k, {}).get("ab")) for g in games for k in (g["a"], g["h"])}
+    if sport in ("soc", "cfb"):
+        ids = {k: (k[2:] if sport == "cfb" else k[1:], (data.get("teams") or {}).get(k, {}).get("n"), (data.get("teams") or {}).get(k, {}).get("ab")) for g in games for k in (g["a"], g["h"])}
     else:
         try:
             ids, _ = cached(f"ml:teams:{sport}", 7 * 24 * 3600, lambda: team_ids(sport))
