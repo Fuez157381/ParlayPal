@@ -9,7 +9,10 @@ def box(gid):
     c = _cache.get(gid)
     if c and now - c[0] < (300 if c[1].get("status") == 3 else 20):
         return c[1]
-    if str(gid).startswith(("nfl:", "nhl:", "soc:")):
+    if str(gid).startswith(("ten:", "ufc:", "esp:")):
+        import matchsports
+        out = matchsports.box(gid)
+    elif str(gid).startswith(("nfl:", "nhl:", "soc:")):
         out = __import__({"soc": "soccer"}.get(str(gid).split(":")[0], str(gid).split(":")[0])).box(gid)
     else:
         import espn

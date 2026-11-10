@@ -253,7 +253,7 @@ def build(date_str=None, all_teams=False):
             elif td[0] not in mine:
                 pl["inj"] = {"s": "q", "t": "Missed his team's most recent game.", "src": "games"}
     opp, why, net = opponent_factors(cur)
-    return {
+    out = {
         "games": games, "players": players, "opp": opp, "why": why, "net": net, "dates": dates,
         "stats": {"date": date_str, "today": dt.datetime.now(et).strftime("%Y-%m-%d"), "games": len(games), "teams": len(teams), "players": len(players),
                   "logs_current_season": cur_logs, "logs_previous_season": prev_logs,
@@ -261,6 +261,7 @@ def build(date_str=None, all_teams=False):
                   "sources": {"scoreboard": sb_src, "current_logs": cur_src, "previous_logs": prev_src},
                   "updated": dt.datetime.now(et).isoformat(timespec="seconds")},
     }
+    return out if all_teams else with_moneylines(out, "nba")
 
 
 # ---------- web ----------
@@ -269,17 +270,33 @@ def cors(resp):
     return resp
 
 
+SPORTS_ALL = ("nfl", "nhl", "soc", "ten", "ufc", "esp")
+
+
+def with_moneylines(data, sport):
+    """Team-to-win entries (moneylines) for NBA, NFL, NHL and soccer games."""
+    try:
+        import moneyline
+        return moneyline.add(data, sport, cached)
+    except Exception as e:
+        print("moneylines skipped:", type(e).__name__, e)
+        return data
+
+
 def build_sport(sport, date):
+    if sport in ("ten", "ufc", "esp"):
+        import matchsports
+        return matchsports.build(sport, date or None, cached)
     if sport in ("nfl", "nhl", "soc"):
         mod = __import__({"soc": "soccer"}.get(sport, sport))
-        return mod.build(date or None, cached, norm_name, inj_level)
+        return with_moneylines(mod.build(date or None, cached, norm_name, inj_level), sport)
     return build(date or None)
 
 
 @app.route("/api/data")
 def api_data():
     date = request.args.get("date", "").strip()
-    sport = request.args.get("sport") if request.args.get("sport") in ("nfl", "nhl", "soc") else "nba"
+    sport = request.args.get("sport") if request.args.get("sport") in SPORTS_ALL else "nba"
     if date and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
         return cors(jsonify({"error": "date must look like 2026-11-02"})), 400
     if sport != "nba":
@@ -288,7 +305,7 @@ def api_data():
             if snap:
                 return cors(jsonify(snap))
             if os.environ.get("VERCEL"):
-                return cors(jsonify({"error": "This day's " + {"soc": "soccer"}.get(sport, sport.upper()) + " data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
+                return cors(jsonify({"error": "This day's " + {"soc": "soccer", "ten": "tennis", "esp": "esports"}.get(sport, sport.upper()) + " data hasn't been saved yet. It refreshes a few times a day, so check back soon."})), 503
         try:
             return cors(jsonify(build_sport(sport, date)))
         except Exception as e:
@@ -386,7 +403,15 @@ def api_lines():
     import sgo      # free plan: reuses the saved SportsGameOdds data, costs nothing extra
     body = request.get_json(silent=True) or {}
     games = body.get("games") or []
-    sport = body.get("sport") if body.get("sport") in ("nfl", "nhl", "soc") else "nba"
+    sport = body.get("sport") if body.get("sport") in SPORTS_ALL else "nba"
+    if sport in ("ten", "ufc", "esp"):          # head-to-head sports: Kalshi lists every match you can bet
+        import matchsports
+        try:
+            pl, _, _ = matchsports.lines(sport, games)
+        except Exception as e:
+            return cors(jsonify({"configured": True, "error": f"Kalshi: {type(e).__name__}: {e}"})), 502
+        posted = {k: True for g in games for k in (g.get("a"), g.get("h")) if k}
+        return cors(jsonify({"configured": True, "source": "Kalshi", "updated": time.strftime("%H:%M"), "players": pl, "posted": posted, "creditsLeft": None}))
     out, errs = None, []
     if sport in ("nba", "nfl", "nhl"):
         try:
@@ -465,7 +490,7 @@ def pal_data(context):
     if k in _PAL and time.time() - _PAL[k][0] < 300:
         return _PAL[k][1]
     out = {"players": [], "games": [], "opp": {}, "why": {}, "net": {}}
-    for sp in ("nba", "nfl", "nhl", "soc"):
+    for sp in ("nba", "nfl", "nhl", "soc", "ten", "ufc", "esp"):
         d = date if sp == sport else ""
         try:
             j = day_data(d) if sp == "nba" else (load_snapshot(d, sp) or (None if HOSTED else build_sport(sp, d)))

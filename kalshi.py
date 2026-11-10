@@ -87,10 +87,36 @@ def url_for(m):
     return f"https://kalshi.com/markets/{ser}/{ev}" if ev else "https://kalshi.com"
 
 
+WIN_SERIES = {"tw": ("KXATPMATCH", "KXWTAMATCH"), "uw": ("KXUFCFIGHT",), "ew": ("KXCS2GAME", "KXLOLGAME", "KXVALORANTGAME")}
+
+
 def match(legs):
     out = []
     for l in legs:
         res = {"found": False}
+        if l.get("ktk"):                                   # moneylines carry their exact Kalshi market
+            try:
+                r = _get(f"/markets/{l['ktk']}", {})
+                m = r.json().get("market") if r.status_code == 200 else None
+            except Exception:
+                m = None
+            if m:
+                ask = _cents(m, "yes")
+                res = {"found": True, "ticker": m.get("ticker"), "url": url_for(m), "yesCents": ask, "american": _american(ask)}
+            out.append(res)
+            continue
+        if l.get("s") in WIN_SERIES and l.get("n"):        # "X wins": the market whose answer is that competitor
+            who = norm(l["n"])
+            for ser in WIN_SERIES[l["s"]]:
+                for m in markets(ser):
+                    if norm(m.get("yes_sub_title") or "") == who:
+                        ask = _cents(m, "yes")
+                        res = {"found": True, "ticker": m.get("ticker"), "url": url_for(m), "yesCents": ask, "american": _american(ask)}
+                        break
+                if res["found"]:
+                    break
+            out.append(res)
+            continue
         ser = SERIES.get(l.get("s"))
         if ser and l.get("n") and l.get("bar"):
             who = norm(l["n"])
