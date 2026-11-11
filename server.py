@@ -650,6 +650,7 @@ def sitemap_xml():
 @app.route("/favicon.png")
 @app.route("/apple-touch-icon.png")
 @app.route("/og.png")
+@app.route("/pp-logo-96.png")
 def site_images():
     name = request.path.lstrip("/")
     resp = send_file(os.path.join(HERE, name))
