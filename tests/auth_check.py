@@ -27,6 +27,9 @@ r = c.post("/api/auth/mascot", json={"mascot": got[0]}); check("equip a rolled P
 locked = [k for k in ("baseball", "chip", "dice", "eight", "goat", "coin", "dad") if k not in u["locker"]["owned"]][0]
 r = c.post("/api/auth/mascot", json={"mascot": locked}); check("can't equip a Pal you don't own", r.status_code == 403)
 r = c.post("/api/auth/profile", json={"name": "Renamed", "email": email, "team": "BOS", "color": "#A78BFA"}); check("profile save", r.status_code == 200 and r.get_json()["user"]["team"] == "BOS")
+r = c.post("/api/auth/parlays", json={"trk": [{"id": 111, "legs": []}], "saved": [{"ts": 222, "name": "Mine", "legs": []}], "gone": []}); j = r.get_json(); check("parlays saved to the account", r.status_code == 200 and [t["id"] for t in j["trk"]] == [111] and j["saved"][0]["name"] == "Mine", j)
+r = c.post("/api/auth/parlays", json={}); check("another device gets them back", [t["id"] for t in r.get_json()["trk"]] == [111], r.get_json())
+r = c.post("/api/auth/parlays", json={"gone": ["t111"]}); check("removing a parlay removes it everywhere", r.get_json()["trk"] == [], r.get_json())
 c.post("/api/auth/logout", json={}); check("signed out", c.get("/api/auth/me").get_json()["user"] is None)
 r = c.post("/api/auth/login", json={"email": email, "password": "wrong password"}); check("wrong password refused", r.status_code == 401)
 r = c.post("/api/auth/login", json={"email": email, "password": "correct horse"}); check("sign in", r.status_code == 200)

@@ -93,6 +93,7 @@ class _Pg:
                 "CREATE TABLE IF NOT EXISTS tokens(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, kind TEXT NOT NULL, expires BIGINT NOT NULL)",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS locker TEXT NOT NULL DEFAULT ''",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS billing TEXT NOT NULL DEFAULT ''",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS parlays TEXT NOT NULL DEFAULT ''",
             ):
                 self.con.cursor().execute(sql)
             self.con.commit()
@@ -141,7 +142,7 @@ def db():
         CREATE TABLE IF NOT EXISTS tokens(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, kind TEXT NOT NULL, expires INTEGER NOT NULL);
     """)
     have = {r["name"] for r in con.execute("PRAGMA table_info(users)")}
-    for col in ("photo", "mascot", "locker", "billing"):
+    for col in ("photo", "mascot", "locker", "billing", "parlays"):
         if col not in have:
             con.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
     return con
@@ -542,6 +543,56 @@ def mascot():
         con.execute("UPDATE users SET mascot=? WHERE id=?", (kind, u["id"]))
         con.commit()
         return jsonify({"user": _public(con.execute("SELECT * FROM users WHERE id=?", (u["id"],)).fetchone())})
+
+
+MAX_PARLAYS_BYTES = 400 * 1024
+
+
+def _merge_parlays(old, new):
+    """Joins one device's parlays with the ones already saved, so every signed-in device sees all of them.
+    trk: submitted (tracked) parlays, keyed by "id". saved: saved slips, keyed by "ts". gone: keys someone removed."""
+    gone = list(dict.fromkeys([str(g) for g in (old.get("gone") or []) + (new.get("gone") or [])]))[-300:]
+    out = {"gone": gone}
+    for name, key, pre, most in (("trk", "id", "t", 40), ("saved", "ts", "s", 40)):
+        seen = {}
+        for src in (old.get(name) or [], new.get(name) or []):          # the newer copy wins, unless the older one is already finished
+            for x in src:
+                if not isinstance(x, dict) or x.get(key) is None:
+                    continue
+                k = str(x[key])
+                if pre + k in gone:
+                    continue
+                if k in seen and seen[k].get("done") and not x.get("done"):
+                    continue
+                seen[k] = x
+        out[name] = sorted(seen.values(), key=lambda x: -float(x.get(key) or 0))[:most]
+    return out
+
+
+@bp.route("/parlays", methods=["POST"])
+def parlays():
+    """Send this device's parlays, get back everyone's (all devices signed in to this account)."""
+    raw = request.get_data() or b""
+    if len(raw) > MAX_PARLAYS_BYTES:
+        return _err("Too many parlays to save at once.", 413)
+    b = _body()
+    new = {k: b.get(k) if isinstance(b.get(k), list) else [] for k in ("trk", "saved", "gone")}
+    with db() as con:
+        u = _current(con)
+        if not u:
+            return _err("Please sign in first.", 401)
+        try:
+            old = json.loads(u["parlays"] or "{}")
+        except (TypeError, ValueError, KeyError, IndexError):
+            old = {}
+        if not isinstance(old, dict):
+            old = {}
+        merged = _merge_parlays(old, new)
+        text = json.dumps(merged, separators=(",", ":"))
+        if len(text) <= MAX_PARLAYS_BYTES:
+            con.execute("UPDATE users SET parlays=? WHERE id=?", (text, u["id"]))
+            con.commit()
+        return jsonify(merged)
 
 
 @bp.route("/password", methods=["POST"])
