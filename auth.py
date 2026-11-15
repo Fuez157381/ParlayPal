@@ -379,6 +379,9 @@ def _json_only():
 def me():
     with db() as con:
         u = _current(con)
+        if u:
+            import pay
+            u = pay.refresh(con, u)
         return jsonify({"user": _public(u) if u else None})
 
 

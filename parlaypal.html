@@ -3719,7 +3719,7 @@ document.addEventListener('submit',function(e){var f=e.target,id=f.id;if(!/^wf(S
   if((id==='wfSignup'||id==='wfReset')&&pw.length<8)return fail('Use at least 8 characters for your password.');
   if(id==='wfLogin'&&!pw)return fail('Please enter your password.');
   btn.disabled=true;
-  var go2=id==='wfSignup'?acPost('signup',{name:n,email:m,password:pw}).then(function(j){acSet(j.user);FORCE='alerts';ACMAIL={kind:'verify',to:j.user.email,emailSent:j.emailSent,mailProblem:j.mailProblem,devLink:j.devLink};WS=7;renderWel()})
+  var go2=id==='wfSignup'?acPost('signup',{name:n,email:m,password:pw}).then(function(j){acSet(j.user);try{localStorage.setItem('pp_pitch_'+j.user.id,'1')}catch(e){}FORCE='alerts';ACMAIL={kind:'verify',to:j.user.email,emailSent:j.emailSent,mailProblem:j.mailProblem,devLink:j.devLink};WS=7;renderWel()})
     :id==='wfLogin'?acPost('login',{email:m,password:pw}).then(function(j){acSet(j.user);closeWel();toast('Welcome back, '+String(j.user.name).split(' ')[0]+'!')})
     :id==='wfForgot'?acPost('forgot',{email:m}).then(function(j){ACMAIL={kind:'reset',to:m,devLink:j.devLink};WS=7;renderWel()})
     :acPost('reset',{token:ACRESET,password:pw}).then(function(j){ACRESET='';acSet(j.user);closeWel();toast('Password updated. You\'re signed in.')});
@@ -3877,8 +3877,11 @@ function payGo(item){
   toast('Opening secure checkout...');
   fetch('/api/pay/checkout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:item})}).then(function(r){return r.json()}).then(function(j){if(j.url)location.href=j.url;else toast(j.error||'Checkout did not open. Try again.')}).catch(function(){toast('Can\'t reach the server. Try again.')})}
 function payPortal(){fetch('/api/pay/portal',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json()}).then(function(j){if(j.url)location.href=j.url;else toast(j.error||'Billing did not open.')}).catch(function(){toast('Can\'t reach the server.')})}
-fetch('/api/pay/config').then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.live){BILLING_LIVE=true;renderAcct()}}).catch(function(){});
-(function(){var pd='';try{pd=new URLSearchParams(location.search).get('paid')||''}catch(e){}if(!pd)return;
+fetch('/api/pay/config').then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.live){BILLING_LIVE=true;renderAcct();palName(S.mascot||'ball');setTimeout(pitchOnce,2500)}}).catch(function(){});
+/* accounts made before the plans existed see the Pro offer once (then Plus, then Free), like new sign-ups do */
+function pitchOnce(){var a=S.acct;if(!a||!needPay()||TON||!$('wel').hidden||$('pmv').classList.contains('open'))return;var k='pp_pitch_'+a.id;try{if(localStorage.getItem(k))return;localStorage.setItem(k,'1')}catch(e){return}openWel(4)}
+(function(){var pd='',cs='';try{var qs=new URLSearchParams(location.search);pd=qs.get('paid')||'';cs=qs.get('cs')||''}catch(e){}if(!pd)return;
+  if(cs)fetch('/api/pay/confirm',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({cs:cs})}).then(function(r){return r.json()}).then(function(j){if(j&&j.user)acSet(j.user)}).catch(function(){});
   try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
   if(pd==='no'){setTimeout(function(){toast('Checkout canceled. Nothing was charged.')},800);return}
   setTimeout(function(){toast(pd==='pro'?'You\'re in! Enjoy Parlay Pal Pro.':pd==='plus'?'You\'re in! Enjoy Parlay Pal Plus.':'Payment done! Your spins are in the locker.');confetti()},900);
