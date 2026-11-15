@@ -1,4 +1,4 @@
-"""Payments with Stripe: Parlay Pal Pro ($9.99 a month) and spin packs.
+"""Payments with Stripe: Parlay Pal Pro ($12.99 a month, unlimited Pal credits), Parlay Pal Plus ($7.99 a month, 30 a day) and spin packs.
 
 Switched on by two Vercel settings (env vars):
   STRIPE_SECRET_KEY      sk_test_... while testing, sk_live_... for real money
@@ -21,11 +21,12 @@ import auth
 bp = Blueprint("pay", __name__)
 API = "https://api.stripe.com/v1"
 
-TRIAL_DAYS = 3        # card goes in up front; Stripe charges $9.99 automatically after 3 days unless canceled
-TRIAL_SPINS = 10      # bonus spins for starting the trial
+TRIAL_DAYS = 0        # no free trial: new accounts are offered Pro, then Plus, then stay Free
+TRIAL_SPINS = 10      # bonus spins for a first subscription
 
 ITEMS = {
-    "pro": {"name": "Parlay Pal Pro", "cents": 999, "monthly": True},
+    "pro": {"name": "Parlay Pal Pro", "cents": 1299, "monthly": True},
+    "plus": {"name": "Parlay Pal Plus", "cents": 799, "monthly": True},
     "spins10": {"name": "10 spins", "cents": 50, "spins": 10},
     "spins25": {"name": "25 spins", "cents": 100, "spins": 25},
 }
@@ -74,6 +75,19 @@ def is_pro(u):
     return b.get("status") in ("active", "trialing") and int(b.get("until", 0)) > time.time() - 3 * 86400
 
 
+RANK = {"free": 0, "plus": 1, "pro": 2}
+
+
+def plan(u):
+    """free, plus or pro. Subscriptions from before Plus existed count as Pro."""
+    if auth._is_owner(u):
+        return "pro"
+    if not is_pro(u):
+        return "free"
+    p = billing(u).get("plan")
+    return p if p in ("plus", "pro") else "pro"
+
+
 def _err(msg, code=400):
     return jsonify({"error": msg}), code
 
@@ -97,8 +111,8 @@ def checkout():
         u = auth._current(con)
         if not u:
             return _err("Please sign in first.", 401)
-        if it.get("monthly") and is_pro(u):
-            return _err("You already have Parlay Pal Pro.", 409)
+        if it.get("monthly") and RANK[plan(u)] >= RANK[item]:
+            return _err(f"You already have {ITEMS[plan(u)]['name']}.", 409)
         b, site = billing(u), _site()
         data = {
             "mode": "subscription" if it.get("monthly") else "payment",
@@ -115,8 +129,9 @@ def checkout():
         if it.get("monthly"):
             data["line_items[0][price_data][recurring][interval]"] = "month"
             data["subscription_data[metadata][uid]"] = str(u["id"])
-            data["payment_method_collection"] = "always"          # card required even though today is $0
-            if not b.get("trialUsed"):                             # one free trial per account
+            data["subscription_data[metadata][item]"] = item
+            data["payment_method_collection"] = "always"
+            if TRIAL_DAYS and not b.get("trialUsed"):              # one free trial per account
                 data["subscription_data[trial_period_days]"] = TRIAL_DAYS
                 data["subscription_data[trial_settings][end_behavior][missing_payment_method]"] = "cancel"
         if b.get("customer"):
@@ -166,6 +181,14 @@ def _verified(payload, header, secret, tolerance=300):
     return any(hmac.compare_digest(want, sig) for sig in parts.get("v1", []))
 
 
+def _stripe_cancel(sub):
+    """Ends an old subscription right away (Plus, after upgrading to Pro). Its unused days become credit on the next bill."""
+    try:
+        requests.delete(f"{API}/subscriptions/{sub}", data={"prorate": "true"}, auth=(_key(), ""), timeout=20)
+    except requests.RequestException:
+        pass
+
+
 def _save(con, uid, fn):
     u = con.execute("SELECT * FROM users WHERE id=?", (int(uid),)).fetchone()
     if not u:
@@ -189,6 +212,7 @@ def webhook():
     uid = meta.get("uid") or obj.get("client_reference_id")
     if not uid or not str(uid).isdigit():
         return jsonify({"ok": True})
+    old = []
     with auth.db() as con:
         if kind == "checkout.session.completed" and obj.get("payment_status") in ("paid", "no_payment_required"):
             item = ITEMS.get(meta.get("item", ""), {})
@@ -203,19 +227,30 @@ def webhook():
                 if item.get("spins"):
                     lk["spins"] = int(lk.get("spins", 0)) + item["spins"]
                 if item.get("monthly"):
-                    first = not b.get("trialUsed")
-                    b["sub"] = obj.get("subscription")
-                    if b.get("status") not in ("active", "trialing"):   # the subscription event may have landed first
-                        b["status"] = "trialing" if first else "active"
-                        b["until"] = int(time.time()) + (TRIAL_DAYS if first else 32) * 86400
-                    if (first or b.get("status") == "trialing") and not b.get("trialSpins"):
+                    first = bool(TRIAL_DAYS) and not b.get("trialUsed")
+                    new = obj.get("subscription")
+                    if b.get("sub") and new and b["sub"] != new and b.get("status") in ("active", "trialing"):
+                        old.append(b["sub"])          # upgrading: the old plan ends once this is saved
+                    b["sub"] = new
+                    b["plan"] = meta.get("item") if meta.get("item") in ("plus", "pro") else "pro"
+                    if first:
+                        b["status"] = "trialing"
+                        b["until"] = int(time.time()) + TRIAL_DAYS * 86400
+                    else:
+                        b["status"] = "active"
+                        b["until"] = max(int(b.get("until", 0)), int(time.time()) + 32 * 86400)
+                    if not b.get("trialSpins"):
                         b["trialSpins"] = True
                         lk["spins"] = int(lk.get("spins", 0)) + TRIAL_SPINS
                     b["trialUsed"] = True
             _save(con, uid, paid)
         elif kind in ("customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"):
             def sub(b, lk):
+                if b.get("sub") and obj.get("id") != b["sub"] and b.get("status") in ("active", "trialing"):
+                    return                         # news about an older plan this person already replaced
                 b["sub"] = obj.get("id")
+                if meta.get("item") in ("plus", "pro"):
+                    b["plan"] = meta["item"]
                 if obj.get("customer"):
                     b["customer"] = obj["customer"]
                 b["status"] = "canceled" if kind.endswith("deleted") else obj.get("status", "")
@@ -226,4 +261,6 @@ def webhook():
                 if obj.get("trial_end"):
                     b["trialUsed"] = True
             _save(con, uid, sub)
+    for sid in old:
+        _stripe_cancel(sid)
     return jsonify({"ok": True})

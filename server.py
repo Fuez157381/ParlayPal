@@ -528,12 +528,28 @@ def day_data(date):
 def api_ask():
     import ask
     import odds
+    import auth
+    import pay
     body = request.get_json(silent=True) or {}
     context = body.get("context") or {}
+    gate = {"ok": True}
+    if ask.configured() and pay.live():        # each smart answer uses one Pal credit, once plans can be bought
+        try:
+            gate = auth.take_credit()
+        except auth.StorageOff:                # accounts aren't set up on this host, so nothing is counted
+            gate = {"ok": True}
+        if not gate["ok"]:
+            return cors(jsonify({"configured": True, "outOfCredits": True, **gate})), 402
     try:
-        return cors(jsonify(ask.ask(body.get("message", ""), body.get("history"), context, lambda: pal_data(context), odds.compare)))
+        out = ask.ask(body.get("message", ""), body.get("history"), context, lambda: pal_data(context), odds.compare)
     except Exception as e:
-        return cors(jsonify({"configured": ask.configured(), "error": f"{type(e).__name__}: {e}"})), 502
+        out = {"configured": ask.configured(), "error": f"{type(e).__name__}: {e}"}
+    failed = bool(out.get("error")) or not out.get("reply")
+    if gate.get("uid") and failed:
+        auth.give_back_credit(gate["uid"])
+    elif gate.get("signedIn"):
+        out["credits"] = {"plan": gate["plan"], "limit": gate["limit"], "left": gate["left"]}
+    return cors(jsonify(out)), (502 if out.get("error") else 200)
 
 
 @app.route("/api/polymarket/probe")

@@ -30,7 +30,27 @@ r = c.post("/api/auth/profile", json={"name": "Renamed", "email": email, "team":
 r = c.post("/api/auth/parlays", json={"trk": [{"id": 111, "legs": []}], "saved": [{"ts": 222, "name": "Mine", "legs": []}], "gone": []}); j = r.get_json(); check("parlays saved to the account", r.status_code == 200 and [t["id"] for t in j["trk"]] == [111] and j["saved"][0]["name"] == "Mine", j)
 r = c.post("/api/auth/parlays", json={}); check("another device gets them back", [t["id"] for t in r.get_json()["trk"]] == [111], r.get_json())
 r = c.post("/api/auth/parlays", json={"gone": ["t111"]}); check("removing a parlay removes it everywhere", r.get_json()["trk"] == [], r.get_json())
+import ask  # noqa: E402  (a stand-in brain, so the credit checks never call a real AI)
+ask.configured = lambda: True
+import pay as _pl  # noqa: E402
+_pl.live = lambda: True   # credits only count once plans can be bought
+ask.ask = lambda *a, **k: {"configured": True, "reply": "hi", "actions": []}
+u = c.get("/api/auth/me").get_json()["user"]; check("new accounts are on Free with 3 credits", u["plan"] == "free" and u["credits"] == {"limit": 3, "left": 3}, u.get("credits"))
+for i in range(3):
+    r = c.post("/api/ask", json={"message": "hi"}); j = r.get_json(); check("smart answer %d uses a credit" % (i + 1), r.status_code == 200 and j["credits"]["left"] == 2 - i, (r.status_code, j))
+r = c.post("/api/ask", json={"message": "hi"}); check("4th smart answer refused on Free", r.status_code == 402 and r.get_json()["outOfCredits"], r.get_json())
+ask.ask = lambda *a, **k: {"configured": True, "error": "busy"}
+import auth as _a, pay as _p  # noqa: E402
+_p.is_pro = lambda u: True
+_orig_billing = _p.billing; _p.billing = lambda u: {"plan": "plus"}
+r = c.post("/api/ask", json={"message": "hi"}); check("a failed answer gives the credit back", r.status_code == 502 and c.get("/api/auth/me").get_json()["user"]["credits"]["left"] == 27, c.get("/api/auth/me").get_json()["user"]["credits"])
+check("Plus is 30 a day", c.get("/api/auth/me").get_json()["user"]["plan"] == "plus")
+_p.billing = lambda u: {"plan": "pro"}
+check("Pro is unlimited", c.get("/api/auth/me").get_json()["user"]["credits"] == {"limit": None, "left": None})
+_p.is_pro = lambda u: False; _p.billing = _orig_billing
 c.post("/api/auth/logout", json={}); check("signed out", c.get("/api/auth/me").get_json()["user"] is None)
+ask.ask = lambda *a, **k: {"configured": True, "reply": "hi", "actions": []}
+r = c.post("/api/ask", json={"message": "hi"}); check("signed-out visitors get no smart answers", r.status_code == 402 and r.get_json()["signedIn"] is False, r.get_json())
 r = c.post("/api/auth/login", json={"email": email, "password": "wrong password"}); check("wrong password refused", r.status_code == 401)
 r = c.post("/api/auth/login", json={"email": email, "password": "correct horse"}); check("sign in", r.status_code == 200)
 r = c.post("/api/auth/password", json={"current": "correct horse", "new": "battery staple"}); check("change password", r.status_code == 200)

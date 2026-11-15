@@ -94,6 +94,7 @@ class _Pg:
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS locker TEXT NOT NULL DEFAULT ''",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS billing TEXT NOT NULL DEFAULT ''",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS parlays TEXT NOT NULL DEFAULT ''",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS usage TEXT NOT NULL DEFAULT ''",
             ):
                 self.con.cursor().execute(sql)
             self.con.commit()
@@ -142,7 +143,7 @@ def db():
         CREATE TABLE IF NOT EXISTS tokens(token TEXT PRIMARY KEY, uid INTEGER NOT NULL, kind TEXT NOT NULL, expires INTEGER NOT NULL);
     """)
     have = {r["name"] for r in con.execute("PRAGMA table_info(users)")}
-    for col in ("photo", "mascot", "locker", "billing", "parlays"):
+    for col in ("photo", "mascot", "locker", "billing", "parlays", "usage"):
         if col not in have:
             con.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
     return con
@@ -255,6 +256,53 @@ def _locker(u):
     return lk
 
 
+# ---------- Pal credits: one credit is one smart (AI) answer from Pal; they refill every day ----------
+CREDIT_LIMITS = {"free": 3, "plus": 30, "pro": None}      # None means unlimited
+
+
+def _used_today(u):
+    try:
+        x = json.loads(u["usage"] or "{}")
+    except (TypeError, ValueError, KeyError, IndexError):
+        x = {}
+    if not isinstance(x, dict) or x.get("day") != _today():
+        return 0
+    return int(x.get("n", 0))
+
+
+def credits(u):
+    import pay
+    p = pay.plan(u)
+    most = CREDIT_LIMITS.get(p, 0)
+    return {"limit": most, "left": None if most is None else max(0, most - _used_today(u))}
+
+
+def take_credit():
+    """Uses one of the signed-in person's credits. Returns {"ok": bool, "plan", "limit", "left", "signedIn"}."""
+    import pay
+    with db() as con:
+        u = _current(con)
+        if not u:
+            return {"ok": False, "signedIn": False, "plan": "guest", "limit": 0, "left": 0}
+        c, p = credits(u), pay.plan(u)
+        if c["left"] == 0:
+            return {"ok": False, "signedIn": True, "plan": p, **c}
+        n = _used_today(u) + 1
+        con.execute("UPDATE users SET usage=? WHERE id=?", (json.dumps({"day": _today(), "n": n}), u["id"]))
+        con.commit()
+        left = None if c["left"] is None else c["left"] - 1
+        return {"ok": True, "signedIn": True, "plan": p, "limit": c["limit"], "left": left, "uid": u["id"]}
+
+
+def give_back_credit(uid):
+    """The smart answer failed, so the credit it used comes back."""
+    with db() as con:
+        u = con.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+        if u and _used_today(u) > 0:
+            con.execute("UPDATE users SET usage=? WHERE id=?", (json.dumps({"day": _today(), "n": _used_today(u) - 1}), uid))
+            con.commit()
+
+
 def _is_owner(u):
     """Emails listed in the OWNER_EMAILS setting (comma separated, kept in Vercel, not in the code)."""
     owners = {e.strip().lower() for e in os.environ.get("OWNER_EMAILS", "").split(",") if e.strip()}
@@ -268,6 +316,7 @@ def _public(u):
     import pay
     b = pay.billing(u)
     return {"id": u["id"], "name": u["name"], "email": u["email"], "verified": bool(u["verified"]), "start": u["start"], "team": u["team"], "color": u["color"], "photo": u["photo"], "mascot": u["mascot"], "locker": _locker(u),
+            "plan": pay.plan(u), "credits": credits(u),
             "pro": pay.is_pro(u) or _is_owner(u), "proUntil": int(b.get("until", 0)), "proEnding": bool(b.get("cancelAtEnd")), "hasBilling": bool(b.get("customer")),
             "trial": b.get("status") == "trialing", "trialUsed": bool(b.get("trialUsed")), "owner": _is_owner(u)}
 

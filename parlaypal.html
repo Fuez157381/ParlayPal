@@ -1850,6 +1850,10 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
   /* tracked parlays */
   .xtw .av{width:32px;height:32px}
 }
+.tiers{display:grid;gap:6px;margin:14px 0 12px}.tiers>div{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;font-size:14px}
+.tiers span{color:var(--mu);font-weight:600}.tiers b{font-weight:600}.tiers em{font-style:normal;color:var(--mu);font-variant-numeric:tabular-nums}
+.tiers .on{border-color:var(--pal);background:var(--pal-l)}.tiers .on span,.tiers .on em{color:var(--ink)}
+.msg .msgb{display:block;margin-top:10px}
 </style>
 <script>/* iPhone Safari does not redraw <use href="#palhead"> when the Pal changes, so every Pal icon gets the picture directly */
 window.PHU='';window.phImg=function(){return window.PHU?'<image class="phi" href="'+window.PHU+'" width="64" height="64"/>':'<use href="#palhead"/>'};
@@ -2268,7 +2272,7 @@ function renderProps(){var el=$('props');if(LOADING&&el.querySelector('.prop')){
     for(var i=0;i<pages;i++){if(pages>7&&i!==0&&i!==pages-1&&Math.abs(i-F.pg)>1){if(i===1||i===pages-2)pn+='<em>…</em>';continue}pn+='<button class="pn" data-act="pgo" data-p="'+i+'"'+(i===F.pg?' aria-current="page"':'')+'>'+(i+1)+'</button>'}
     pn+='</span><button data-act="pgo" data-p="'+(F.pg+1)+'"'+(F.pg===pages-1?' disabled':'')+'>Next &rarr;</button></nav><p class="pinfo">Page '+(F.pg+1)+' of '+pages+' · picks '+(F.pg*PER+1)+' to '+(F.pg*PER+shown.length)+' of '+all.length+', best first, riskier further down.</p>'}
   mvSet(el,outNote()+'<div class="pgrid">'+shown.map(propRow).join('')+'</div>'+pn)}
-function renderChat(){var c=$('chat');c.innerHTML=CHAT.slice(-8).map(function(m){return'<div class="msg '+m.r+(m.th?' th':'')+'">'+(m.th?'<span class="dots"><i></i><i></i><i></i></span>':'')+esc(m.t)+'</div>'}).join('');c.scrollTop=c.scrollHeight}
+function renderChat(){var c=$('chat');c.innerHTML=CHAT.slice(-8).map(function(m){return'<div class="msg '+m.r+(m.th?' th':'')+'">'+(m.th?'<span class="dots"><i></i><i></i><i></i></span>':'')+esc(m.t)+(m.btn?'<button class="btn mini msgb" type="button" data-act="'+m.btn.a+'">'+esc(m.btn.l)+'</button>':'')+'</div>'}).join('');c.scrollTop=c.scrollHeight}
 
 function legHtml(c,i){var a=analyze(c),L=ladOf(c);
   return'<div class="leg"><div class="lt"><div class="who">'+av(c.n,c.id,'sm')+'<div><button class="nm" data-act="player" data-id="'+c.id+'">'+esc(c.n)+'</button><small>'+sub(c)+'</small></div></div>'+
@@ -2325,7 +2329,7 @@ function renderSlip(){var el=$('slip'),r=rate(S.cart),n=S.cart.length,open=el.cl
       booksHtml()+
       '<div class="pacts"><button class="pab" type="button" data-act="savep"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Save this parlay</button><button class="pab pclr" type="button" data-act="clear"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Clear parlay</button></div></div></div>'}
   if((S.saved||[]).length){h+='<div class="sv"><h3>Saved parlays</h3>'+S.saved.map(function(x,i){return'<div class="it"><b>'+esc(x.name)+'</b><span>'+x.legs.length+' legs</span><button data-act="loadp" data-i="'+i+'">Open</button><button data-act="dupp" data-i="'+i+'">Duplicate</button><button data-act="renp" data-i="'+i+'">Rename</button><button data-act="delp" data-i="'+i+'">Delete</button></div>'}).join('')+'</div>'}
-  if(!S.acct&&n>=2&&!TDEMO){if(!S.gUsed){S.gUsed=true;save()}h+='<div class="nudge">That was your free parlay. Make a free account for more, with 3 days of full access.<button class="btn" data-act="acct">Make a free account</button></div>'}
+  if(!S.acct&&n>=2&&!TDEMO){if(!S.gUsed){S.gUsed=true;save()}h+='<div class="nudge">That was your free parlay. Make a free account to keep building.<button class="btn" data-act="acct">Make a free account</button></div>'}
   var lg0=el.querySelectorAll('.leg').length;mvSet(el,h);if(open)el.classList.add('open');el.classList.toggle('wide',n>0);if(!mvOff()&&!TON)Array.prototype.slice.call(el.querySelectorAll('.leg'),lg0).forEach(function(c){c.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],{duration:340,easing:'cubic-bezier(.22,1,.36,1)'})});if(TDEMO!==true)oddsKick();
   var fc=$('fcn');if(fc){fc.textContent=n;fc.hidden=!n}var hc=$('hcn');if(hc){hc.textContent=n;hc.hidden=!n}
   var nbEl=$('nb');if(nbEl){nbEl.textContent=n;nbEl.hidden=!n}
@@ -2471,7 +2475,12 @@ function detectDay(s){
   var wd=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
   for(var i=0;i<wd.length;i++){if(new RegExp('\\b'+wd[i]+'\\b').test(s)){var ds=dayList().filter(function(d){return wd[new Date(d+'T12:00:00').getDay()]===wd[i]});if(ds.length)return{d:ds[0],w:new RegExp('\\b'+wd[i]+'\\b')}}}
   return null}
-function say(t,r){CHAT.push({r:r||'a',t:t});renderChat()}
+function say(t,r,btn){CHAT.push({r:r||'a',t:t,btn:btn||null});renderChat()}
+/* Pal credits: one smart answer = one credit. Free 3 a day, Plus 30 a day, Pro unlimited */
+function credText(){var a=S.acct,c=a&&a.credits;if(!a||!c||!BILLING_LIVE)return'';if(c.left==null||c.limit==null)return'Unlimited smart answers';return c.left+(c.left===1?' smart answer':' smart answers')+' left today'}
+function palNoCredits(j){if(!j.signedIn){say('That was my basic brain. Make a free account and I can give you 3 smart answers every day.','a',{a:'acct',l:'Create free account'});return}
+  if(j.plan==='plus')say('You used all '+j.limit+' smart answers for today, so that was my basic brain. They refill tomorrow, or go Pro for unlimited.','a',{a:'paywall',l:'See Pro'});
+  else say('You used your '+(j.limit||3)+' free smart answers for today, so that was my basic brain. Plus gets you 30 a day, Pro is unlimited.','a',{a:'paywall',l:'See plans'})}
 function legDepth(){return S.cart.map(function(c,i){var a=analyze(c);return (i+1)+'. '+legName(c)+' vs '+tname(c.opp)+': cleared '+a.hits+' of '+a.n+' games, averages '+a.avg.toFixed(1)+' (range '+Math.min.apply(null,c.v)+' to '+Math.max.apply(null,c.v)+'), about '+Math.round(a.p*100)+'% to hit, '+a.risk.toLowerCase()+' risk.'}).join('\n')}
 function ratingText(){var r=rate(S.cart);if(!r)return'Your slip is empty. Ask me to build a parlay, or tap Add on a prop.';
   return'Your '+r.n+(r.n===1?' leg':' legs')+' scores '+r.score+' out of 100 ('+r.label+'). That is about a '+r.score+'% chance every leg hits, with a low-end estimate of '+r.low+'%.\nWeakest leg: '+legName(r.ws.c)+'. '+weakWhy(r.ws)+'\n\nLeg by leg:\n'+legDepth()}
@@ -2855,6 +2864,8 @@ function aiAsk(t){t=(t||'').trim();if(!t)return;if(blocked())return;
    .then(function(r){return r.json().then(function(j){return{j:j,ok:r.ok}})})
    .then(function(x){
      if(x.j&&x.j.configured===false){PAL.llm='off';done(function(){palLocal(t)});return}
+     if(x.j&&x.j.outOfCredits){if(S.acct){S.acct.credits={limit:x.j.limit,left:0};palName(S.mascot||'ball')}done(function(){palLocal(t);palNoCredits(x.j)});return}
+     if(x.j&&x.j.credits&&S.acct){S.acct.credits={limit:x.j.credits.limit,left:x.j.credits.left};S.acct.plan=x.j.credits.plan||S.acct.plan;palName(S.mascot||'ball')}
      if(!x.ok||x.j.error||!x.j.reply){var why=(x.j&&x.j.error)||'no answer';done(function(){if(!PAL.warned){PAL.warned=true;say('My smart brain did not answer ('+why+'), so I am using my basic rules for now.')}palLocal(t)});return}
      PAL.llm='on';done(function(){say(palApply(x.j))})})
    .catch(function(){PAL.llm='off';done(function(){palLocal(t)})})}
@@ -2877,7 +2888,7 @@ function proPreview(){var pk=[];try{pk=topPicks(4)}catch(e){}if(pk.length<2)retu
   var gm=(G||[]).slice(0,3).map(function(g){return'<div class="pvg">'+matchup(g)+'</div>'}).join('');
   return'<div class="provw" aria-hidden="true"><div class="pvgrid"><div class="pvcol">'+cards+'</div><div class="pvcol"><div class="pvs"><div class="ring" style="width:84px;height:84px">'+ringSvg(r.score,r.tone,84)+'<div class="n" style="font-size:26px"><div>'+r.score+'</div></div></div><b>'+esc(r.label)+'</b><span>Parlay score</span></div>'+gm+'</div></div></div>'}
 function trialLeft(){var a=S.acct;if(!a||!a.trial||!a.proUntil)return 0;return Math.max(0,Math.ceil((a.proUntil*1000-Date.now())/864e5))}
-function needPay(){var a=S.acct;return!!(a&&BILLING_LIVE&&!a.pro&&!a.owner)}
+function needPay(){var a=S.acct;return!!(a&&BILLING_LIVE&&(a.plan||'free')==='free'&&!a.owner)}
 function renderAcct(){var b=$('acctChip');if(!b)return;b.hidden=false;
   if(S.acct){b.className='chipbtn tr';b.setAttribute('aria-haspopup','menu');b.setAttribute('aria-expanded','false');b.setAttribute('aria-label','Account menu for '+S.acct.name);b.innerHTML=acAvatar(S.acct)+'<span class="acn">'+esc(String(S.acct.name).split(' ')[0])+'</span><svg class="accar" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'}
   else{b.className='chipbtn';b.removeAttribute('aria-haspopup');b.removeAttribute('aria-expanded');b.removeAttribute('aria-label');b.textContent='Sign up'}
@@ -2892,7 +2903,7 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   else if(WS===1){h='<h2>Add props. Get a <span>parlay score.</span></h2><p class="wp">Tap Add on the props you like. You get a score out of 100 and the weakest leg.</p><div class="phoneBox" id="phone" hidden></div><div class="stack"><button class="btn big wht" data-act="welnext">Next</button></div>'+dots()}
   else if(WS===2){h='<h2>Let\'s <span>get started.</span></h2><p class="wp">Free to try. No card needed.</p><div class="stack"><button class="btn big" data-act="welnext">Get started</button></div>'+dots()}
   else if(WS===3){sk.hidden=!WGATE;sk.textContent='Not now';sk.dataset.act='welclose';
-    h='<h2>'+(WWHY==='nudge'?'Nice pick. <span>Save it.</span>':WGATE?'Make an account <span>to keep going.</span>':'Create your <span>free account.</span>')+'</h2><p class="wp">'+(WWHY==='nudge'?'Make a free account so your parlay, your Pals and your spins are saved. You also get 3 days of full access and 3 free spins every day.':WWHY==='legs'?'Guests can add up to '+GMAX+' legs. Make a free account to keep building. It takes 10 seconds and gets you 3 days of full access.':WGATE?'You used your free parlay. An account gets you 3 days of full access.':'Get 3 days of full access, free, plus 3 free spins every day.')+'</p>'+
+    h='<h2>'+(WWHY==='nudge'?'Nice pick. <span>Save it.</span>':WGATE?'Make an account <span>to keep going.</span>':'Create your <span>free account.</span>')+'</h2><p class="wp">'+(WWHY==='nudge'?'Make a free account so your parlay, your Pals and your spins are saved. You also get 3 smart answers from Pal and 3 free spins every day.':WWHY==='legs'?'Guests can add up to '+GMAX+' legs. Make a free account to keep building. It takes 10 seconds.':WGATE?'You used your free parlay. Make a free account to keep building.':'Free. Get 3 smart answers from Pal and 3 free spins every day.')+'</p>'+
     '<form class="frm" id="wfSignup" novalidate><label>Name<input id="acN" type="text" autocomplete="name" placeholder="Your name"></label><label>Email<input id="acE" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="acP" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label><p class="err" id="wfErr" role="alert"></p><button class="btn big" type="submit">Create account</button></form>'+
     '<p class="wsw">Already have an account? <button class="lnk" type="button" data-act="acsignin">Sign in</button></p>'+
     (WGATE?'':'<div class="or">or</div><div class="stack"><button class="btn big ghost" data-act="guest">Continue as guest</button></div>')+
@@ -2904,20 +2915,25 @@ function renderWel(){var el=$('welBody'),h='',sk=$('welSkip');
   else if(WS===7){sk.hidden=true;h=acMailScreen()}
   else if(WS===8){sk.textContent='Not now';sk.dataset.act='welclose';
     h='<h2>Choose a new <span>password.</span></h2><p class="wp">You\'ll be signed in right after.</p><form class="frm" id="wfReset" novalidate><label>New password<input id="acP" type="password" autocomplete="new-password" placeholder="At least 8 characters"></label><p class="err" id="wfErr" role="alert"></p><button class="btn big" type="submit">Save new password</button></form>'}
-  else{var a=S.acct,used=!!(a&&a.trialUsed),end=new Date(Date.now()+TRIAL_DAYS*864e5).toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    sk.hidden=!(a&&a.pro);sk.textContent='Close';sk.dataset.act='welclose';
-    var cta=!a?'<button class="btn big wht" data-act="acct">Start your 3-day free trial</button>':a.pro?'<button class="btn big wht" data-act="welclose">You have Pro. Back to the app</button>':
-      (!BILLING_LIVE?'<button class="btn big wht" data-act="welclose">Back to the app</button>':used?'<button class="btn big wht" data-act="paypro">Subscribe for $9.99/month</button>':'<button class="btn big wht" data-act="paypro">Start my free trial</button>');
-    h='<h2>'+(a&&a.pro?'Parlay Pal <span>Pro</span>':used?'Your trial <span>is over.</span>':'Try Pro <span>free for 3 days.</span>')+'</h2><p class="prosub">'+(used&&!(a&&a.pro)?'Subscribe to keep building parlays':'Unlock the full read')+'</p>'+proPreview()+
-    '<ul class="perks"><li>Unlimited parlays</li><li>Parlay Pal chat, every day</li><li>Every day\'s games and props</li>'+(used?'':'<li>+10 free spins in the locker</li>')+'</ul>'+
-    '<div class="plan" role="radio" aria-checked="true"><div class="plt"><b>Monthly</b><span class="chk" aria-hidden="true">&#10003;</span></div><div class="plp">'+(used?'$9.99<small>/mo</small>':'$0 <small>today</small>')+'</div><p>'+(used?'Billed monthly. Cancel anytime.':'Then $9.99/month, starting '+end+'.')+'</p></div>'+
-    '<p class="nopay">'+(!BILLING_LIVE?'Payments aren\'t switched on yet, so nothing will be charged.':used?'Cancel anytime from your account menu.':'Card required. Cancel anytime before '+end+' and you won\'t be charged.')+'</p>'+
-    (a&&a.trial?'<p class="wp">'+trialLeft()+' day'+(trialLeft()===1?'':'s')+' left in your free trial.</p>':'')+
-    '<div class="stack">'+cta+(a&&!a.pro&&BILLING_LIVE?'<button class="lnk" data-act="apout">Sign out</button>':(!a?'<button class="lnk" data-act="welclose">Not now</button>':''))+'</div>'}
+  else if(WS===9){var a=S.acct;sk.hidden=true;
+    h='<h2>Not ready for Pro? <span>Try Plus.</span></h2><p class="prosub">More smart answers from Pal, for less.</p>'+
+    '<div class="tiers" role="table" aria-label="Plans"><div role="row"><span role="cell">Free</span><b role="cell">3 smart answers a day</b><em role="cell">$0</em></div><div role="row" class="on"><span role="cell">Plus</span><b role="cell">30 smart answers a day</b><em role="cell">$7.99/mo</em></div><div role="row"><span role="cell">Pro</span><b role="cell">Unlimited</b><em role="cell">$12.99/mo</em></div></div>'+
+    '<div class="plan" role="radio" aria-checked="true"><div class="plt"><b>Plus, monthly</b><span class="chk" aria-hidden="true">&#10003;</span></div><div class="plp">$7.99<small>/mo</small></div><p>Billed monthly. Cancel anytime.</p></div>'+
+    '<p class="nopay">'+(!BILLING_LIVE?'Payments aren\'t switched on yet, so nothing will be charged.':'Stripe\'s secure checkout takes your card. Cancel anytime from your account menu.')+'</p>'+
+    '<div class="stack"><button class="btn big wht" data-act="payplus">Get Plus for $7.99/month</button><button class="lnk" data-act="freego">No thanks, stay on Free</button></div>'}
+  else{var a=S.acct,pl=a?(a.plan||'free'):'',up=pl==='plus';
+    sk.hidden=!(pl==='pro'||!a);sk.textContent='Close';sk.dataset.act='welclose';
+    var cta=!a?'<button class="btn big wht" data-act="acct">Create a free account</button>':pl==='pro'?'<button class="btn big wht" data-act="welclose">You have Pro. Back to the app</button>':
+      '<button class="btn big wht" data-act="paypro">'+(up?'Upgrade to Pro for $12.99/month':'Get Pro for $12.99/month')+'</button><button class="lnk" data-act="'+(up?'welclose':'wstep')+'" data-s="9">'+(up?'Not now':'No thanks')+'</button>';
+    h='<h2>'+(pl==='pro'?'Parlay Pal <span>Pro</span>':up?'Upgrade to <span>Pro.</span>':'Go <span>Pro.</span>')+'</h2><p class="prosub">Unlimited smart answers from Pal, every sport, every day.</p>'+proPreview()+
+    '<ul class="perks"><li>Unlimited smart answers from Pal</li><li>Pal builds and rates parlays for you</li><li>Every sport and every day\'s props</li>'+(a&&!a.hasBilling?'<li>+10 bonus spins in the locker</li>':'')+'</ul>'+
+    '<div class="plan" role="radio" aria-checked="true"><div class="plt"><b>Pro, monthly</b><span class="chk" aria-hidden="true">&#10003;</span></div><div class="plp">$12.99<small>/mo</small></div><p>Billed monthly. Cancel anytime.</p></div>'+
+    '<p class="nopay">'+(!BILLING_LIVE?'Payments aren\'t switched on yet, so nothing will be charged.':up?'Your Plus plan ends when Pro starts, and its unused days come off your bill.':'Stripe\'s secure checkout takes your card. Cancel anytime from your account menu.')+'</p>'+
+    '<div class="stack">'+cta+'</div>'}
   el.innerHTML=h;if(WS===1)renderPhone()}
 var GMAX=3;   /* guests can hold this many legs; the next one needs a free account */
 function blocked(add){
-  if(S.acct){if(needPay()){openWel(4);return true}return false}
+  if(S.acct)return false;
   if(ACCT_OFF)return false;
   if(add&&S.cart.length>=GMAX){WWHY='legs';openWel(3,true);return true}
   if(S.gUsed&&(!add||S.cart.length===0)){WWHY='';openWel(3,true);return true}
@@ -3447,6 +3463,8 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-act]
   else if(a==='lkrevx'){var rv=document.querySelector('.lkrev');if(rv)rv.remove();if(lkState().spins>0&&/again/i.test(b.textContent))lkSpin()}
   else if(a==='paybuy')payGo(d.item);
   else if(a==='paypro')payGo('pro');
+  else if(a==='payplus')payGo('plus');
+  else if(a==='freego'){closeWel();toast('You\u2019re on Free: 3 smart answers from Pal a day. Upgrade anytime from your account menu.')}
   else if(a==='paywall')openWel(4);
   else if(a.slice(0,2)==='so'&&soAct(a,d,b)){}
   else if(a==='fbarx'){try{localStorage.setItem('pp_fbar',String(Date.now()))}catch(e){}fbarShow()}
@@ -3631,7 +3649,8 @@ setTimeout(lkDot,0);
 var ACOL=['#FB8A2E','#22C55E','#38BDF8','#F43F5E','#A78BFA','#FBBF24'],APT='profile',APDEL=false,APCOL=null;
 function acIni(a){return esc(String(a&&a.name||'?').trim().charAt(0).toUpperCase()||'?')}
 function acAvatar(a,c){if(a&&a.photo)return'<i class="acav ph'+(c?' '+c:'')+'" aria-hidden="true"><img src="'+esc(a.photo)+'" alt=""></i>';var col=APCOL&&c==='lg'?APCOL:(a&&a.color)||'';return'<i class="acav'+(c?' '+c:'')+'" aria-hidden="true"'+(col?' style="background:'+esc(col)+';color:#14100A"':'')+'>'+acIni(a)+'</i>'}
-function acPlan(){var a=S.acct;if(a&&a.owner)return'Owner: everything unlocked';if(a&&a.pro&&a.trial){var d=trialLeft();return'Free trial: '+d+(d===1?' day':' days')+' left'+(a.proEnding?', won\'t renew':', then $9.99/mo')}if(a&&a.pro)return'Parlay Pal Pro'+(a.proEnding&&a.proUntil?', ends '+new Date(a.proUntil*1000).toLocaleDateString():', renews monthly');return BILLING_LIVE?'No plan yet. Start your free trial.':'Free plan'}
+function acPlan(){var a=S.acct;if(a&&a.owner)return'Owner: everything unlocked';var pl=a&&a.plan||'free',cr=credText(),end=a&&a.proEnding&&a.proUntil?', ends '+new Date(a.proUntil*1000).toLocaleDateString():', renews monthly';
+  if(pl==='pro')return'Parlay Pal Pro, unlimited smart answers'+end;if(pl==='plus')return'Parlay Pal Plus, $7.99/mo'+end+(cr?'. '+cr:'');return'Free'+(cr?'. '+cr:'')}
 function acMenuClose(){var m=$('amenu');if(m.hidden)return;m.hidden=true;$('acctChip').setAttribute('aria-expanded','false')}
 function acMenu(){var m=$('amenu'),b=$('acctChip');if(!m.hidden){acMenuClose();return}ntClose();var a=S.acct,r=b.getBoundingClientRect();
   m.innerHTML='<div class="amh">'+acAvatar(a)+'<div><b>'+esc(a.name)+'</b><span>'+esc(a.email)+'</span></div></div><p class="amp">'+acPlan()+'</p>'+
@@ -3646,7 +3665,7 @@ function acProfile(){var a=S.acct;if(!a)return acMascot()+'<div class="apempty">
     '<label class="apf">Email<input id="apE" type="email" autocomplete="email" maxlength="120" value="'+esc(a.email)+'"></label>'+
     '<label class="apf">Favorite team<select id="apT"><option value="">None</option>'+teams.map(function(t){return'<option value="'+t.t+'"'+(a.team===t.t?' selected':'')+'>'+esc(t.n)+'</option>'}).join('')+'</select><small>Their game shows first in Today\'s Matchups.</small></label>'+
     '<p class="err" id="apErr" role="alert"></p><button class="btn" type="submit">Save changes</button></form>'+
-    '<div class="aprow"><div><b>Plan</b><span>'+acPlan()+(BILLING_LIVE?'':'. Nothing is charged right now.')+'</span></div>'+(BILLING_LIVE?(a.hasBilling?'<button class="apb" type="button" data-act="payportal">Manage</button>':(a.pro?'':'<button class="apb" type="button" data-act="paypro">Get Pro</button>')):'')+'</div>'+
+    '<div class="aprow"><div><b>Plan</b><span>'+acPlan()+(BILLING_LIVE?'':'. Nothing is charged right now.')+'</span></div>'+(BILLING_LIVE?((a.plan||'free')!=='pro'?'<button class="apb" type="button" data-act="paywall">'+((a.plan||'free')==='plus'?'Upgrade':'See plans')+'</button>':'')+(a.hasBilling?'<button class="apb" type="button" data-act="payportal">Manage</button>':''):'')+'</div>'+
     '<div class="aprow"><div><b>Email status</b><span>'+(a.verified?'Verified':'Not verified yet')+'</span></div>'+(a.verified?'':'<button class="apb" type="button" data-act="acresend">Resend</button>')+'</div>'+
     '<form class="apsub" id="apPwForm" novalidate><b>Change password</b><input id="apPwC" type="password" autocomplete="current-password" placeholder="Current password" aria-label="Current password"><input id="apPwN" type="password" autocomplete="new-password" placeholder="New password, at least 8 characters" aria-label="New password"><p class="err" id="apPwErr" role="alert"></p><button class="apb" type="submit">Update password</button></form>'+
     '<div class="aprow"><div><b>Sign out</b><span>Your parlays stay on this device.</span></div><button class="apb" type="button" data-act="apout">Sign out</button></div>'+
@@ -3677,7 +3696,7 @@ document.addEventListener('input',function(e){if(e.target.id!=='apHue')return;va
 function acHueMark(h){Array.prototype.forEach.call(document.querySelectorAll('.apswatch button'),function(b){b.setAttribute('aria-checked',String(+b.dataset.h===h))});var r=$('apReset');if(r)r.hidden=h===27;var v=$('apHue');if(v&&document.activeElement!==v&&+v.value!==h)v.value=h}
 function acRefresh(){lkDot();save();renderAcct();renderHome();renderSlip()}
 function acPost(path,body){return fetch('/api/auth/'+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||'That didn\'t work. Please try again.');return j})},function(){throw new Error('Can\'t reach the server. Check your connection and try again.')})}
-function acSet(u){S.acct=u?{id:u.id,name:u.name,email:u.email,start:u.start,verified:u.verified,team:u.team,color:u.color,photo:u.photo||'',mascot:u.mascot||'',locker:u.locker||null,pro:!!u.pro,proUntil:u.proUntil||0,proEnding:!!u.proEnding,hasBilling:!!u.hasBilling,trial:!!u.trial,trialUsed:!!u.trialUsed,owner:!!u.owner}:null;if(u&&u.mascot)msSet(u.mascot,true);if(u){S.wel=true;S.guest=false}acRefresh();if(u)setTimeout(function(){syncNow(true)},300)}
+function acSet(u){S.acct=u?{id:u.id,name:u.name,email:u.email,start:u.start,verified:u.verified,team:u.team,color:u.color,photo:u.photo||'',mascot:u.mascot||'',locker:u.locker||null,pro:!!u.pro,proUntil:u.proUntil||0,proEnding:!!u.proEnding,hasBilling:!!u.hasBilling,trial:!!u.trial,trialUsed:!!u.trialUsed,owner:!!u.owner,plan:u.plan||'free',credits:u.credits||null}:null;if(u&&u.mascot)msSet(u.mascot,true);if(u){S.wel=true;S.guest=false}acRefresh();palName(S.mascot||'ball');if(u)setTimeout(function(){syncNow(true)},300)}
 var ACMAIL={};
 function acMailScreen(){var m=ACMAIL,a=S.acct,sent=m.emailSent,to=m.to||(a&&a.email)||'',reset=m.kind==='reset';
   var body=reset?'<p class="wp">If there\'s an account for <b>'+esc(to)+'</b>, a reset link is on its way. It works for 1 hour.</p>':sent?'<p class="wp">We sent a verification link to <b>'+esc(to)+'</b>. Open it to confirm your account.</p>':'<p class="wp">Your account is ready, but we couldn\'t send the verification email to <b>'+esc(to)+'</b>'+(m.mailProblem==='not_configured'?' because email isn\'t set up on this site yet.':'. Please try again.')+'</p>';
@@ -3839,7 +3858,7 @@ var PAL_OLDPC={baseball:'#DC4850',chip:'#22B05F',dice:'#9A6234',eight:'#66DE50',
 function palThemeFix(){try{var k=S.mascot,p=PALS[k];if(!p||!p.pc)return;var th=window.ppTheme();if(th.pk===k&&th.pc===p.pc)return;if(th.pk===k&&th.pc&&th.pc===PAL_OLDPC[k]){window.ppTheme({hue:p.hue,pc:p.pc,pk:k});return}if(th.pk||th.pc)return;if(th.hue===PAL_OLDHUE[k]||th.hue===p.hue)window.ppTheme({hue:p.hue,pc:p.pc,pk:k})}catch(e){}}
 function msBuild(){var a=$('pal'),b=$('msLogo');[MSP,MSL].forEach(function(m){if(m){m.dead=true;m.el.remove()}});MSALL=[];MSP=msMake(a,PW,PH);MSL=msMake(b,36,42);msStatics();palHeadSync();palThemeFix()}
 function palHeadSync(){var k=S.mascot||'ball';palImg(k,function(u){if((S.mascot||'ball')!==k)return;var e=document.getElementById('palheadImg');if(e&&u)e.setAttribute('href',u);phSet(u)});palName(k)}
-function palName(k){var p=PALS[k]||PALS.ball,n=p&&p.n,a=$('pphN'),b=$('pphS');if(!a)return;a.textContent=n?'Ask '+n:'Parlay Pal';b.textContent=n?'Your Parlay Pal':'Ask me about your parlay';PP.setAttribute('aria-label',(n?n+', your ':'')+'Parlay Pal chat')}
+function palName(k){var p=PALS[k]||PALS.ball,n=p&&p.n,a=$('pphN'),b=$('pphS');if(!a)return;a.textContent=n?'Ask '+n:'Parlay Pal';var cr=credText();b.textContent=cr||(n?'Your Parlay Pal':'Ask me about your parlay');$('palp').setAttribute('aria-label',(n?n+', your ':'')+'Parlay Pal chat')}
 function msSet(k,quiet){k=PALS[k]?k:'ball';if(S.mascot===k||(!S.mascot&&k==='ball'))return;S.mascot=k;save();msBuild();if(!quiet&&MSP)setTimeout(function(){MSP.greet();if(MSP.flick)MSP.flick()},60)}
 msBuild();
 $('msLogo').parentNode.addEventListener('pointerenter',function(){if(!mvOff()){MSL.f('happy',1200);MSL.tip()}});
@@ -3853,7 +3872,7 @@ PAL.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse'&&!PAL
 
 /* ---------- payments (Stripe's own checkout page takes the card) ---------- */
 function payGo(item){
-  if(!BILLING_LIVE){toast(item==='pro'?'Pro payments switch on soon. Nothing is charged yet.':'Spin packs switch on soon. Nothing is charged yet.');return}
+  if(!BILLING_LIVE){toast(item==='pro'||item==='plus'?'Plans switch on soon. Nothing is charged yet.':'Spin packs switch on soon. Nothing is charged yet.');return}
   if(!S.acct){lkClose();closeWel();WWHY='';openWel(3,false);toast('Make a free account first, so your purchase is saved.');return}
   toast('Opening secure checkout...');
   fetch('/api/pay/checkout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:item})}).then(function(r){return r.json()}).then(function(j){if(j.url)location.href=j.url;else toast(j.error||'Checkout did not open. Try again.')}).catch(function(){toast('Can\'t reach the server. Try again.')})}
@@ -3862,7 +3881,7 @@ fetch('/api/pay/config').then(function(r){return r.ok?r.json():null}).then(funct
 (function(){var pd='';try{pd=new URLSearchParams(location.search).get('paid')||''}catch(e){}if(!pd)return;
   try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
   if(pd==='no'){setTimeout(function(){toast('Checkout canceled. Nothing was charged.')},800);return}
-  setTimeout(function(){toast(pd==='pro'?'You\'re in! Enjoy Parlay Pal Pro.':'Payment done! Your spins are in the locker.');confetti()},900);
+  setTimeout(function(){toast(pd==='pro'?'You\'re in! Enjoy Parlay Pal Pro.':pd==='plus'?'You\'re in! Enjoy Parlay Pal Plus.':'Payment done! Your spins are in the locker.');confetti()},900);
   [2500,6000,12000].forEach(function(ms){setTimeout(acLoad,ms)})})();
 window.__pp={ms:function(){return MSP},msl:function(){return MSL},S:function(){return S},cheat:function(c){return cheatRows(c).map(function(x){return[x.n,x.tag||'',x.bar,x.a.hits]})},go:go,blocked:blocked,ai:aiRun,parse:parseAsk,rate:rate,analyze:analyze,load:loadDay};
 
