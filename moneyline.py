@@ -293,5 +293,41 @@ def add(data, sport, cached):
                             "mu": [f"{me} {'vs.' if r['home'] else '@'} {r['opp']}" for r in rows],
                             "ml": [r["win"] for r in rows], "mlm": mar, "kp": cents, "ktk": tk, "info": info, "risks": risks,
                             "ab": (ids.get(me) or (None, None, None))[2]})
+    if sport == "nba" and day and entries:
+        try:
+            _model(data, entries, games, day, cached)
+        except Exception as e:                          # the moneylines still show without the model
+            print("nba model skipped:", type(e).__name__, e)
     data["players"] = entries + (data.get("players") or [])
     return data
+
+
+def _model(data, entries, games, day, cached):
+    """Pal's model (nbamodel.py): win chance, expected margin and fair odds on each NBA moneyline."""
+    import nbamodel
+    from espn import tri
+    gl = nbamodel.load(cached, day)
+    pred, rat = nbamodel.predict(gl, day, [(g["a"], g["h"]) for g in games], tri)
+    rec, _ = cached(f"nbamodel:record:{day}", 3 * 3600,
+                    lambda: {"season": nbamodel.record(gl, day), "last15": nbamodel.record(gl, day, 15)})
+    for e in entries:
+        me = e["t"]
+        for (a, h), pr in pred.items():
+            if me not in (a, h):
+                continue
+            home = me == h
+            p = pr["ph"] if home else 1 - pr["ph"]
+            m = pr["m"] if home else -pr["m"]
+            e["wp"] = round(p * 100)
+            e["pm"] = round(m, 1)
+            e["fair"] = nbamodel.american(p)
+            e["rk"] = rat["rank"].get(me)
+            e["rt"] = rat["rating"].get(me)
+            e["opp"] = a if home else h
+            e["home"] = home
+            e["info"].insert(0, f"Pal's model: {e['wp']}% to win, {'by about ' + format(abs(m), '.1f') + ' points' if m > 0 else 'losing by about ' + format(abs(m), '.1f') + ' points'}. "
+                                f"Power rank {e['rk']} of {len(rat['rank'])}.")
+            if pr["b2b"].get(me):
+                e["risks"].append("Back-to-back tonight: the model takes off about 2 points.")
+    data["mlmodel"] = {"record": rec, "rating": rat["rating"], "rank": rat["rank"], "hca": rat["hca"],
+                       "how": "Power ratings from every game this season and last (older games count less), plus home court and back-to-backs."}
