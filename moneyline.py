@@ -293,11 +293,11 @@ def add(data, sport, cached):
                             "mu": [f"{me} {'vs.' if r['home'] else '@'} {r['opp']}" for r in rows],
                             "ml": [r["win"] for r in rows], "mlm": mar, "kp": cents, "ktk": tk, "info": info, "risks": risks,
                             "ab": (ids.get(me) or (None, None, None))[2]})
-    if sport == "nba" and day and entries:
+    if sport in ("nba", "nfl") and day and entries:
         try:
-            _model(data, entries, games, day, cached)
+            (_model if sport == "nba" else _model_nfl)(data, entries, games, day, cached)
         except Exception as e:                          # the moneylines still show without the model
-            print("nba model skipped:", type(e).__name__, e)
+            print(sport, "model skipped:", type(e).__name__, e)
     data["players"] = entries + (data.get("players") or [])
     return data
 
@@ -324,6 +324,28 @@ def _model(data, entries, games, day, cached):
     pred, rat = nbamodel.predict(gl, day, [(g["a"], g["h"]) for g in games], lambda t: t, pl, outs, tg)
     rec, _ = cached(f"nbamodel:record2:{day}", 3 * 3600,
                     lambda: {"season": nbamodel.record(gl, day), "last15": nbamodel.record(gl, day, 15)})
+    _apply(data, entries, pred, rat, rec, "nba",
+           "Team vs team: power ratings from every game this season and last, adjusted for who they played, plus home court, rest and who is out.")
+
+
+def _model_nfl(data, entries, games, day, cached):
+    """Pal's NFL model (nflmodel.py): ratings adjusted for who they played, home field, and the starting quarterback."""
+    import nflmodel
+    gl = nflmodel.load(cached, day)
+    qbs = nflmodel.QBs(gl)
+    outs = {}
+    for p in data.get("players") or []:
+        if (p.get("inj") or {}).get("s") == "out" and p.get("pos") == "QB" and p.get("id") is not None:
+            outs.setdefault(p.get("t"), set()).add(str(p["id"]))
+    pred, rat = nflmodel.predict(gl, day, [(g["a"], g["h"]) for g in games], qbs, outs)
+    rec, _ = cached(f"nflmodel:record:{day}", 3 * 3600,
+                    lambda: {"season": nflmodel.record(gl, day), "last15": nflmodel.record(gl, day, 28), "days": 28})
+    _apply(data, entries, pred, rat, rec, "nfl",
+           "Team vs team: power ratings from every game this season and last, adjusted for who they played, plus home field and the starting quarterback.")
+
+
+def _apply(data, entries, pred, rat, rec, sport, how):
+    import nbamodel
     for e in entries:
         me = e["t"]
         for (a, h), pr in pred.items():
@@ -347,10 +369,11 @@ def _model(data, entries, games, day, cached):
             e["info"].insert(0, f"Pal's model, team vs team: {e['wp']}% to win, {'by about ' + format(abs(m), '.1f') + ' points' if m > 0 else 'losing by about ' + format(abs(m), '.1f') + ' points'}. "
                                 f"Power rank {e['rk']} vs {rat['rank'].get(e['opp'])} of {len(rat['rank'])}.")
             if pr["inj"][me]:
-                e["risks"].append("Model takes off " + format(sum(x[1] for x in pr["inj"][me]), ".1f") + " points for who is out: " + ", ".join(x[0] for x in pr["inj"][me][:3]) + ".")
+                e["risks"].append("Model takes off " + format(sum(x[1] for x in pr["inj"][me]), ".1f") + " points for who is out: " + ", ".join(x[0] for x in pr["inj"][me][:3]) + "." +
+                                  (" Expected starter: " + pr["inj"][me][0][2] + "." if sport == "nfl" and len(pr["inj"][me][0]) > 2 and pr["inj"][me][0][2] else ""))
             if pr["inj"][e["opp"]]:
                 e["info"].append("The other side is missing " + ", ".join(x[0] for x in pr["inj"][e["opp"]][:3]) + " (worth about " + format(sum(x[1] for x in pr["inj"][e["opp"]]), ".1f") + " points).")
             if pr["b2b"].get(me):
                 e["risks"].append("Back-to-back tonight: the model takes off about 2 points.")
-    data["mlmodel"] = {"record": rec, "rating": rat["rating"], "rank": rat["rank"], "hca": rat["hca"],
-                       "how": "Team vs team: power ratings from every game this season and last, adjusted for who they played, plus home court, rest and who is out.", "kinj": rat.get("kinj")}
+    data["mlmodel"] = {"record": rec, "rating": rat["rating"], "rank": rat["rank"], "hca": rat["hca"], "sport": sport,
+                       "how": how, "kinj": rat.get("kinj")}
