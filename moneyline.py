@@ -305,10 +305,24 @@ def add(data, sport, cached):
 def _model(data, entries, games, day, cached):
     """Pal's model (nbamodel.py): win chance, expected margin and fair odds on each NBA moneyline."""
     import nbamodel
+    import espn
     from espn import tri
-    gl = nbamodel.load(cached, day)
-    pred, rat = nbamodel.predict(gl, day, [(g["a"], g["h"]) for g in games], tri)
-    rec, _ = cached(f"nbamodel:record:{day}", 3 * 3600,
+    gl = [dict(g, h=tri(g["h"]), a=tri(g["a"])) for g in nbamodel.load(cached, day)]
+    pl, tg = None, None
+    try:                                   # who sat out each past game, from the player logs the page already uses
+        s = nbamodel._season_of(day)
+        roster, _ = cached("espn:rosters", 6 * 3600, espn.fetch_rosters)
+        rows = espn.all_logs(roster, s, cached, 6 * 3600) + espn.all_logs(roster, s - 1, cached, 30 * 24 * 3600)
+        pl = nbamodel.Players(rows)
+        tg = nbamodel.add_missing(gl, pl)
+    except Exception as e:
+        print("nba model: no player logs, injuries left out:", type(e).__name__, e)
+    outs = {}
+    for p in data.get("players") or []:
+        if (p.get("inj") or {}).get("s") == "out" and isinstance(p.get("id"), int):
+            outs.setdefault(p.get("t"), set()).add(p["id"])
+    pred, rat = nbamodel.predict(gl, day, [(g["a"], g["h"]) for g in games], lambda t: t, pl, outs, tg)
+    rec, _ = cached(f"nbamodel:record2:{day}", 3 * 3600,
                     lambda: {"season": nbamodel.record(gl, day), "last15": nbamodel.record(gl, day, 15)})
     for e in entries:
         me = e["t"]
@@ -325,9 +339,18 @@ def _model(data, entries, games, day, cached):
             e["rt"] = rat["rating"].get(me)
             e["opp"] = a if home else h
             e["home"] = home
-            e["info"].insert(0, f"Pal's model: {e['wp']}% to win, {'by about ' + format(abs(m), '.1f') + ' points' if m > 0 else 'losing by about ' + format(abs(m), '.1f') + ' points'}. "
-                                f"Power rank {e['rk']} of {len(rat['rank'])}.")
+            op = e["opp"]
+            pt = pr["parts"]
+            e["mx"] = {"me": pt["rating"][me], "op": pt["rating"][op], "rkme": rat["rank"].get(me), "rkop": rat["rank"].get(op),
+                       "home": home, "hca": pt["hca"], "restMe": pt["rest"][me], "restOp": pt["rest"][op],
+                       "injMe": pr["inj"][me], "injOp": pr["inj"][op], "m": round(m, 1)}
+            e["info"].insert(0, f"Pal's model, team vs team: {e['wp']}% to win, {'by about ' + format(abs(m), '.1f') + ' points' if m > 0 else 'losing by about ' + format(abs(m), '.1f') + ' points'}. "
+                                f"Power rank {e['rk']} vs {rat['rank'].get(e['opp'])} of {len(rat['rank'])}.")
+            if pr["inj"][me]:
+                e["risks"].append("Model takes off " + format(sum(x[1] for x in pr["inj"][me]), ".1f") + " points for who is out: " + ", ".join(x[0] for x in pr["inj"][me][:3]) + ".")
+            if pr["inj"][e["opp"]]:
+                e["info"].append("The other side is missing " + ", ".join(x[0] for x in pr["inj"][e["opp"]][:3]) + " (worth about " + format(sum(x[1] for x in pr["inj"][e["opp"]]), ".1f") + " points).")
             if pr["b2b"].get(me):
                 e["risks"].append("Back-to-back tonight: the model takes off about 2 points.")
     data["mlmodel"] = {"record": rec, "rating": rat["rating"], "rank": rat["rank"], "hca": rat["hca"],
-                       "how": "Power ratings from every game this season and last (older games count less), plus home court and back-to-backs."}
+                       "how": "Team vs team: power ratings from every game this season and last, adjusted for who they played, plus home court, rest and who is out.", "kinj": rat.get("kinj")}

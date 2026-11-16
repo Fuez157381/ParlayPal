@@ -1876,6 +1876,13 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 .mlrank li .tlg{width:16px;height:16px;margin:0 6px -3px 0}.mlrank li b{font-weight:500}.mlrank li em{font-style:normal;margin-left:6px;font-variant-numeric:tabular-nums}
 .mlfine{margin:8px 0 0;font-size:12px}
 @media (max-width:720px){.mlgrid{grid-template-columns:1fr;gap:8px}.mlp{padding:10px 12px}.mlrank ol{columns:1}.mls b{font-size:13px}}
+.mxb{margin:2px 0;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--card2)}
+.mxh{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}.mxh b{font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.mxh span{font-size:13px;color:var(--mu)}
+.mxr{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:13px;color:var(--mu)}.mxr b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mxr small{font-size:11px;color:var(--mu2,#5B6168)}.mxr .ok{color:var(--ok)}.mxr .bad{color:var(--bad)}
+.mxt{margin-top:4px;padding-top:6px;border-top:1px solid var(--line2)}.mxt span{color:var(--ink);font-weight:600}
+.mxn{margin:6px 0 0;font-size:11.5px;line-height:1.4;color:var(--mu2,#5B6168)}
+@media (max-width:720px){.pgrid .mxb{padding:8px}.pgrid .mxh b{font-size:19px}.pgrid .mxh span,.pgrid .mxr{font-size:11.5px}.pgrid .mxn{display:none}}
 </style>
 <script>/* iPhone Safari does not redraw <use href="#palhead"> when the Pal changes, so every Pal icon gets the picture directly */
 window.PHU='';window.phImg=function(){return window.PHU?'<image class="phi" href="'+window.PHU+'" width="64" height="64"/>':'<use href="#palhead"/>'};
@@ -2132,7 +2139,7 @@ function snap(p,s,useOv){var v=(p[s]||[]).slice(0,10);if(v.length<3)return null;
   var a=NET[p.t],b=NET[opp];
   var gap=(a&&b&&a.g>=3&&b.g>=3)?Math.abs(a.m-b.m):null;
   var mf=(b&&b.g>=3&&OPP[opp]&&OPP[opp][s]!=null)?OPP[opp][s]:null;
-  return{key:p.id+'|'+s,id:p.id,n:p.n,t:p.t,s:s,lg:p.lg||'nba',gid:g.id,info:p.info||null,risks:p.risks||null,kp:p.kp,ktk:p.ktk||null,ab:p.ab||null,wp:p.wp,fair:p.fair,form5:p.form5,lostfin:p.lostfin,v:v,dates:(p.dates||[]).slice(0,10),ncur:Math.min(p.ncur||0,10),mins:(p.min||[]).slice(0,10),
+  return{key:p.id+'|'+s,id:p.id,n:p.n,t:p.t,s:s,lg:p.lg||'nba',gid:g.id,info:p.info||null,risks:p.risks||null,kp:p.kp,ktk:p.ktk||null,ab:p.ab||null,wp:p.wp,fair:p.fair,mx:p.mx||null,form5:p.form5,lostfin:p.lostfin,v:v,dates:(p.dates||[]).slice(0,10),ncur:Math.min(p.ncur||0,10),mins:(p.min||[]).slice(0,10),
     inj:p.inj||null,opp:opp,hv:g.a===p.t?'at':'vs',bar:bar,def:def,lo:L.lo,hi:L.hi,al:al||null,unv:unv,ov:bar!==def,gap:gap,mf:mf,na:a?a.m:null,nb:b?b.m:null,why:(WHY[opp]&&WHY[opp][s])||''}}
 function analyze(x){
   var v=x.v,n=v.length,bar=x.bar,hits=v.filter(function(a){return a>=bar}).length;
@@ -2200,6 +2207,7 @@ function analyze(x){
   var risk=[['Low','l'],['Moderate','m'],['High','h'],['Extreme','e']][tier];
   if(hits===0){p=Math.min(p,.01);lo=0;flags.unshift('This player has not reached this line in any of these '+n+' games.')}
   var m5a=v.slice(0,5).reduce(function(a,b){return a+b},0)/Math.min(5,n);
+  if(x.s==='ml'&&x.wp!=null){p=x.wp/100;lo=p;tier=p>=.75?0:p>=.6?1:p>=.5?2:3;risk=[['Low','l'],['Moderate','m'],['High','h'],['Extreme','e']][tier];flags=flags.filter(function(t){return !/has not reached this line|^Missed this line|^Only \d+ (games of data|of these games)/.test(t)})}
   return{n:n,hits:hits,p:p,lo:lo,avg:avg,med:med,mn:mn,mx:mx,m5:m5a,rs:rs,risk:risk[0],rc:risk[1],flags:flags,good:good}}
 function rate(cart){
   if(!cart.length)return null;var pt=1,lo=1,ws=null;
@@ -2208,7 +2216,7 @@ function rate(cart){
   var lab=sc>=70?['Very strong','ok']:sc>=50?['Solid','ok']:sc>=30?['Risky','warn']:sc>=15?['Long shot','bad']:['Very unlikely','bad'];
   return{score:sc,low:Math.round(Math.min(lo,pt)*100),label:lab[0],tone:lab[1],ws:ws,n:cart.length}}
 function legName(c){return c.n+' '+bl(c)}
-function weakWhy(ws){var a=ws.a,t='Estimated '+Math.round(a.p*100)+'% to hit. Cleared in '+a.hits+' of '+a.n+' games, lowest game '+a.mn+'.';
+function weakWhy(ws){var a=ws.a,t=ws.c.s==='ml'&&ws.c.wp!=null?'Pal\'s model gives them '+ws.c.wp+'% to win, team vs team.':'Estimated '+Math.round(a.p*100)+'% to hit. Cleared in '+a.hits+' of '+a.n+' games, lowest game '+a.mn+'.';
   return a.flags.length?a.flags.slice(0,3).join(' ')+' '+t:'Nothing stands out. It is simply the lowest of your legs. '+t}
 
 /* ---------- rendering pieces ---------- */
@@ -2232,9 +2240,9 @@ function propRow(x){var a=x.a,on=S.cart.some(function(c){return c.key===x.key});
   var facts='<div class="facts"><div><b>'+a.avg.toFixed(1)+'</b><span>Average</span></div><div><b>'+a.med+'</b><span>Median</span></div><div><b>'+a.mn+'</b><span>Lowest</span></div><div><b>'+a.mx+'</b><span>Highest</span></div><div><b>'+a.m5.toFixed(1)+'</b><span>Last 5 average</span></div></div>';
   var det=facts+a.good.map(function(t){return'<p class="moretxt">'+esc(t)+'</p>'}).join('')+a.flags.map(function(t){return'<p class="moretxt">'+esc(t)+'</p>'}).join('')+(x.why?'<p class="moretxt mu">'+esc(x.why)+'</p>':'')+(x.ncur<x.v.length?'<p class="legend">Lighter bars are from last season.</p>':'');
   return'<article class="prop"><div class="who">'+av(x.n,x.id)+'<div><button class="nm" data-act="player" data-id="'+x.id+'">'+esc(x.n)+'</button><small>'+sub(x)+'</small></div></div>'+
-   '<div class="lineBig"><div class="stp2"><button data-act="rup" data-key="'+esc(x.key)+'" aria-label="Raise the line"'+(x.bar>=x.hi?' disabled':'')+'>&#9650;</button><button data-act="rdn" data-key="'+esc(x.key)+'" aria-label="Lower the line"'+(x.bar<=x.lo?' disabled':'')+'>&#9660;</button></div><div class="lv"><b>'+(x.s==='ml'?'To win':BIN[x.s]?catName(x.s):ovh(x.bar))+'</b><span>'+sico(x.s,18)+' '+(x.s==='ml'?'moneyline':BIN[x.s]?'yes or no':ST[x.s])+'</span>'+(x.ov?'<button class="lnk rst" data-act="rreset" data-key="'+esc(x.key)+'">Reset to '+x.def+'+</button>':'')+'</div></div>'+bars(x.v,x.dates,x.ncur,x.bar)+
+   '<div class="lineBig"><div class="stp2"><button data-act="rup" data-key="'+esc(x.key)+'" aria-label="Raise the line"'+(x.bar>=x.hi?' disabled':'')+'>&#9650;</button><button data-act="rdn" data-key="'+esc(x.key)+'" aria-label="Lower the line"'+(x.bar<=x.lo?' disabled':'')+'>&#9660;</button></div><div class="lv"><b>'+(x.s==='ml'?'To win':BIN[x.s]?catName(x.s):ovh(x.bar))+'</b><span>'+sico(x.s,18)+' '+(x.s==='ml'?'moneyline':BIN[x.s]?'yes or no':ST[x.s])+'</span>'+(x.ov?'<button class="lnk rst" data-act="rreset" data-key="'+esc(x.key)+'">Reset to '+x.def+'+</button>':'')+'</div></div>'+(x.s==='ml'&&x.mx?mlBox(x):bars(x.v,x.dates,x.ncur,x.bar))+
    '<button class="add'+(on?' on':'')+'" data-act="add" data-key="'+esc(x.key)+'" aria-pressed="'+on+'">'+(on?'Added':'Add')+'</button>'+
-   '<div class="meta"><span class="rec">Cleared in '+a.hits+' of '+a.n+' games</span>'+tag(a)+'</div>'+
+   '<div class="meta"><span class="rec">'+(x.s==='ml'&&x.wp!=null?'Team vs team: '+x.wp+'% to win':'Cleared in '+a.hits+' of '+a.n+' games')+'</span>'+tag(a)+'</div>'+
    (x.unv&&LINES.st==='ok'?'<p class="warnline">Apps have not posted lines for this game yet, so this line is not verified.</p>':'')+(function(){var f=a.flags.filter(function(t){return a.n-a.hits>=3||t.indexOf('Missed this line')!==0})[0];return f?'<p class="warnline">'+esc(f)+'</p>':''})()+
    '<details class="more"><summary>View analysis</summary>'+det+'</details></article>'}
 
@@ -2299,8 +2307,8 @@ function renderChat(){var c=$('chat');c.innerHTML=CHAT.slice(-8).map(function(m)
 function legHtml(c,i){var a=analyze(c),L=ladOf(c);
   return'<div class="leg"><div class="lt"><div class="who">'+av(c.n,c.id,'sm')+'<div><button class="nm" data-act="player" data-id="'+c.id+'">'+esc(c.n)+'</button><small>'+sub(c)+'</small></div></div>'+
    '<div class="stp"><button data-act="up" data-i="'+i+'" aria-label="Raise the line"'+(c.bar>=L.hi?' disabled':'')+'>&#9650;</button><button data-act="down" data-i="'+i+'" aria-label="Lower the line"'+(c.bar<=L.lo?' disabled':'')+'>&#9660;</button></div></div>'+
-   '<div class="legline"><b>'+(c.s==='ml'?'To win':BIN[c.s]?catName(c.s):ovh(c.bar))+'</b><span>'+sico(c.s,18)+' '+(c.s==='ml'?'moneyline':BIN[c.s]?'yes or no':ST[c.s])+'</span>'+tag(a)+'</div>'+bars(c.v,c.dates,c.ncur,c.bar)+
-   '<div class="legft"><span>Cleared in '+a.hits+' of '+a.n+' games</span>'+'<button class="lnk" data-act="rm" data-i="'+i+'">Remove</button></div></div>'}
+   '<div class="legline"><b>'+(c.s==='ml'?'To win':BIN[c.s]?catName(c.s):ovh(c.bar))+'</b><span>'+sico(c.s,18)+' '+(c.s==='ml'?'moneyline':BIN[c.s]?'yes or no':ST[c.s])+'</span>'+tag(a)+'</div>'+(c.s==='ml'&&c.mx?mlBox(c):bars(c.v,c.dates,c.ncur,c.bar))+
+   '<div class="legft"><span>'+(c.s==='ml'&&c.wp!=null?'Team vs team: '+c.wp+'% to win':'Cleared in '+a.hits+' of '+a.n+' games')+'</span>'+'<button class="lnk" data-act="rm" data-i="'+i+'">Remove</button></div></div>'}
 function dkLine(c){var l=OD.st==='ok'&&OD.data&&OD.data.dk||[];for(var j=0;j<l.length;j++)if(l[j]&&String(l[j].pid)===String(c.id)&&l[j].s===c.s)return l[j];return null}
 function dkChip(c,i){var d=dkLine(c);if(!d)return'';if(d.line===c.bar)return'<span class="dkb on" title="DraftKings price for this line">DK '+fmtAm(d.american)+'</span>';
   return'<button class="dkb" type="button" data-act="dkset" data-i="'+i+'" data-v="'+d.line+'" title="Switch to the line DraftKings offers">DK line '+d.line+'+ · '+fmtAm(d.american)+'</button>'}
@@ -3071,6 +3079,16 @@ function ufcHero(){var F=G.filter(function(g){return g.lg==='ufc'});if(!F.length
     '<div class="uf-card" id="sec-ufcard"><h3>Full card</h3>'+rest.map(function(g,i){return row(g,i===0?'Co-main':'')}).join('')+'</div></section>'}
 /* ---------- NBA moneyline predictions (nbamodel.py on the server) ---------- */
 var MLM=null;
+/* team vs team: how Pal's model gets a moneyline (ratings adjusted for who they played, home court, rest, who is out) */
+function pts(v){return(v>0?'+':v<0?'\u2212':'')+Math.abs(v).toFixed(1)}
+function mlBox(x){var q=x.mx;if(!q)return'';var me=tname(x.t),op=tname(x.opp),row=function(l,v,cls){return'<div class="mxr"><span>'+l+'</span><b class="'+(cls||'')+'">'+v+'</b></div>'},im=(q.injMe||[]).reduce(function(s,z){return s+z[1]},0),io=(q.injOp||[]).reduce(function(s,z){return s+z[1]},0),nm=function(l){return l.slice(0,2).map(function(z){return esc(z[0])}).join(', ')+(l.length>2?' +'+(l.length-2):'')};
+  return'<div class="mxb" role="group" aria-label="Team vs team"><div class="mxh"><b>'+x.wp+'%</b><span>to beat the '+esc(op)+(x.fair!=null?' \u00b7 fair odds '+oddsTxt(x.fair):'')+'</span></div>'+
+    row(esc(me)+' strength <small>#'+q.rkme+'</small>',pts(q.me),q.me>=0?'ok':'bad')+row(esc(op)+' strength <small>#'+q.rkop+'</small>',pts(q.op),q.op>=0?'ok':'bad')+
+    row('Home court',(q.home?esc(tshort(x.t)):esc(tshort(x.opp)))+' '+pts(q.hca))+
+    (q.restMe||q.restOp?row('Back-to-back',(q.restMe?esc(tshort(x.t))+' '+pts(q.restMe):'')+(q.restMe&&q.restOp?', ':'')+(q.restOp?esc(tshort(x.opp))+' '+pts(q.restOp):'')):'')+
+    (im?row('Out for '+esc(tshort(x.t))+': '+nm(q.injMe),pts(-im),'bad'):'')+(io?row('Out for '+esc(tshort(x.opp))+': '+nm(q.injOp),pts(-io),'bad'):'')+
+    '<div class="mxr mxt"><span>Expected</span><b>'+(q.m>=0?esc(tshort(x.t))+' by '+Math.abs(q.m).toFixed(1):esc(tshort(x.opp))+' by '+Math.abs(q.m).toFixed(1))+'</b></div>'+
+    '<p class="mxn">Strength is points better than an average team, from every game this season and last, adjusted for who they played. Not the last 10 games.</p></div>'}
 function oddsP(t){t=String(t||'').replace(/\s/g,'');if(!/^[+-]?\d{3,5}$/.test(t))return null;var o=+t;if(Math.abs(o)<100)return null;return o<0?-o/(-o+100):100/(o+100)}
 function mlBtns(){Array.prototype.forEach.call(document.querySelectorAll('.mladd'),function(b){var on=(S.cart||[]).some(function(c){return c.key===b.dataset.key});b.setAttribute('aria-pressed',String(on));b.textContent=on?'Added':'Add '+b.dataset.key.replace(/^ml|\|ml$/g,'')+' to win'})}
 function oddsTxt(f){return f>0?'+'+f:String(f)}
@@ -3080,11 +3098,11 @@ function mlPicks(){if(!MLM)return'';var by={};D.forEach(function(p){if(/^ml/.tes
   var pre=function(g){return /\d:\d\d\s*[AP]M/i.test(g.t||'')},gs=G.filter(function(g){return by[g.a]&&by[g.h]}).sort(function(x,y){return(pre(y)?1:0)-(pre(x)?1:0)});if(!gs.length)return'';var rc=MLM.record||{},l15=rc.last15||{},sea=rc.season||{},pc=function(r){return r.games?Math.round(r.right/r.games*100):0};
   var rows=gs.map(function(g){var A=by[g.a],H=by[g.h],pk=H.wp>=A.wp?H:A,ot=pk===H?A:H,x=null;try{x=snap(pk,'ml',false)}catch(e){}if(x)HM[x.key]=x;var inC=x&&(S.cart||[]).some(function(c){return c.key===x.key});
     return'<div class="mlp"><div class="mlt"><span class="mls'+(pk===A?' pk':'')+'">'+tlogo(g.a)+'<b>'+esc(tshort(g.a))+'</b><em>'+A.wp+'%</em></span><span class="mlbar" role="img" aria-label="'+esc(tname(g.a))+' '+A.wp+'%, '+esc(tname(g.h))+' '+H.wp+'%"><i style="width:'+A.wp+'%"></i></span><span class="mls r'+(pk===H?' pk':'')+'"><em>'+H.wp+'%</em><b>'+esc(tshort(g.h))+'</b>'+tlogo(g.h)+'</span></div>'+
-      '<p class="mlwhy"><b>Pal\'s '+(pre(g)?'pick':'pick was')+': '+esc(tname(pk.t))+'</b>, by about '+Math.abs(pk.pm).toFixed(1)+' points. Fair odds '+oddsTxt(pk.fair)+'.'+(pk.kp!=null?' Kalshi has them at '+pk.kp+'%'+(pk.wp-pk.kp>=5?', so Pal sees value.':pk.kp-pk.wp>=5?', higher than Pal.':'.'):'')+' Power rank #'+pk.rk+' vs #'+ot.rk+'.'+(g.t?' <span class="mu">'+esc(g.t)+'</span>':'')+'</p>'+
+      '<p class="mlwhy"><b>Pal\'s '+(pre(g)?'pick':'pick was')+': '+esc(tname(pk.t))+'</b>, by about '+Math.abs(pk.pm).toFixed(1)+' points.'+(function(){var q=pk.mx,o=[];if(!q)return'';(q.injMe||[]).concat(q.injOp||[]).sort(function(u,v){return v[1]-u[1]}).slice(0,3).forEach(function(z){o.push(esc(z[0]))});return o.length?' Accounts for '+o.join(', ')+' out.':''})()+' Fair odds '+oddsTxt(pk.fair)+'.'+(pk.kp!=null?' Kalshi has them at '+pk.kp+'%'+(pk.wp-pk.kp>=5?', so Pal sees value.':pk.kp-pk.wp>=5?', higher than Pal.':'.'):'')+' Power rank #'+pk.rk+' vs #'+ot.rk+'.'+(g.t?' <span class="mu">'+esc(g.t)+'</span>':'')+'</p>'+
       (!pre(g)?'':'<div class="mlodds"><label class="mlinw"><span>Your app\'s odds for '+esc(tshort(pk.t))+'</span><input class="mlin" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. '+oddsTxt(Math.round(pk.fair*1.1))+'" data-wp="'+pk.wp+'"></label>'+
       (x?'<button class="btn mini mladd" type="button" data-act="add" data-key="'+esc(x.key)+'" aria-pressed="'+!!inC+'">'+(inC?'Added':'Add '+esc(tshort(pk.t))+' to win')+'</button>':'')+'<p class="mlv" aria-live="polite"></p></div>')+'</div>'}).join('');
   var rk=Object.keys(MLM.rank||{}).sort(function(a,b){return MLM.rank[a]-MLM.rank[b]});
-  return'<div class="hsec" id="sec-ml"><h2>Moneyline predictions</h2><p class="sub">Pal rates every team from all games this season and last, plus home court and rest. '+(l15.games?'Last 15 days: '+l15.right+'-'+(l15.games-l15.right)+' ('+pc(l15)+'%). ':'')+(sea.games?'This season: '+sea.right+'-'+(sea.games-sea.right)+' ('+pc(sea)+'%).':'')+'</p>'+
+  return'<div class="hsec" id="sec-ml"><h2>Moneyline predictions</h2><p class="sub">Team vs team, not the last 10 games: Pal rates every team from all games this season and last, adjusted for who they played, then adds home court, rest and who is out tonight. '+(l15.games?'Last 15 days: '+l15.right+'-'+(l15.games-l15.right)+' ('+pc(l15)+'%). ':'')+(sea.games?'This season: '+sea.right+'-'+(sea.games-sea.right)+' ('+pc(sea)+'%).':'')+'</p>'+
     '<div class="mlgrid">'+rows+'</div>'+
     (rk.length?'<details class="mlrank"><summary>Power rankings: how all '+rk.length+' teams stack up</summary><p class="mu">Points better or worse than an average team on a neutral court. Home court is worth about '+(MLM.hca||2)+' points.</p><ol>'+rk.map(function(t){var r=MLM.rating[t];return'<li>'+tlogo(t,'sm')+'<b>'+esc(tname(t))+'</b><em class="'+(r>=0?'ok':'bad')+'">'+(r>0?'+':'')+r.toFixed(1)+'</em></li>'}).join('')+'</ol></details>':'')+
     '<p class="mu mlfine">Estimates from past games, not guarantees. Check injuries before you bet.</p></div>'}
