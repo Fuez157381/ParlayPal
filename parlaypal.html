@@ -1883,6 +1883,14 @@ html.calm *,html.calm *::before,html.calm *::after{animation:none!important;tran
 .mxt{margin-top:4px;padding-top:6px;border-top:1px solid var(--line2)}.mxt span{color:var(--ink);font-weight:600}
 .mxn{margin:6px 0 0;font-size:11.5px;line-height:1.4;color:var(--mu2,#5B6168)}
 @media (max-width:720px){.pgrid .mxb{padding:8px}.pgrid .mxh b{font-size:19px}.pgrid .mxh span,.pgrid .mxr{font-size:11.5px}.pgrid .mxn{display:none}}
+.mlcall{margin:8px 0 0;font-size:13px;line-height:1.45;color:var(--mu)}
+.mlc{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:6px;font-size:11.5px;font-weight:700;border:1px solid var(--line2);color:var(--ink)}
+.mlc.safe{color:var(--ok);border-color:var(--ok)}.mlc.split{color:var(--bad);border-color:var(--bad)}
+.mlup{margin:0 0 10px;padding:10px 14px;background:var(--card);border:1px solid var(--line2);border-radius:12px}
+.mlup h3{margin:0 0 4px;font-size:14px;font-weight:600}.mlup p{margin:0 0 6px;font-size:12.5px;line-height:1.45}
+.mlup ul{margin:0;padding:0;list-style:none}.mlup li{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13.5px;flex-wrap:wrap}
+.mlup li .tlg{width:18px;height:18px;margin:0}.mlup li b{font-weight:600}.mlup li em{margin-left:auto;font-style:normal;color:var(--mu);font-variant-numeric:tabular-nums;font-size:12.5px}
+.mxc b{color:var(--ink);font-weight:600}
 </style>
 <script>/* iPhone Safari does not redraw <use href="#palhead"> when the Pal changes, so every Pal icon gets the picture directly */
 window.PHU='';window.phImg=function(){return window.PHU?'<image class="phi" href="'+window.PHU+'" width="64" height="64"/>':'<use href="#palhead"/>'};
@@ -3088,22 +3096,31 @@ function mlBox(x){var q=x.mx;if(!q)return'';var me=tname(x.t),op=tname(x.opp),ro
     (q.restMe||q.restOp?row('Back-to-back',(q.restMe?esc(tshort(x.t))+' '+pts(q.restMe):'')+(q.restMe&&q.restOp?', ':'')+(q.restOp?esc(tshort(x.opp))+' '+pts(q.restOp):'')):'')+
     (im?row('Out for '+esc(tshort(x.t))+': '+nm(q.injMe),pts(-im),'bad'):'')+(io?row('Out for '+esc(tshort(x.opp))+': '+nm(q.injOp),pts(-io),'bad'):'')+
     '<div class="mxr mxt"><span>Expected</span><b>'+(q.m>=0?esc(tshort(x.t))+' by '+Math.abs(q.m).toFixed(1):esc(tshort(x.opp))+' by '+Math.abs(q.m).toFixed(1))+'</b></div>'+
-    '<p class="mxn">Strength is points better than an average team, from every game this season and last, adjusted for who they played. Not the last 10 games.</p></div>'}
+    '<p class="mxn">Strength is points better than an average team, from every game this season and last, adjusted for who they played. Not the last 10 games.</p>'+
+    '<p class="mxn mxc"><b>Also checked</b> (tested, each under half a point, so not added): '+((q.chk||[]).length?q.chk.map(esc).join('; ')+'. Also looked at ':'')+(x.lg==='nfl'?'bye and short weeks, travel, ':'3 games in 4 nights, travel, road trips, altitude, ')+'hot and cold streaks, head-to-head.</p></div>'}
 function oddsP(t){t=String(t||'').replace(/\s/g,'');if(!/^[+-]?\d{3,5}$/.test(t))return null;var o=+t;if(Math.abs(o)<100)return null;return o<0?-o/(-o+100):100/(o+100)}
 function mlBtns(){Array.prototype.forEach.call(document.querySelectorAll('.mladd'),function(b){var on=(S.cart||[]).some(function(c){return c.key===b.dataset.key});b.setAttribute('aria-pressed',String(on));b.textContent=on?'Added':'Add '+b.dataset.key.replace(/^ml|\|ml$/g,'')+' to win'})}
 function oddsTxt(f){return f>0?'+'+f:String(f)}
 function mlVerdict(wp,t){var ip=oddsP(t);if(ip==null)return t?'Type odds like -150 or +130.':'';var need=Math.round(ip*100),e=wp-need;
   return e>=5?'<b class="ok">Good value.</b> Those odds need '+need+'% to break even. Pal says '+wp+'%.':e>=-2?'<b>About fair.</b> Those odds need '+need+'%, Pal says '+wp+'%.':'<b class="bad">Skip it.</b> Those odds need '+need+'%, but Pal says only '+wp+'%.'}
+function mlCall(pk,ot){var T=MLM.tests||{},k=pk.kp,m=ot.kp;if(k==null)return'';var mkt=m!=null&&m>k?ot:pk,mk=mkt===pk?k:m;
+  if(mkt!==pk)return'<p class="mlcall"><span class="mlc split">Toss-up</span>Pal likes '+esc(tshort(pk.t))+', the market likes '+esc(tshort(ot.t))+' ('+mk+'%).'+(T.split?' When they split, the market\'s side won '+T.split+'% of '+T.splitN+' tested games. Skip it or bet small.':'')+'</p>';
+  if(pk.wp>=70&&k>=70)return'<p class="mlcall"><span class="mlc safe">Safe pick</span>Pal ('+pk.wp+'%) and the market ('+k+'%) both say '+esc(tshort(pk.t))+'.'+(T.agree?' When both said 70%+, the favorite won '+T.agree+'% of '+T.agreeN+' tested games.':'')+'</p>';
+  return'<p class="mlcall"><span class="mlc lean">Lean</span>Pal ('+pk.wp+'%) and the market ('+k+'%) both pick '+esc(tshort(pk.t))+', but it\'s close.</p>'}
+function mlUpsets(gs,by,pre){var T=MLM.tests||{},L=[];gs.forEach(function(g){if(!pre(g))return;var A=by[g.a],H=by[g.h];if(A.kp==null||H.kp==null)return;var d=A.kp<H.kp?A:H,c=Math.round((d.kp+d.wp)/2);if(c>=35)L.push({d:d,o:d===A?H:A,c:c})});
+  if(!L.length)return'';L.sort(function(u,v){return v.c-u.c});
+  return'<div class="mlup"><h3>Upset watch</h3><p class="mu">'+(T.dogDay?'Last season an underdog won on '+T.dogDay+'% of NBA nights, about '+T.dogsPerDay+' a night. ':'')+'These are today\'s likeliest. Underdogs this close won about '+(T.close||40)+'% of the time, so most still lose: testing on '+(T.games||'past')+' games showed Pal can\'t find underdogs the market underrates.</p><ul>'+
+    L.slice(0,2).map(function(u){return'<li>'+tlogo(u.d.t,'sm')+'<b>'+esc(tname(u.d.t))+'</b> over the '+esc(tname(u.o.t))+'<em>Pal '+u.d.wp+'% · market '+u.d.kp+'%</em></li>'}).join('')+'</ul></div>'}
 function mlPicks(){if(!MLM)return'';var by={};D.forEach(function(p){if(/^ml/.test(p.id)&&p.wp!=null)by[p.t]=p});
   var pre=function(g){return /\d:\d\d\s*[AP]M/i.test(g.t||'')},gs=G.filter(function(g){return by[g.a]&&by[g.h]}).sort(function(x,y){return(pre(y)?1:0)-(pre(x)?1:0)});if(!gs.length)return'';var rc=MLM.record||{},l15=rc.last15||{},sea=rc.season||{},pc=function(r){return r.games?Math.round(r.right/r.games*100):0};
   var rows=gs.map(function(g){var A=by[g.a],H=by[g.h],pk=H.wp>=A.wp?H:A,ot=pk===H?A:H,x=null;try{x=snap(pk,'ml',false)}catch(e){}if(x)HM[x.key]=x;var inC=x&&(S.cart||[]).some(function(c){return c.key===x.key});
     return'<div class="mlp"><div class="mlt"><span class="mls'+(pk===A?' pk':'')+'">'+tlogo(g.a)+'<b>'+esc(tshort(g.a))+'</b><em>'+A.wp+'%</em></span><span class="mlbar" role="img" aria-label="'+esc(tname(g.a))+' '+A.wp+'%, '+esc(tname(g.h))+' '+H.wp+'%"><i style="width:'+A.wp+'%"></i></span><span class="mls r'+(pk===H?' pk':'')+'"><em>'+H.wp+'%</em><b>'+esc(tshort(g.h))+'</b>'+tlogo(g.h)+'</span></div>'+
-      '<p class="mlwhy"><b>Pal\'s '+(pre(g)?'pick':'pick was')+': '+esc(tname(pk.t))+'</b>, by about '+Math.abs(pk.pm).toFixed(1)+' points.'+(function(){var q=pk.mx,o=[];if(!q)return'';(q.injMe||[]).concat(q.injOp||[]).sort(function(u,v){return v[1]-u[1]}).slice(0,3).forEach(function(z){o.push(esc(z[0]))});return o.length?' Accounts for '+o.join(', ')+' out.':''})()+' Fair odds '+oddsTxt(pk.fair)+'.'+(pk.kp!=null?' Kalshi has them at '+pk.kp+'%'+(pk.wp-pk.kp>=5?', so Pal sees value.':pk.kp-pk.wp>=5?', higher than Pal.':'.'):'')+' Power rank #'+pk.rk+' vs #'+ot.rk+'.'+(g.t?' <span class="mu">'+esc(g.t)+'</span>':'')+'</p>'+
+      '<p class="mlwhy"><b>Pal\'s '+(pre(g)?'pick':'pick was')+': '+esc(tname(pk.t))+'</b>, by about '+Math.abs(pk.pm).toFixed(1)+' points.'+(function(){var q=pk.mx,o=[];if(!q)return'';(q.injMe||[]).concat(q.injOp||[]).sort(function(u,v){return v[1]-u[1]}).slice(0,3).forEach(function(z){o.push(esc(z[0]))});return o.length?' Accounts for '+o.join(', ')+' out.':''})()+' Fair odds '+oddsTxt(pk.fair)+'.'+' Power rank #'+pk.rk+' vs #'+ot.rk+'.'+(g.t?' <span class="mu">'+esc(g.t)+'</span>':'')+'</p>'+(pre(g)?mlCall(pk,ot):'')+
       (!pre(g)?'':'<div class="mlodds"><label class="mlinw"><span>Your app\'s odds for '+esc(tshort(pk.t))+'</span><input class="mlin" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. '+oddsTxt(Math.round(pk.fair*1.1))+'" data-wp="'+pk.wp+'"></label>'+
       (x?'<button class="btn mini mladd" type="button" data-act="add" data-key="'+esc(x.key)+'" aria-pressed="'+!!inC+'">'+(inC?'Added':'Add '+esc(tshort(pk.t))+' to win')+'</button>':'')+'<p class="mlv" aria-live="polite"></p></div>')+'</div>'}).join('');
   var rk=Object.keys(MLM.rank||{}).sort(function(a,b){return MLM.rank[a]-MLM.rank[b]});
   return'<div class="hsec" id="sec-ml"><h2>Moneyline predictions</h2><p class="sub">Team vs team, not the last 10 games: Pal rates every team from all games this season and last, adjusted for who they played, '+(MLM.sport==='nfl'?'then adds home field and the starting quarterback (who is out, and how much worse the backup is). ':'then adds home court, rest and who is out tonight. ')+(l15.games?'Last '+(rc.days||15)+' days: '+l15.right+'-'+(l15.games-l15.right)+' ('+pc(l15)+'%). ':'')+(sea.games?'This season: '+sea.right+'-'+(sea.games-sea.right)+' ('+pc(sea)+'%).':'')+'</p>'+
-    '<div class="mlgrid">'+rows+'</div>'+
+    mlUpsets(gs,by,pre)+'<div class="mlgrid">'+rows+'</div>'+
     (rk.length?'<details class="mlrank"><summary>Power rankings: how all '+rk.length+' teams stack up</summary><p class="mu">Points better or worse than an average team on a neutral '+(MLM.sport==='nfl'?'field. Home field':'court. Home court')+(MLM.hca?' is worth about '+MLM.hca+' points.':' has made no real difference lately.')+'</p><ol>'+rk.map(function(t){var r=MLM.rating[t];return'<li>'+tlogo(t,'sm')+'<b>'+esc(tname(t))+'</b><em class="'+(r>=0?'ok':'bad')+'">'+(r>0?'+':'')+r.toFixed(1)+'</em></li>'}).join('')+'</ol></details>':'')+
     '<p class="mu mlfine">Estimates from past games, not guarantees. Check injuries before you bet.</p></div>'}
 document.addEventListener('input',function(e){var i=e.target;if(!i.classList||!i.classList.contains('mlin'))return;var v=i.closest('.mlodds').querySelector('.mlv');v.innerHTML=mlVerdict(+i.dataset.wp,i.value.trim())});

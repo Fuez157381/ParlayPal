@@ -324,7 +324,8 @@ def _model(data, entries, games, day, cached):
     pred, rat = nbamodel.predict(gl, day, [(g["a"], g["h"]) for g in games], lambda t: t, pl, outs, tg)
     rec, _ = cached(f"nbamodel:record2:{day}", 3 * 3600,
                     lambda: {"season": nbamodel.record(gl, day), "last15": nbamodel.record(gl, day, 15)})
-    _apply(data, entries, pred, rat, rec, "nba",
+    _apply(data, entries, pred, rat, rec, "nba", checks=_checks(gl, day, [(g["a"], g["h"]) for g in games], "nba"),
+           how=
            "Team vs team: power ratings from every game this season and last, adjusted for who they played, plus home court, rest and who is out.")
 
 
@@ -340,11 +341,70 @@ def _model_nfl(data, entries, games, day, cached):
     pred, rat = nflmodel.predict(gl, day, [(g["a"], g["h"]) for g in games], qbs, outs)
     rec, _ = cached(f"nflmodel:record:{day}", 3 * 3600,
                     lambda: {"season": nflmodel.record(gl, day), "last15": nflmodel.record(gl, day, 28), "days": 28})
-    _apply(data, entries, pred, rat, rec, "nfl",
+    _apply(data, entries, pred, rat, rec, "nfl", checks=_checks(gl, day, [(g["a"], g["h"]) for g in games], "nfl"),
+           how=
            "Team vs team: power ratings from every game this season and last, adjusted for who they played, plus home field and the starting quarterback.")
 
 
-def _apply(data, entries, pred, rat, rec, sport, how):
+# Time zones (hours from Eastern) for the travel check.
+TZ = {"nba": {**dict.fromkeys("ATL BOS BKN CHA CLE DET IND MIA NYK ORL PHI TOR WAS".split(), 0),
+              **dict.fromkeys("CHI DAL HOU MEM MIL MIN NOP OKC SAS".split(), -1),
+              **dict.fromkeys("DEN UTA PHX".split(), -2), **dict.fromkeys("GSW LAC LAL POR SAC".split(), -3)},
+      "nfl": {**dict.fromkeys("buf mia ne nyj nyg phi wsh bal pit cle cin jax tb atl car det ind".split(), 0),
+              **dict.fromkeys("chi gb min kc hou dal no ten".split(), -1),
+              **dict.fromkeys("den ari".split(), -2), **dict.fromkeys("lv lac lar sf sea".split(), -3)}}
+# What testing against real sportsbook closing lines showed (2025-26 + 2026-27 NBA, 1,124 games; NFL 2024-26, 690 games).
+TESTS = {"nba": {"agree": 83, "agreeN": 404, "split": 55, "splitN": 110, "dogDay": 92, "dogsPerDay": 2.4, "close": 43, "closeN": 389, "games": 1124},
+         "nfl": {"agree": 82, "agreeN": 160, "split": 56, "splitN": 113, "close": 41, "games": 690}}
+
+
+def _checks(gl, day, matchups, sport):
+    """Every smaller thing Pal looked at for each game. Tested; each moves results by under half a point, so they're shown,
+    not added to the win chance."""
+    tz = TZ[sport]
+    d0 = dt.date.fromisoformat(day)
+    out = {}
+    for a, h in matchups:
+        lst = []
+        for t, home in ((a, False), (h, True)):
+            prior = [g for g in gl if g["date"] < day and t in (g["h"], g["a"])]
+            if not prior:
+                continue
+            last = prior[-1]
+            rest = (d0 - dt.date.fromisoformat(last["date"])).days
+            nm = t.upper()
+            if sport == "nba":
+                if sum(1 for g in prior[-2:] if (d0 - dt.date.fromisoformat(g["date"])).days <= 3) >= 2:
+                    lst.append(f"{nm}: 3rd game in 4 nights")
+                elif rest >= 3:
+                    lst.append(f"{nm}: rested, {rest - 1} days off")
+            else:
+                if 12 <= rest <= 30:
+                    lst.append(f"{nm}: coming off a bye week")
+                elif rest <= 5:
+                    lst.append(f"{nm}: short week ({rest} days of rest)")
+            if sport == "nba" and last["h"] in tz and h in tz and rest <= 2:
+                hrs = abs(tz[h] - tz[last["h"]])
+                if hrs >= 2:
+                    lst.append(f"{nm}: traveled {hrs} time zones since the last game")
+            if not home:
+                trip = 1
+                for g in reversed(prior):
+                    if g["a"] == t:
+                        trip += 1
+                    else:
+                        break
+                if trip >= 3:
+                    lst.append(f"{nm}: game {trip} of a road trip")
+        if sport == "nba" and h in ("DEN", "UTA"):
+            lst.append("Altitude: playing at " + ("Denver" if h == "DEN" else "Utah"))
+        if sport == "nfl" and a in tz and h in tz and abs(tz[a] - tz[h]) >= 3:
+            lst.append(f"{a.upper()}: cross-country trip")
+        out[(a, h)] = lst
+    return out
+
+
+def _apply(data, entries, pred, rat, rec, sport, how, checks=None):
     import nbamodel
     for e in entries:
         me = e["t"]
@@ -365,7 +425,8 @@ def _apply(data, entries, pred, rat, rec, sport, how):
             pt = pr["parts"]
             e["mx"] = {"me": pt["rating"][me], "op": pt["rating"][op], "rkme": rat["rank"].get(me), "rkop": rat["rank"].get(op),
                        "home": home, "hca": pt["hca"], "restMe": pt["rest"][me], "restOp": pt["rest"][op],
-                       "injMe": pr["inj"][me], "injOp": pr["inj"][op], "m": round(m, 1)}
+                       "injMe": pr["inj"][me], "injOp": pr["inj"][op], "m": round(m, 1),
+                       "chk": (checks or {}).get((a, h), [])}
             e["info"].insert(0, f"Pal's model, team vs team: {e['wp']}% to win, {'by about ' + format(abs(m), '.1f') + ' points' if m > 0 else 'losing by about ' + format(abs(m), '.1f') + ' points'}. "
                                 f"Power rank {e['rk']} vs {rat['rank'].get(e['opp'])} of {len(rat['rank'])}.")
             if pr["inj"][me]:
@@ -375,5 +436,5 @@ def _apply(data, entries, pred, rat, rec, sport, how):
                 e["info"].append("The other side is missing " + ", ".join(x[0] for x in pr["inj"][e["opp"]][:3]) + " (worth about " + format(sum(x[1] for x in pr["inj"][e["opp"]]), ".1f") + " points).")
             if pr["b2b"].get(me):
                 e["risks"].append("Back-to-back tonight: the model takes off about 2 points.")
-    data["mlmodel"] = {"record": rec, "rating": rat["rating"], "rank": rat["rank"], "hca": rat["hca"], "sport": sport,
+    data["mlmodel"] = {"record": rec, "rating": rat["rating"], "rank": rat["rank"], "hca": rat["hca"], "sport": sport, "tests": TESTS.get(sport),
                        "how": how, "kinj": rat.get("kinj")}
